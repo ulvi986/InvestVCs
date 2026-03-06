@@ -1,24 +1,27 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/Layout";
-import { ArrowRight, Shield, BarChart3, TrendingUp } from "lucide-react";
+import { ArrowRight, Shield, BarChart3, TrendingUp, ClipboardList, DollarSign } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
   {
     icon: Shield,
-    title: "Berkus Method",
-    description: "Evaluate startup value based on key early-stage success components.",
+    title: "Startup Evaluation",
+    description: "Calculate your startup's valuation using Berkus, Scorecard, and Risk Factor methods.",
+    link: "/evaluation",
   },
   {
-    icon: BarChart3,
-    title: "Scorecard Method",
-    description: "Compare startup strength relative to the regional average.",
+    icon: ClipboardList,
+    title: "Preparation Phase",
+    description: "Get ready for your evaluation with market research, team analysis, and financial planning.",
+    link: "/preparation",
   },
   {
-    icon: TrendingUp,
-    title: "Risk Factor Method",
-    description: "Adjust valuation based on startup risk categories.",
+    icon: DollarSign,
+    title: "Example",
+    description: "See a full valuation example for an AI Fintech Startup with all three methods compared.",
+    link: "/example",
   },
 ];
 
@@ -76,26 +79,27 @@ const Index = () => (
     <section className="py-20">
       <div className="container">
         <div className="text-center mb-14">
-          <h2 className="text-3xl font-bold text-foreground">Three Proven Methods</h2>
-          <p className="mt-3 text-muted-foreground">Industry-standard frameworks used by top investors worldwide.</p>
+          <h2 className="text-3xl font-bold text-foreground">Platform Features</h2>
+          <p className="mt-3 text-muted-foreground">Everything you need to evaluate and prepare your startup for investors.</p>
         </div>
         <div className="grid gap-6 md:grid-cols-3">
           {features.map((f, i) => (
-            <motion.div
-              key={f.title}
-              className="rounded-2xl border border-border bg-card p-8 shadow-card hover:shadow-elevated transition-shadow"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeUp}
-              custom={i}
-            >
-              <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
-                <f.icon className="h-5 w-5 text-primary-foreground" />
-              </div>
-              <h3 className="text-lg font-semibold text-foreground">{f.title}</h3>
-              <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
-            </motion.div>
+            <Link to={f.link} key={f.title}>
+              <motion.div
+                className="rounded-2xl border border-border bg-card p-8 shadow-card hover:shadow-elevated transition-shadow h-full"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                custom={i}
+              >
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
+                  <f.icon className="h-5 w-5 text-primary-foreground" />
+                </div>
+                <h3 className="text-lg font-semibold text-foreground">{f.title}</h3>
+                <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{f.description}</p>
+              </motion.div>
+            </Link>
           ))}
         </div>
       </div>

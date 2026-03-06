@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import ValuationGauge from "./ValuationGauge";
 
@@ -10,10 +10,18 @@ const components = [
   "Product Rollout or Sales",
 ];
 
-const BerkusMethod = () => {
+interface BerkusMethodProps {
+  onValuationChange?: (value: number) => void;
+}
+
+const BerkusMethod = ({ onValuationChange }: BerkusMethodProps) => {
   const [values, setValues] = useState<number[]>([0, 0, 0, 0, 0]);
 
   const total = values.reduce((a, b) => a + b, 0);
+
+  useEffect(() => {
+    onValuationChange?.(total);
+  }, [total, onValuationChange]);
 
   const updateValue = (idx: number, val: number[]) => {
     setValues((prev) => {
