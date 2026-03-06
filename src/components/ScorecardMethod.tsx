@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import ValuationGauge from "./ValuationGauge";
@@ -12,12 +12,20 @@ const factors = [
   { name: "Other Factors", weight: 0.06 },
 ];
 
-const ScorecardMethod = () => {
+interface ScorecardMethodProps {
+  onValuationChange?: (value: number) => void;
+}
+
+const ScorecardMethod = ({ onValuationChange }: ScorecardMethodProps) => {
   const [median, setMedian] = useState(3000000);
   const [scores, setScores] = useState<number[]>(factors.map(() => 100));
 
   const weightedScore = factors.reduce((sum, f, i) => sum + (scores[i] / 100) * f.weight, 0);
   const valuation = Math.round(median * weightedScore);
+
+  useEffect(() => {
+    onValuationChange?.(valuation);
+  }, [valuation, onValuationChange]);
 
   const updateScore = (idx: number, val: number[]) => {
     setScores((prev) => {

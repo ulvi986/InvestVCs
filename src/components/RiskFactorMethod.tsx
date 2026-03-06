@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import ValuationGauge from "./ValuationGauge";
@@ -26,7 +26,11 @@ const scoreOptions = [
   { value: "-2", label: "-2 (Very High Risk)", adjustment: -500000 },
 ];
 
-const RiskFactorMethod = () => {
+interface RiskFactorMethodProps {
+  onValuationChange?: (value: number) => void;
+}
+
+const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
   const [base, setBase] = useState(2000000);
   const [scores, setScores] = useState<number[]>(risks.map(() => 0));
 
@@ -36,6 +40,10 @@ const RiskFactorMethod = () => {
   }, 0);
 
   const valuation = Math.max(0, base + totalAdjustment);
+
+  useEffect(() => {
+    onValuationChange?.(valuation);
+  }, [valuation, onValuationChange]);
 
   const updateScore = (idx: number, val: string) => {
     setScores((prev) => {
