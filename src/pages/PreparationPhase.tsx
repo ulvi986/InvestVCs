@@ -1,18 +1,93 @@
 import Layout from "@/components/Layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FinancialCalculator from "@/components/FinancialCalculator";
+import FinancialDashboard from "@/components/FinancialDashboard";
+import { useState } from "react";
 
-const PreparationPhase = () => (
-  <Layout>
-    <div className="container py-10">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-foreground">Financial Management</h1>
-        <p className="mt-2 text-muted-foreground">
-          Enter your startup's financial data to calculate key metrics and understand your financial health.
-        </p>
+export type FinancialSnapshot = {
+  id: string;
+  date: Date;
+  revenue: {
+    productSales: number;
+    subscription: number;
+    serviceFees: number;
+    otherIncome: number;
+    total: number;
+  };
+  expenses: {
+    salaries: number;
+    rent: number;
+    salesMarketing: number;
+    tech: number;
+    loanPayments: number;
+    otherExpenses: number;
+    taxes: number;
+    depreciation: number;
+    legalAccounting: number;
+    total: number;
+  };
+  cashFlow: {
+    startingCash: number;
+    cashInflow: number;
+    cashOutflow: number;
+    endingCash: number;
+    monthlyBurnRate: number;
+    runway: number;
+  };
+  customerMetrics: {
+    newCustomers: number;
+    totalCustomersStart: number;
+    lostCustomers: number;
+    activeUsers: number;
+    arpu: number;
+    churnRate: number;
+    customerLifetime: number;
+    cac: number;
+    grossProfit: number;
+    grossMargin: number;
+    cltv: number;
+  };
+};
+
+const PreparationPhase = () => {
+  const [snapshots, setSnapshots] = useState<FinancialSnapshot[]>([]);
+
+  const addSnapshot = (snapshot: FinancialSnapshot) => {
+    setSnapshots((prev) => [...prev, snapshot].sort((a, b) => a.date.getTime() - b.date.getTime()));
+  };
+
+  const removeSnapshot = (id: string) => {
+    setSnapshots((prev) => prev.filter((s) => s.id !== id));
+  };
+
+  return (
+    <Layout>
+      <div className="container py-10">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Financial Management</h1>
+          <p className="mt-2 text-muted-foreground">
+            Enter your startup's financial data by date and track your progress on the dashboard.
+          </p>
+        </div>
+        <Tabs defaultValue="entry" className="space-y-6">
+          <TabsList className="bg-muted p-1 rounded-xl h-auto gap-1">
+            <TabsTrigger value="entry" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
+              Data Entry
+            </TabsTrigger>
+            <TabsTrigger value="dashboard" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
+              📊 Dashboard
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="entry">
+            <FinancialCalculator onSave={addSnapshot} />
+          </TabsContent>
+          <TabsContent value="dashboard">
+            <FinancialDashboard snapshots={snapshots} onRemove={removeSnapshot} />
+          </TabsContent>
+        </Tabs>
       </div>
-      <FinancialCalculator />
-    </div>
-  </Layout>
-);
+    </Layout>
+  );
+};
 
 export default PreparationPhase;
