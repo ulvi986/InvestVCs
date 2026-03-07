@@ -40,6 +40,7 @@ export type FinancialSnapshot = {
     lostCustomers: number;
     activeUsers: number;
     arpu: number;
+    avgRevenuePerCustomerPerMonth: number;
     churnRate: number;
     customerLifetime: number;
     cac: number;
