@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+
 import ValuationGauge from "./ValuationGauge";
 
 const ADJUSTMENT_PER_POINT = 250000;
@@ -154,10 +154,10 @@ interface RiskFactorMethodProps {
 }
 
 const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
-  const [baseValuation, setBaseValuation] = useState<string>("250000");
+  const baseValuation = 250000;
   const [scores, setScores] = useState<(number | null)[]>(Array(risks.length).fill(null));
 
-  const base = parseFloat(baseValuation) || 0;
+  const base = baseValuation;
   const totalAdjustment = scores.reduce((sum, s) => sum + (s !== null ? s * ADJUSTMENT_PER_POINT : 0), 0);
   const valuation = Math.max(0, base + totalAdjustment);
 
@@ -177,22 +177,8 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
     <div className="space-y-8">
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
         <h3 className="text-base font-semibold text-foreground mb-1">Base Valuation</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Enter the base pre-money valuation for your startup.
-        </p>
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold text-foreground">$</span>
-          <Input
-            type="number"
-            placeholder="e.g. 2000000"
-            value={baseValuation}
-            onChange={(e) => setBaseValuation(e.target.value)}
-            className="max-w-xs text-lg"
-          />
-          <span className="text-sm text-muted-foreground">USD</span>
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">
-          Each risk score point adjusts the valuation by $250,000
+        <p className="text-sm text-muted-foreground">
+          Fixed at <span className="font-semibold text-foreground">$250,000</span> USD. Each risk score point adjusts the valuation by $250,000.
         </p>
       </div>
 
