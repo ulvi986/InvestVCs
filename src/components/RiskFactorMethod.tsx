@@ -154,7 +154,7 @@ interface RiskFactorMethodProps {
 }
 
 const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
-  const [baseValuation, setBaseValuation] = useState<string>("");
+  const [baseValuation, setBaseValuation] = useState<string>("250000");
   const [scores, setScores] = useState<(number | null)[]>(Array(risks.length).fill(null));
 
   const base = parseFloat(baseValuation) || 0;
@@ -220,11 +220,10 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
                 >
                   {risk.options.map((opt) => {
                     const optColor = scoreOptions.find((s) => s.value === opt.score)?.color || "";
-                    const optAdj = opt.score * ADJUSTMENT_PER_POINT;
                     return (
                       <div
                         key={opt.score}
-                        className={`flex items-center gap-3 rounded-lg border p-3 transition-colors cursor-pointer ${
+                        className={`flex items-center gap-2 rounded-md border px-3 py-2 transition-colors cursor-pointer ${
                           scores[i] === opt.score
                             ? "border-primary bg-primary/5"
                             : "border-border hover:border-primary/40"
@@ -239,13 +238,10 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
                           htmlFor={`${risk.name}-${opt.score}`}
                           className="text-sm cursor-pointer flex-1"
                         >
-                          <span className={`font-medium mr-2 ${optColor}`}>
+                          <span className={`font-medium ${optColor}`}>
                             {opt.score >= 0 ? "+" : ""}{opt.score}
                           </span>
-                          <span className="text-muted-foreground">— {opt.label}</span>
-                          <span className={`ml-2 text-xs ${optAdj > 0 ? "text-emerald-500" : optAdj < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                            ({optAdj >= 0 ? "+" : ""}${optAdj.toLocaleString("en-US")})
-                          </span>
+                          <span className="text-muted-foreground ml-1.5">— {opt.label}</span>
                         </Label>
                       </div>
                     );
