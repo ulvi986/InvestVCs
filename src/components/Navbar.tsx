@@ -10,7 +10,7 @@ const Navbar = () => {
   const links = [
     { to: "/evaluation", label: "Startup Evaluation" },
     { to: "/preparation", label: "Financial Management" },
-    { to: "/example", label: "Example" },
+    { to: "/readiness", label: "Readiness Level" },
   ];
 
   return (
