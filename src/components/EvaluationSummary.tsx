@@ -100,11 +100,9 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
 
   const chartData = [
     { method: "Berkus", value: berkus },
-    { method: "Berkus", value: berkus },
     { method: "Scorecard", value: scorecard },
     { method: "Risk Factor", value: riskFactor },
     { method: "Average", value: average },
-    { method: "Ortalama", value: average },
   ];
 
   const advice = getAdvice(average, berkus, scorecard, riskFactor);
