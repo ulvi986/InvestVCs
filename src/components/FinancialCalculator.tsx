@@ -252,7 +252,14 @@ const FinancialCalculator = () => {
           <Field label="Product Sales" value={productSales} onChange={setProductSales} />
           <Field label="Subscription / MRR" value={subscription} onChange={setSubscription} />
           <Field label="Service Fees" value={serviceFees} onChange={setServiceFees} />
-          <Field label="Other Income" value={otherIncome} onChange={setOtherIncome} />
+          <DynamicItems
+            label="Other Income"
+            items={otherIncomeItems}
+            onAdd={() => addItem(setOtherIncomeItems)}
+            onRemove={(i) => removeItem(setOtherIncomeItems, i)}
+            onChangeName={(i, v) => updateItemName(setOtherIncomeItems, i, v)}
+            onChangeAmount={(i, v) => updateItemAmount(setOtherIncomeItems, i, v)}
+          />
         </div>
         <ResultRow label="Total Revenue" value={calcs.totalRevenue} bold highlight />
       </SectionCard>
@@ -265,7 +272,14 @@ const FinancialCalculator = () => {
           <Field label="Sales / Marketing" value={salesMarketing} onChange={setSalesMarketing} />
           <Field label="Tech (Server etc.)" value={tech} onChange={setTech} />
           <Field label="Loan Payments" value={loanPayments} onChange={setLoanPayments} />
-          <Field label="Other" value={otherExpense} onChange={setOtherExpense} />
+          <DynamicItems
+            label="Other Expenses"
+            items={otherExpenseItems}
+            onAdd={() => addItem(setOtherExpenseItems)}
+            onRemove={(i) => removeItem(setOtherExpenseItems, i)}
+            onChangeName={(i, v) => updateItemName(setOtherExpenseItems, i, v)}
+            onChangeAmount={(i, v) => updateItemAmount(setOtherExpenseItems, i, v)}
+          />
           <Field label="Taxes" value={taxes} onChange={setTaxes} />
           <Field label="Depreciation / Amortization" value={depreciation} onChange={setDepreciation} />
           <Field label="Legal / Accounting" value={legalAccounting} onChange={setLegalAccounting} />
