@@ -167,6 +167,7 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
               </div>
               <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
                 <span className="text-foreground">Average</span>
+                <span className="text-gradient">${average.toLocaleString()}</span>
               </div>
             </div>
           </div>
