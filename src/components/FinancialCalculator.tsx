@@ -134,16 +134,17 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
     const cashInflow = totalRevenue;
     const cashOutflow = totalExpenses;
     const endingCash = n(startingCash) + cashInflow - cashOutflow;
-    const monthlyBurnRate = totalExpenses - totalRevenue;
-    const runway = monthlyBurnRate > 0 ? endingCash / monthlyBurnRate : NaN;
+    const monthlyBurnRate = totalRevenue - totalExpenses;
+    const runway = monthlyBurnRate !== 0 ? endingCash / Math.abs(monthlyBurnRate) : NaN;
     const activeUsers = n(totalCustomersStart) + n(newCustomers) - n(lostCustomers);
     const churnRate = n(totalCustomersStart) > 0 ? n(lostCustomers) / n(totalCustomersStart) : NaN;
-    const arpu = activeUsers > 0 ? totalRevenue / activeUsers : NaN;
+    const totalCustomers = activeUsers;
+    const arpu = totalCustomers > 0 ? totalRevenue / totalCustomers : NaN;
     const customerLifetime = churnRate > 0 ? 1 / churnRate : NaN;
     const cac = n(newCustomers) > 0 ? n(salesMarketing) / n(newCustomers) : NaN;
     const grossProfit = totalRevenue - totalExpenses;
     const grossMargin = totalRevenue > 0 ? grossProfit / totalRevenue : NaN;
-    const cltv = isFinite(arpu) && isFinite(customerLifetime) && isFinite(grossMargin) ? arpu * customerLifetime * grossMargin : NaN;
+    const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(arpu) ? customerLifetime * grossMargin * arpu : NaN;
     return { totalRevenue, totalExpenses, cashInflow, cashOutflow, endingCash, monthlyBurnRate, runway, activeUsers, churnRate, arpu, customerLifetime, cac, grossProfit, grossMargin, cltv };
   }, [productSales, subscription, serviceFees, otherIncomeTotal, salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting, startingCash, newCustomers, totalCustomersStart, lostCustomers]);
 
