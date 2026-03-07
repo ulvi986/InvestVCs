@@ -170,7 +170,7 @@ const FinancialCalculator = () => {
   const [productSales, setProductSales] = useState("");
   const [subscription, setSubscription] = useState("");
   const [serviceFees, setServiceFees] = useState("");
-  const [otherIncome, setOtherIncome] = useState("");
+  const [otherIncomeItems, setOtherIncomeItems] = useState<OtherItem[]>([]);
 
   // Expenses
   const [salaries, setSalaries] = useState("");
@@ -178,7 +178,7 @@ const FinancialCalculator = () => {
   const [salesMarketing, setSalesMarketing] = useState("");
   const [tech, setTech] = useState("");
   const [loanPayments, setLoanPayments] = useState("");
-  const [otherExpense, setOtherExpense] = useState("");
+  const [otherExpenseItems, setOtherExpenseItems] = useState<OtherItem[]>([]);
   const [taxes, setTaxes] = useState("");
   const [depreciation, setDepreciation] = useState("");
   const [legalAccounting, setLegalAccounting] = useState("");
@@ -195,12 +195,16 @@ const FinancialCalculator = () => {
   const [totalProductionCosts, setTotalProductionCosts] = useState("");
 
   const n = (v: string) => parseFloat(v) || 0;
+  const sumItems = (items: OtherItem[]) => items.reduce((s, it) => s + n(it.amount), 0);
+
+  const otherIncomeTotal = sumItems(otherIncomeItems);
+  const otherExpenseTotal = sumItems(otherExpenseItems);
 
   const calcs = useMemo(() => {
-    const totalRevenue = n(productSales) + n(subscription) + n(serviceFees) + n(otherIncome);
+    const totalRevenue = n(productSales) + n(subscription) + n(serviceFees) + otherIncomeTotal;
     const totalExpenses =
       n(salaries) + n(rent) + n(salesMarketing) + n(tech) + n(loanPayments) +
-      n(otherExpense) + n(taxes) + n(depreciation) + n(legalAccounting);
+      otherExpenseTotal + n(taxes) + n(depreciation) + n(legalAccounting);
 
     const cashInflow = totalRevenue;
     const cashOutflow = totalExpenses;
@@ -226,10 +230,19 @@ const FinancialCalculator = () => {
       grossProfit, grossMargin, cltv,
     };
   }, [
-    productSales, subscription, serviceFees, otherIncome,
-    salaries, rent, salesMarketing, tech, loanPayments, otherExpense, taxes, depreciation, legalAccounting,
+    productSales, subscription, serviceFees, otherIncomeTotal,
+    salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting,
     startingCash, newCustomers, totalCustomersStart, lostCustomers,
   ]);
+
+  const addItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>) =>
+    setter((prev) => [...prev, { name: "", amount: "" }]);
+  const removeItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number) =>
+    setter((prev) => prev.filter((_, idx) => idx !== i));
+  const updateItemName = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number, v: string) =>
+    setter((prev) => prev.map((it, idx) => (idx === i ? { ...it, name: v } : it)));
+  const updateItemAmount = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number, v: string) =>
+    setter((prev) => prev.map((it, idx) => (idx === i ? { ...it, amount: v } : it)));
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
