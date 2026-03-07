@@ -1,6 +1,65 @@
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { DollarSign, TrendingUp, TrendingDown, Wallet, Users } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Wallet, Users, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+type OtherItem = { name: string; amount: string };
+
+const DynamicItems = ({
+  items,
+  onAdd,
+  onRemove,
+  onChangeName,
+  onChangeAmount,
+  label,
+}: {
+  items: OtherItem[];
+  onAdd: () => void;
+  onRemove: (i: number) => void;
+  onChangeName: (i: number, v: string) => void;
+  onChangeAmount: (i: number, v: string) => void;
+  label: string;
+}) => (
+  <div className="py-2">
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onAdd}
+        className="h-7 gap-1 text-xs text-primary hover:text-primary"
+      >
+        <Plus className="h-3 w-3" /> Add
+      </Button>
+    </div>
+    {items.map((item, i) => (
+      <div key={i} className="flex items-center gap-2 mb-2 ml-2">
+        <Input
+          placeholder="Name"
+          value={item.name}
+          onChange={(e) => onChangeName(i, e.target.value)}
+          className="flex-1 text-sm h-8"
+        />
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground">$</span>
+          <Input
+            type="number"
+            placeholder="0"
+            value={item.amount}
+            onChange={(e) => onChangeAmount(i, e.target.value)}
+            className="w-24 text-right text-sm h-8"
+          />
+        </div>
+        <button
+          onClick={() => onRemove(i)}
+          className="text-muted-foreground hover:text-destructive transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    ))}
+  </div>
+);
 
 const numFmt = (v: number) => {
   if (!isFinite(v) || isNaN(v)) return "—";
@@ -111,7 +170,7 @@ const FinancialCalculator = () => {
   const [productSales, setProductSales] = useState("");
   const [subscription, setSubscription] = useState("");
   const [serviceFees, setServiceFees] = useState("");
-  const [otherIncome, setOtherIncome] = useState("");
+  const [otherIncomeItems, setOtherIncomeItems] = useState<OtherItem[]>([]);
 
   // Expenses
   const [salaries, setSalaries] = useState("");
@@ -119,7 +178,7 @@ const FinancialCalculator = () => {
   const [salesMarketing, setSalesMarketing] = useState("");
   const [tech, setTech] = useState("");
   const [loanPayments, setLoanPayments] = useState("");
-  const [otherExpense, setOtherExpense] = useState("");
+  const [otherExpenseItems, setOtherExpenseItems] = useState<OtherItem[]>([]);
   const [taxes, setTaxes] = useState("");
   const [depreciation, setDepreciation] = useState("");
   const [legalAccounting, setLegalAccounting] = useState("");
@@ -136,12 +195,16 @@ const FinancialCalculator = () => {
   const [totalProductionCosts, setTotalProductionCosts] = useState("");
 
   const n = (v: string) => parseFloat(v) || 0;
+  const sumItems = (items: OtherItem[]) => items.reduce((s, it) => s + n(it.amount), 0);
+
+  const otherIncomeTotal = sumItems(otherIncomeItems);
+  const otherExpenseTotal = sumItems(otherExpenseItems);
 
   const calcs = useMemo(() => {
-    const totalRevenue = n(productSales) + n(subscription) + n(serviceFees) + n(otherIncome);
+    const totalRevenue = n(productSales) + n(subscription) + n(serviceFees) + otherIncomeTotal;
     const totalExpenses =
       n(salaries) + n(rent) + n(salesMarketing) + n(tech) + n(loanPayments) +
-      n(otherExpense) + n(taxes) + n(depreciation) + n(legalAccounting);
+      otherExpenseTotal + n(taxes) + n(depreciation) + n(legalAccounting);
 
     const cashInflow = totalRevenue;
     const cashOutflow = totalExpenses;
@@ -167,10 +230,19 @@ const FinancialCalculator = () => {
       grossProfit, grossMargin, cltv,
     };
   }, [
-    productSales, subscription, serviceFees, otherIncome,
-    salaries, rent, salesMarketing, tech, loanPayments, otherExpense, taxes, depreciation, legalAccounting,
+    productSales, subscription, serviceFees, otherIncomeTotal,
+    salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting,
     startingCash, newCustomers, totalCustomersStart, lostCustomers,
   ]);
+
+  const addItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>) =>
+    setter((prev) => [...prev, { name: "", amount: "" }]);
+  const removeItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number) =>
+    setter((prev) => prev.filter((_, idx) => idx !== i));
+  const updateItemName = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number, v: string) =>
+    setter((prev) => prev.map((it, idx) => (idx === i ? { ...it, name: v } : it)));
+  const updateItemAmount = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number, v: string) =>
+    setter((prev) => prev.map((it, idx) => (idx === i ? { ...it, amount: v } : it)));
 
   return (
     <div className="grid gap-6 lg:grid-cols-2">
@@ -180,7 +252,14 @@ const FinancialCalculator = () => {
           <Field label="Product Sales" value={productSales} onChange={setProductSales} />
           <Field label="Subscription / MRR" value={subscription} onChange={setSubscription} />
           <Field label="Service Fees" value={serviceFees} onChange={setServiceFees} />
-          <Field label="Other Income" value={otherIncome} onChange={setOtherIncome} />
+          <DynamicItems
+            label="Other Income"
+            items={otherIncomeItems}
+            onAdd={() => addItem(setOtherIncomeItems)}
+            onRemove={(i) => removeItem(setOtherIncomeItems, i)}
+            onChangeName={(i, v) => updateItemName(setOtherIncomeItems, i, v)}
+            onChangeAmount={(i, v) => updateItemAmount(setOtherIncomeItems, i, v)}
+          />
         </div>
         <ResultRow label="Total Revenue" value={calcs.totalRevenue} bold highlight />
       </SectionCard>
@@ -193,7 +272,14 @@ const FinancialCalculator = () => {
           <Field label="Sales / Marketing" value={salesMarketing} onChange={setSalesMarketing} />
           <Field label="Tech (Server etc.)" value={tech} onChange={setTech} />
           <Field label="Loan Payments" value={loanPayments} onChange={setLoanPayments} />
-          <Field label="Other" value={otherExpense} onChange={setOtherExpense} />
+          <DynamicItems
+            label="Other Expenses"
+            items={otherExpenseItems}
+            onAdd={() => addItem(setOtherExpenseItems)}
+            onRemove={(i) => removeItem(setOtherExpenseItems, i)}
+            onChangeName={(i, v) => updateItemName(setOtherExpenseItems, i, v)}
+            onChangeAmount={(i, v) => updateItemAmount(setOtherExpenseItems, i, v)}
+          />
           <Field label="Taxes" value={taxes} onChange={setTaxes} />
           <Field label="Depreciation / Amortization" value={depreciation} onChange={setDepreciation} />
           <Field label="Legal / Accounting" value={legalAccounting} onChange={setLegalAccounting} />
