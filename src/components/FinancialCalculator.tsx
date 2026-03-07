@@ -138,14 +138,15 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
     const runway = monthlyBurnRate !== 0 ? endingCash / Math.abs(monthlyBurnRate) : NaN;
     const activeUsers = n(totalCustomersStart) + n(newCustomers) - n(lostCustomers);
     const churnRate = n(totalCustomersStart) > 0 ? n(lostCustomers) / n(totalCustomersStart) : NaN;
-    const totalCustomers = activeUsers;
+    const totalCustomers = n(totalCustomersStart);
     const arpu = totalCustomers > 0 ? totalRevenue / totalCustomers : NaN;
+    const avgRevenuePerCustomerPerMonth = activeUsers > 0 ? totalRevenue / activeUsers : NaN;
     const customerLifetime = churnRate > 0 ? 1 / churnRate : NaN;
     const cac = n(newCustomers) > 0 ? n(salesMarketing) / n(newCustomers) : NaN;
     const grossProfit = n(totalProductRevenue) - n(totalProductionCosts);
     const grossMargin = n(totalProductRevenue) > 0 ? grossProfit / n(totalProductRevenue) : NaN;
-    const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(arpu) ? customerLifetime * grossMargin * arpu : NaN;
-    return { totalRevenue, totalExpenses, cashInflow, cashOutflow, endingCash, monthlyBurnRate, runway, activeUsers, churnRate, arpu, customerLifetime, cac, grossProfit, grossMargin, cltv };
+    const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(avgRevenuePerCustomerPerMonth) ? customerLifetime * grossMargin * avgRevenuePerCustomerPerMonth : NaN;
+    return { totalRevenue, totalExpenses, cashInflow, cashOutflow, endingCash, monthlyBurnRate, runway, activeUsers, churnRate, arpu, avgRevenuePerCustomerPerMonth, customerLifetime, cac, grossProfit, grossMargin, cltv };
   }, [productSales, subscription, serviceFees, otherIncomeTotal, salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting, startingCash, newCustomers, totalCustomersStart, lostCustomers, totalProductRevenue, totalProductionCosts]);
 
   const addItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>) => setter((prev) => [...prev, { name: "", amount: "" }]);
@@ -176,7 +177,8 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
       },
       customerMetrics: {
         newCustomers: n(newCustomers), totalCustomersStart: n(totalCustomersStart), lostCustomers: n(lostCustomers),
-        activeUsers: calcs.activeUsers, arpu: calcs.arpu, churnRate: calcs.churnRate, customerLifetime: calcs.customerLifetime,
+        activeUsers: calcs.activeUsers, arpu: calcs.arpu, avgRevenuePerCustomerPerMonth: calcs.avgRevenuePerCustomerPerMonth,
+        churnRate: calcs.churnRate, customerLifetime: calcs.customerLifetime,
         cac: calcs.cac, grossProfit: calcs.grossProfit, grossMargin: calcs.grossMargin, cltv: calcs.cltv,
       },
     };
@@ -266,6 +268,7 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
           <div className="mt-3 space-y-0 divide-y divide-border/50">
             <ResultRow label="Active Users" value={calcs.activeUsers} prefix="" />
             <ResultRow label="ARPU" value={calcs.arpu} />
+            <ResultRow label="Avg Revenue Per Customer Per Month" value={calcs.avgRevenuePerCustomerPerMonth} />
             <ResultRow label="Churn Rate" value={calcs.churnRate * 100} prefix="" suffix="%" />
             <ResultRow label="Customer Lifetime" value={calcs.customerLifetime} prefix="" suffix=" months" />
             <ResultRow label="CAC" value={calcs.cac} />
