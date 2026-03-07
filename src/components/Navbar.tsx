@@ -9,7 +9,7 @@ const Navbar = () => {
 
   const links = [
     { to: "/evaluation", label: "Startup Evaluation" },
-    { to: "/preparation", label: "Preparation Phase" },
+    { to: "/preparation", label: "Financial Management" },
     { to: "/example", label: "Example" },
   ];
 
