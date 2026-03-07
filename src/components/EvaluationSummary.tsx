@@ -100,8 +100,10 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
 
   const chartData = [
     { method: "Berkus", value: berkus },
+    { method: "Berkus", value: berkus },
     { method: "Scorecard", value: scorecard },
     { method: "Risk Factor", value: riskFactor },
+    { method: "Average", value: average },
     { method: "Ortalama", value: average },
   ];
 
@@ -131,7 +133,7 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Chart */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Müqayisə</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Comparison</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
@@ -149,9 +151,9 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
 
         {/* Summary + Average */}
         <div className="space-y-6">
-          <ValuationGauge value={average} max={5000000} label="Ümumi Təxmini Dəyər (Ortalama)" />
+          <ValuationGauge value={average} max={5000000} label="Overall Estimated Value (Average)" />
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-            <h3 className="text-lg font-semibold text-foreground mb-3">Hesablama</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-3">Calculation</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Berkus</span>
@@ -166,8 +168,7 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
                 <span className="font-medium text-foreground">${riskFactor.toLocaleString()}</span>
               </div>
               <div className="border-t border-border pt-2 mt-2 flex justify-between font-bold">
-                <span className="text-foreground">Ortalama</span>
-                <span className="text-gradient">${average.toLocaleString()}</span>
+                <span className="text-foreground">Average</span>
               </div>
             </div>
           </div>
@@ -176,7 +177,7 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
 
       {/* Advice Section */}
       <div>
-        <h3 className="text-xl font-bold text-foreground mb-4">💡 Məsləhət və Tövsiyələr</h3>
+        <h3 className="text-xl font-bold text-foreground mb-4">💡 Advice & Recommendations</h3>
         <div className="grid gap-4 md:grid-cols-2">
           {advice.map((tip, i) => (
             <div key={i} className={`rounded-xl border p-5 ${typeStyles[tip.type]}`}>
