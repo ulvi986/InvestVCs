@@ -161,8 +161,7 @@ const ScorecardMethod = ({ onValuationChange }: ScorecardMethodProps) => {
                       htmlFor={`${factor.name}-${opt.value}`}
                       className="text-sm cursor-pointer flex-1"
                     >
-                      <span className={`font-medium mr-2 ${opt.color}`}>{opt.label}</span>
-                      <span className="text-muted-foreground">— {opt.value}%</span>
+                      <span className={`font-medium ${opt.color}`}>{opt.label}</span>
                     </Label>
                   </div>
                 ))}

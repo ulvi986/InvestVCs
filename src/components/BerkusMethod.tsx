@@ -108,14 +108,9 @@ const BerkusMethod = ({ onValuationChange }: BerkusMethodProps) => {
         <div className="space-y-6">
           {components.map((comp, i) => (
             <div key={comp.name} className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <div className="flex items-center justify-between mb-1">
                 <h3 className="text-base font-semibold text-foreground">
                   {i + 1}. {comp.name}
                 </h3>
-                <span className="text-sm font-semibold text-primary">
-                  ${values[i].toLocaleString("en-US")}
-                </span>
-              </div>
               <p className="text-xs text-muted-foreground mb-3">{comp.subtitle}</p>
               <p className="text-sm text-foreground/80 mb-4">{comp.question}</p>
               <RadioGroup
@@ -138,10 +133,7 @@ const BerkusMethod = ({ onValuationChange }: BerkusMethodProps) => {
                       htmlFor={`${comp.name}-${opt.score}`}
                       className="text-sm cursor-pointer flex-1 leading-relaxed"
                     >
-                      <span className="font-medium text-primary mr-2">
-                        ${scoreToValue[opt.score].toLocaleString("en-US")}
-                      </span>
-                      <span className="text-muted-foreground">— {opt.label}</span>
+                      <span className="text-muted-foreground">{opt.label}</span>
                     </Label>
                   </div>
                 ))}

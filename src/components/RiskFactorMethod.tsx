@@ -224,10 +224,7 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
                           htmlFor={`${risk.name}-${opt.score}`}
                           className="text-sm cursor-pointer flex-1"
                         >
-                          <span className={`font-medium ${optColor}`}>
-                            {opt.score >= 0 ? "+" : ""}{opt.score}
-                          </span>
-                          <span className="text-muted-foreground ml-1.5">— {opt.label}</span>
+                          <span className="text-muted-foreground">{opt.label}</span>
                         </Label>
                       </div>
                     );
