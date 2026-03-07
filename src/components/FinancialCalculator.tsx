@@ -134,8 +134,8 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
     const cashInflow = totalRevenue;
     const cashOutflow = totalExpenses;
     const endingCash = n(startingCash) + cashInflow - cashOutflow;
-    const monthlyBurnRate = totalExpenses;
-    const runway = monthlyBurnRate > 0 ? n(startingCash) / monthlyBurnRate : NaN;
+    const monthlyBurnRate = totalExpenses - totalRevenue;
+    const runway = monthlyBurnRate > 0 ? endingCash / monthlyBurnRate : NaN;
     const activeUsers = n(totalCustomersStart) + n(newCustomers) - n(lostCustomers);
     const churnRate = n(totalCustomersStart) > 0 ? n(lostCustomers) / n(totalCustomersStart) : NaN;
     const arpu = activeUsers > 0 ? totalRevenue / activeUsers : NaN;
