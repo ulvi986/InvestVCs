@@ -11,6 +11,7 @@ const Navbar = () => {
     { to: "/evaluation", label: "Startup Evaluation" },
     { to: "/preparation", label: "Financial Management" },
     { to: "/readiness", label: "Readiness Level" },
+    { to: "/summary", label: "📊 Overall Summary" },
   ];
 
   return (
