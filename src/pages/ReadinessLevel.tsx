@@ -1,9 +1,10 @@
 import Layout from "@/components/Layout";
-import { useState, useMemo } from "react";
+import { useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Cpu, ShoppingCart, Landmark, ChevronRight, Lock, Info } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useStartupContext } from "@/context/StartupContext";
 
 type CriterionType = "M" | "S";
 
@@ -207,15 +208,15 @@ function getMaxUnlockedLevel(levels: Level[], answers: Answers, prefix: string, 
 }
 
 const ReadinessAssessment = ({
-  levels, prefix, icon: Icon, color,
+  levels, prefix, icon: Icon, color, answers, setAnswers,
 }: {
   levels: Level[];
   prefix: string;
   icon: React.ElementType;
   color: string;
+  answers: Answers;
+  setAnswers: React.Dispatch<React.SetStateAction<Answers>>;
 }) => {
-  const [answers, setAnswers] = useState<Answers>({});
-
   const toggle = (key: string) => {
     setAnswers(prev => ({ ...prev, [key]: !prev[key] }));
   };
@@ -367,6 +368,9 @@ const ReadinessAssessment = ({
 };
 
 const ReadinessLevel = () => {
+  const { readiness } = useStartupContext();
+  const { trlAnswers, crlAnswers, frlAnswers, setTrlAnswers, setCrlAnswers, setFrlAnswers } = readiness;
+
   return (
     <Layout>
       <div className="container py-10">
@@ -391,28 +395,13 @@ const ReadinessLevel = () => {
           </TabsList>
 
           <TabsContent value="trl">
-            <ReadinessAssessment
-              levels={TRL_LEVELS}
-              prefix="TRL"
-              icon={Cpu}
-              color="gradient-primary"
-            />
+            <ReadinessAssessment levels={TRL_LEVELS} prefix="TRL" icon={Cpu} color="gradient-primary" answers={trlAnswers} setAnswers={setTrlAnswers} />
           </TabsContent>
           <TabsContent value="crl">
-            <ReadinessAssessment
-              levels={CRL_LEVELS}
-              prefix="CRL"
-              icon={ShoppingCart}
-              color="gradient-primary"
-            />
+            <ReadinessAssessment levels={CRL_LEVELS} prefix="CRL" icon={ShoppingCart} color="gradient-primary" answers={crlAnswers} setAnswers={setCrlAnswers} />
           </TabsContent>
           <TabsContent value="frl">
-            <ReadinessAssessment
-              levels={FRL_LEVELS}
-              prefix="FRL"
-              icon={Landmark}
-              color="gradient-primary"
-            />
+            <ReadinessAssessment levels={FRL_LEVELS} prefix="FRL" icon={Landmark} color="gradient-primary" answers={frlAnswers} setAnswers={setFrlAnswers} />
           </TabsContent>
         </Tabs>
       </div>
