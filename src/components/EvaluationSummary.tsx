@@ -21,43 +21,41 @@ const getAdvice = (average: number, berkus: number, scorecard: number, riskFacto
   if (average === 0) {
     tips.push({
       icon: AlertTriangle,
-      title: "Məlumat daxil edilməyib",
-      text: "Nəticə görmək üçün əvvəlcə hər üç metodu doldurun: Berkus, Scorecard və Risk Factor.",
+      title: "No data entered",
+      text: "To see results, please complete all three methods first: Berkus, Scorecard, and Risk Factor.",
       type: "warning",
     });
     return tips;
   }
 
-  // General valuation range advice
   if (average < 1_000_000) {
     tips.push({
       icon: AlertTriangle,
-      title: "Aşağı qiymətləndirmə",
-      text: "Startapınızın ümumi dəyəri nisbətən aşağıdır. Komanda gücünüzü, bazarınızı və məhsulunuzu inkişaf etdirməyə fokuslanın.",
+      title: "Low Valuation",
+      text: "Your startup's overall value is relatively low. Focus on strengthening your team, market, and product.",
       type: "warning",
     });
   } else if (average < 2_500_000) {
     tips.push({
       icon: Lightbulb,
-      title: "Orta səviyyədə qiymətləndirmə",
-      text: "Startapınız yaxşı başlanğıc nöqtəsindədir. Strateji tərəfdaşlıqlar və satış kanallarını gücləndirsəniz dəyər artacaq.",
+      title: "Moderate Valuation",
+      text: "Your startup is at a good starting point. Strengthening strategic partnerships and sales channels will increase its value.",
       type: "info",
     });
   } else {
     tips.push({
       icon: CheckCircle,
-      title: "Güclü qiymətləndirmə",
-      text: "Startapınız yüksək potensiala malikdir. İnvestorlarla danışıqlara hazır ola bilərsiniz.",
+      title: "Strong Valuation",
+      text: "Your startup has high potential. You may be ready for investor discussions.",
       type: "success",
     });
   }
 
-  // Method-specific advice
   if (berkus < scorecard * 0.5 && berkus > 0) {
     tips.push({
       icon: AlertTriangle,
-      title: "Berkus dəyəri aşağıdır",
-      text: "Erkən mərhələ komponentlərini (prototip, komanda, strateji tərəfdaşlıqlar) gücləndirməyiniz tövsiyə olunur.",
+      title: "Berkus value is low",
+      text: "It is recommended to strengthen early-stage components (prototype, team, strategic partnerships).",
       type: "warning",
     });
   }
@@ -65,8 +63,8 @@ const getAdvice = (average: number, berkus: number, scorecard: number, riskFacto
   if (riskFactor < average * 0.7 && riskFactor > 0) {
     tips.push({
       icon: AlertTriangle,
-      title: "Risk faktorları narahatedicidir",
-      text: "Bir neçə risk kateqoriyasında yüksək risk göstəricisiniz var. Bu riskləri azaltmaq üçün plan hazırlayın.",
+      title: "Risk factors are concerning",
+      text: "You have high risk indicators in several categories. Prepare a plan to mitigate these risks.",
       type: "warning",
     });
   }
@@ -74,19 +72,18 @@ const getAdvice = (average: number, berkus: number, scorecard: number, riskFacto
   if (scorecard > berkus && scorecard > riskFactor && scorecard > 0) {
     tips.push({
       icon: TrendingUp,
-      title: "Scorecard üstünlüyü",
-      text: "Regional müqayisədə güclü görünürsünüz. Bu üstünlüyünüzü investorlara təqdim edərkən vurğulayın.",
+      title: "Scorecard advantage",
+      text: "You appear strong in regional comparison. Highlight this advantage when presenting to investors.",
       type: "success",
     });
   }
 
-  // Always give an action tip
   tips.push({
     icon: Lightbulb,
-    title: "Növbəti addım",
+    title: "Next Step",
     text: average > 2_000_000
-      ? "Pitch deck hazırlayın və investor görüşlərinə başlayın. Bu qiymətləndirməni əsas götürərək müzakirə aparın."
-      : "Hazırlıq mərhələsinə keçin, komandanızı gücləndirin və bazarınızı daha yaxşı tanıyın.",
+      ? "Prepare a pitch deck and start investor meetings. Use this valuation as a basis for negotiations."
+      : "Move to the preparation phase, strengthen your team, and get to know your market better.",
     type: "info",
   });
 
