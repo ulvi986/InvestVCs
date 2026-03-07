@@ -2,7 +2,7 @@ import Layout from "@/components/Layout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FinancialCalculator from "@/components/FinancialCalculator";
 import FinancialDashboard from "@/components/FinancialDashboard";
-import { useState } from "react";
+import { useStartupContext } from "@/context/StartupContext";
 
 export type FinancialSnapshot = {
   id: string;
@@ -51,15 +51,8 @@ export type FinancialSnapshot = {
 };
 
 const PreparationPhase = () => {
-  const [snapshots, setSnapshots] = useState<FinancialSnapshot[]>([]);
-
-  const addSnapshot = (snapshot: FinancialSnapshot) => {
-    setSnapshots((prev) => [...prev, snapshot].sort((a, b) => a.date.getTime() - b.date.getTime()));
-  };
-
-  const removeSnapshot = (id: string) => {
-    setSnapshots((prev) => prev.filter((s) => s.id !== id));
-  };
+  const { financial } = useStartupContext();
+  const { snapshots, addSnapshot, removeSnapshot } = financial;
 
   return (
     <Layout>

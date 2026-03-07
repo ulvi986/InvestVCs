@@ -4,12 +4,11 @@ import BerkusMethod from "@/components/BerkusMethod";
 import ScorecardMethod from "@/components/ScorecardMethod";
 import RiskFactorMethod from "@/components/RiskFactorMethod";
 import EvaluationSummary from "@/components/EvaluationSummary";
-import { useState } from "react";
+import { useStartupContext } from "@/context/StartupContext";
 
 const StartupEvaluation = () => {
-  const [berkusVal, setBerkusVal] = useState(0);
-  const [scorecardVal, setScorecardVal] = useState(0);
-  const [riskVal, setRiskVal] = useState(0);
+  const { evaluation } = useStartupContext();
+  const { berkus, scorecard, riskFactor, setBerkus, setScorecard, setRiskFactor } = evaluation;
 
   return (
     <Layout>
@@ -36,16 +35,16 @@ const StartupEvaluation = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="berkus">
-            <BerkusMethod onValuationChange={setBerkusVal} />
+            <BerkusMethod onValuationChange={setBerkus} />
           </TabsContent>
           <TabsContent value="scorecard">
-            <ScorecardMethod onValuationChange={setScorecardVal} />
+            <ScorecardMethod onValuationChange={setScorecard} />
           </TabsContent>
           <TabsContent value="risk">
-            <RiskFactorMethod onValuationChange={setRiskVal} />
+            <RiskFactorMethod onValuationChange={setRiskFactor} />
           </TabsContent>
           <TabsContent value="summary">
-            <EvaluationSummary berkus={berkusVal} scorecard={scorecardVal} riskFactor={riskVal} />
+            <EvaluationSummary berkus={berkus} scorecard={scorecard} riskFactor={riskFactor} />
           </TabsContent>
         </Tabs>
       </div>
