@@ -1,6 +1,65 @@
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
-import { DollarSign, TrendingUp, TrendingDown, Wallet, Users } from "lucide-react";
+import { DollarSign, TrendingUp, TrendingDown, Wallet, Users, Plus, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+type OtherItem = { name: string; amount: string };
+
+const DynamicItems = ({
+  items,
+  onAdd,
+  onRemove,
+  onChangeName,
+  onChangeAmount,
+  label,
+}: {
+  items: OtherItem[];
+  onAdd: () => void;
+  onRemove: (i: number) => void;
+  onChangeName: (i: number, v: string) => void;
+  onChangeAmount: (i: number, v: string) => void;
+  label: string;
+}) => (
+  <div className="py-2">
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-sm text-muted-foreground">{label}</span>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={onAdd}
+        className="h-7 gap-1 text-xs text-primary hover:text-primary"
+      >
+        <Plus className="h-3 w-3" /> Add
+      </Button>
+    </div>
+    {items.map((item, i) => (
+      <div key={i} className="flex items-center gap-2 mb-2 ml-2">
+        <Input
+          placeholder="Name"
+          value={item.name}
+          onChange={(e) => onChangeName(i, e.target.value)}
+          className="flex-1 text-sm h-8"
+        />
+        <div className="flex items-center gap-1">
+          <span className="text-xs text-muted-foreground">$</span>
+          <Input
+            type="number"
+            placeholder="0"
+            value={item.amount}
+            onChange={(e) => onChangeAmount(i, e.target.value)}
+            className="w-24 text-right text-sm h-8"
+          />
+        </div>
+        <button
+          onClick={() => onRemove(i)}
+          className="text-muted-foreground hover:text-destructive transition-colors"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    ))}
+  </div>
+);
 
 const numFmt = (v: number) => {
   if (!isFinite(v) || isNaN(v)) return "—";
