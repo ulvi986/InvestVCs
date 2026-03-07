@@ -171,6 +171,14 @@ function isLevelCompleted(level: Level, answers: Answers, prefix: string): boole
   return allMandatory && supportiveOk;
 }
 
+function hasAnyMandatory(level: Level, answers: Answers, prefix: string): boolean {
+  const mandatory = level.criteria.filter(c => c.type === "M");
+  return mandatory.some((_, i) => {
+    const key = `${prefix}-${level.level}-M-${i}`;
+    return answers[key] === true;
+  });
+}
+
 function getFinalLevel(levels: Level[], answers: Answers, prefix: string): number {
   let finalLevel = 0;
   for (const level of levels) {
@@ -181,6 +189,21 @@ function getFinalLevel(levels: Level[], answers: Answers, prefix: string): numbe
     }
   }
   return finalLevel;
+}
+
+function getMaxUnlockedLevel(levels: Level[], answers: Answers, prefix: string, finalLevel: number): number {
+  let maxUnlocked = finalLevel;
+  for (let i = finalLevel; i < levels.length; i++) {
+    if (i === finalLevel || hasAnyMandatory(levels[i], answers, prefix)) {
+      maxUnlocked = i;
+      if (hasAnyMandatory(levels[i], answers, prefix) && i + 1 < levels.length) {
+        maxUnlocked = i + 1;
+      }
+    } else {
+      break;
+    }
+  }
+  return maxUnlocked;
 }
 
 const ReadinessAssessment = ({
@@ -198,6 +221,7 @@ const ReadinessAssessment = ({
   };
 
   const finalLevel = useMemo(() => getFinalLevel(levels, answers, prefix), [levels, answers, prefix]);
+  const maxUnlocked = useMemo(() => getMaxUnlockedLevel(levels, answers, prefix, finalLevel), [levels, answers, prefix, finalLevel]);
   const maxLevel = levels.length;
   const progressPercent = (finalLevel / maxLevel) * 100;
 
@@ -239,7 +263,7 @@ const ReadinessAssessment = ({
         {levels.map((level, levelIdx) => {
           const isCompleted = levelIdx < finalLevel;
           const isCurrent = levelIdx === finalLevel;
-          const isLocked = levelIdx > finalLevel;
+          const isLocked = levelIdx > maxUnlocked;
 
           const mandatoryIdxs: number[] = [];
           const supportiveIdxs: number[] = [];
