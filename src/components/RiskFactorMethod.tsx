@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+
 import ValuationGauge from "./ValuationGauge";
 
 const ADJUSTMENT_PER_POINT = 250000;
