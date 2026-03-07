@@ -221,6 +221,7 @@ const ReadinessAssessment = ({
   };
 
   const finalLevel = useMemo(() => getFinalLevel(levels, answers, prefix), [levels, answers, prefix]);
+  const maxUnlocked = useMemo(() => getMaxUnlockedLevel(levels, answers, prefix, finalLevel), [levels, answers, prefix, finalLevel]);
   const maxLevel = levels.length;
   const progressPercent = (finalLevel / maxLevel) * 100;
 
@@ -262,7 +263,7 @@ const ReadinessAssessment = ({
         {levels.map((level, levelIdx) => {
           const isCompleted = levelIdx < finalLevel;
           const isCurrent = levelIdx === finalLevel;
-          const isLocked = levelIdx > finalLevel;
+          const isLocked = levelIdx > maxUnlocked;
 
           const mandatoryIdxs: number[] = [];
           const supportiveIdxs: number[] = [];
