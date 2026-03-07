@@ -145,7 +145,7 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
     const cac = n(newCustomers) > 0 ? n(salesMarketing) / n(newCustomers) : NaN;
     const grossProfit = n(totalProductRevenue) - n(totalProductionCosts);
     const grossMargin = n(totalProductRevenue) > 0 ? grossProfit / n(totalProductRevenue) : NaN;
-    const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(avgRevenuePerCustomerPerMonth) ? customerLifetime * grossMargin * avgRevenuePerCustomerPerMonth : NaN;
+    const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(arpu) ? arpu * grossMargin * customerLifetime : NaN;
     return { totalRevenue, totalExpenses, cashInflow, cashOutflow, endingCash, monthlyBurnRate, runway, activeUsers, churnRate, arpu, avgRevenuePerCustomerPerMonth, customerLifetime, cac, grossProfit, grossMargin, cltv };
   }, [productSales, subscription, serviceFees, otherIncomeTotal, salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting, startingCash, newCustomers, totalCustomersStart, lostCustomers, totalProductRevenue, totalProductionCosts]);
 
