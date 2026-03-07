@@ -142,11 +142,11 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
     const arpu = totalCustomers > 0 ? totalRevenue / totalCustomers : NaN;
     const customerLifetime = churnRate > 0 ? 1 / churnRate : NaN;
     const cac = n(newCustomers) > 0 ? n(salesMarketing) / n(newCustomers) : NaN;
-    const grossProfit = totalRevenue - totalExpenses;
-    const grossMargin = totalRevenue > 0 ? grossProfit / totalRevenue : NaN;
+    const grossProfit = n(totalProductRevenue) - n(totalProductionCosts);
+    const grossMargin = n(totalProductRevenue) > 0 ? grossProfit / n(totalProductRevenue) : NaN;
     const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(arpu) ? customerLifetime * grossMargin * arpu : NaN;
     return { totalRevenue, totalExpenses, cashInflow, cashOutflow, endingCash, monthlyBurnRate, runway, activeUsers, churnRate, arpu, customerLifetime, cac, grossProfit, grossMargin, cltv };
-  }, [productSales, subscription, serviceFees, otherIncomeTotal, salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting, startingCash, newCustomers, totalCustomersStart, lostCustomers]);
+  }, [productSales, subscription, serviceFees, otherIncomeTotal, salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting, startingCash, newCustomers, totalCustomersStart, lostCustomers, totalProductRevenue, totalProductionCosts]);
 
   const addItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>) => setter((prev) => [...prev, { name: "", amount: "" }]);
   const removeItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number) => setter((prev) => prev.filter((_, idx) => idx !== i));
