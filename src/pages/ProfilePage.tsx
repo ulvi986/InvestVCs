@@ -233,7 +233,7 @@ const ProfilePage = () => {
               />
               <StatCard
                 icon={<TrendingDown className="h-5 w-5" />}
-                label="Ümumi Xərclər"
+                label="Total Expenses"
                 value={`$${latestSnapshot.expenses.total.toLocaleString()}`}
                 color="text-red-500"
                 bg="bg-red-500/10"
