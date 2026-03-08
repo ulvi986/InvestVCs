@@ -69,9 +69,9 @@ const ProfilePage = () => {
 
     setSaving(false);
     if (error) {
-      toast.error("Profil yenilənə bilmədi");
+      toast.error("Failed to update profile");
     } else {
-      toast.success("Profil uğurla yeniləndi");
+      toast.success("Profile updated successfully");
     }
   };
 
@@ -98,8 +98,8 @@ const ProfilePage = () => {
     <Layout>
       <div className="container py-10 space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Profil</h1>
-          <p className="mt-2 text-muted-foreground">Şəxsi və startup məlumatlarınız</p>
+          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+          <p className="mt-2 text-muted-foreground">Your personal and startup information</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -108,12 +108,12 @@ const ProfilePage = () => {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <User className="h-5 w-5 text-primary" />
-                Şəxsi Məlumatlar
+                Personal Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ad</Label>
+                <Label htmlFor="name">First Name</Label>
                 <Input
                   id="name"
                   value={profile?.name || ""}
@@ -121,7 +121,7 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="surname">Soyad</Label>
+                <Label htmlFor="surname">Last Name</Label>
                 <Input
                   id="surname"
                   value={profile?.surname || ""}
@@ -129,17 +129,17 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>E-poçt</Label>
+                <Label>Email</Label>
                 <div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4" />
                   {user?.email}
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Qeydiyyat tarixi</Label>
+                <Label>Registration Date</Label>
                 <div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
                   <CalendarDays className="h-4 w-4" />
-                  {user?.created_at ? new Date(user.created_at).toLocaleDateString("az-AZ") : "—"}
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US") : "—"}
                 </div>
               </div>
             </CardContent>
@@ -150,12 +150,12 @@ const ProfilePage = () => {
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
                 <Building2 className="h-5 w-5 text-accent" />
-                Startup Məlumatları
+                Startup Information
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="startup_name">Startup adı</Label>
+                <Label htmlFor="startup_name">Startup Name</Label>
                 <Input
                   id="startup_name"
                   value={profile?.startup_name || ""}
@@ -163,7 +163,7 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="startup_description">Startup haqqında</Label>
+                <Label htmlFor="startup_description">About Startup</Label>
                 <Textarea
                   id="startup_description"
                   value={profile?.startup_description || ""}
@@ -173,7 +173,7 @@ const ProfilePage = () => {
               </div>
               <Button onClick={handleSave} disabled={saving} className="gradient-primary text-primary-foreground border-0">
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Yadda saxla
+                Save
               </Button>
             </CardContent>
           </Card>
@@ -183,7 +183,7 @@ const ProfilePage = () => {
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Maliyyə İcmalı
+            Financial Overview
           </h2>
 
           {avgValuation > 0 && (
@@ -193,7 +193,7 @@ const ProfilePage = () => {
                   <Activity className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Ortalama Qiymətləndirmə</p>
+                  <p className="text-sm text-muted-foreground">Average Valuation</p>
                   <p className="text-2xl font-bold text-foreground">
                     ${avgValuation.toLocaleString()}
                   </p>
@@ -226,14 +226,14 @@ const ProfilePage = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 icon={<TrendingUp className="h-5 w-5" />}
-                label="Ümumi Gəlir"
+                label="Total Revenue"
                 value={`$${latestSnapshot.revenue.total.toLocaleString()}`}
                 color="text-green-600"
                 bg="bg-green-500/10"
               />
               <StatCard
                 icon={<TrendingDown className="h-5 w-5" />}
-                label="Ümumi Xərclər"
+                label="Total Expenses"
                 value={`$${latestSnapshot.expenses.total.toLocaleString()}`}
                 color="text-red-500"
                 bg="bg-red-500/10"
@@ -241,13 +241,13 @@ const ProfilePage = () => {
               <StatCard
                 icon={<DollarSign className="h-5 w-5" />}
                 label="Burn Rate"
-                value={`$${Math.abs(latestSnapshot.cashFlow.monthlyBurnRate).toLocaleString()}/ay`}
+                value={`$${Math.abs(latestSnapshot.cashFlow.monthlyBurnRate).toLocaleString()}/mo`}
                 color="text-orange-500"
                 bg="bg-orange-500/10"
               />
               <StatCard
                 icon={<Users className="h-5 w-5" />}
-                label="Aktiv İstifadəçilər"
+                label="Active Users"
                 value={latestSnapshot.customerMetrics.activeUsers.toLocaleString()}
                 color="text-primary"
                 bg="bg-primary/10"
@@ -276,7 +276,7 @@ const ProfilePage = () => {
               <StatCard
                 icon={<DollarSign className="h-5 w-5" />}
                 label="Runway"
-                value={`${latestSnapshot.cashFlow.runway.toFixed(1)} ay`}
+                value={`${latestSnapshot.cashFlow.runway.toFixed(1)} months`}
                 color="text-green-600"
                 bg="bg-green-500/10"
               />
@@ -285,8 +285,8 @@ const ProfilePage = () => {
             <Card className="border-border shadow-card">
               <CardContent className="py-12 text-center text-muted-foreground">
                 <BarChart3 className="mx-auto mb-3 h-10 w-10 opacity-40" />
-                <p>Hələ maliyyə məlumatı daxil edilməyib.</p>
-                <p className="text-sm mt-1">Financial Management bölməsindən data əlavə edin.</p>
+                <p>No financial data has been entered yet.</p>
+                <p className="text-sm mt-1">Add data from the Financial Management section.</p>
               </CardContent>
             </Card>
           )}
