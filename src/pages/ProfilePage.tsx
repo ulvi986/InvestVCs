@@ -98,8 +98,8 @@ const ProfilePage = () => {
     <Layout>
       <div className="container py-10 space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Profil</h1>
-          <p className="mt-2 text-muted-foreground">Şəxsi və startup məlumatlarınız</p>
+          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
+          <p className="mt-2 text-muted-foreground">Your personal and startup information</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
