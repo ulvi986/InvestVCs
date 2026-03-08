@@ -54,7 +54,7 @@ const Navbar = () => {
               <UserCircle className="h-4 w-4" />
             </Button>
           </Link>
-          <Button variant="ghost" size="icon" onClick={signOut} title="Çıxış">
+          <Button variant="ghost" size="icon" onClick={signOut} title="Sign Out">
             <LogOut className="h-4 w-4" />
           </Button>
         </div>
