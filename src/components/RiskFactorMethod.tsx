@@ -2,8 +2,6 @@ import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 
-import ValuationGauge from "./ValuationGauge";
-
 const ADJUSTMENT_PER_POINT = 250000;
 
 const scoreOptions = [
@@ -182,98 +180,56 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
         </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
-          {risks.map((risk, i) => {
-            const adjustment = scores[i] !== null ? scores[i]! * ADJUSTMENT_PER_POINT : 0;
-            return (
-              <div key={risk.name} className="rounded-xl border border-border bg-card p-5 shadow-card">
-                <div className="flex items-center justify-between mb-1">
-                  <h3 className="text-base font-semibold text-foreground">
-                    {i + 1}. {risk.name}
-                  </h3>
-                  {scores[i] !== null && (
-                    <span className={`text-sm font-semibold ${adjustment > 0 ? "text-emerald-500" : adjustment < 0 ? "text-destructive" : "text-muted-foreground"}`}>
-                      {adjustment >= 0 ? "+" : ""}${adjustment.toLocaleString("en-US")}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-foreground/80 mb-4">{risk.question}</p>
-                <RadioGroup
-                  value={scores[i] !== null ? String(scores[i]) : undefined}
-                  onValueChange={(v) => updateScore(i, v)}
-                  className="space-y-2"
-                >
-                  {risk.options.map((opt) => {
-                    const optColor = scoreOptions.find((s) => s.value === opt.score)?.color || "";
-                    return (
-                      <div
-                        key={opt.score}
-                        className={`flex items-center gap-2 rounded-md border px-3 py-2 transition-colors cursor-pointer ${
-                          scores[i] === opt.score
-                            ? "border-primary bg-primary/5"
-                            : "border-border hover:border-primary/40"
-                        }`}
-                        onClick={() => updateScore(i, String(opt.score))}
-                      >
-                        <RadioGroupItem
-                          value={String(opt.score)}
-                          id={`${risk.name}-${opt.score}`}
-                        />
-                        <Label
-                          htmlFor={`${risk.name}-${opt.score}`}
-                          className="text-sm cursor-pointer flex-1"
-                        >
-                          <span className="text-muted-foreground">{opt.label}</span>
-                        </Label>
-                      </div>
-                    );
-                  })}
-                </RadioGroup>
-              </div>
-            );
-          })}
-        </div>
-
-        <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-          <ValuationGauge value={valuation} max={(base || 2000000) + 6000000} />
-
-          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h4 className="text-sm font-semibold text-foreground mb-3">Risk Breakdown</h4>
-            <div className="space-y-2">
-              {risks.map((risk, i) => {
-                const score = scores[i];
-                const adj = score !== null ? score * ADJUSTMENT_PER_POINT : null;
-                return (
-                  <div key={risk.name} className="flex justify-between text-sm">
-                    <span className="text-muted-foreground truncate mr-2">{risk.name}</span>
-                    <span className={`font-medium whitespace-nowrap ${
-                      adj !== null ? (adj > 0 ? "text-emerald-500" : adj < 0 ? "text-destructive" : "text-muted-foreground") : "text-muted-foreground"
-                    }`}>
-                      {adj !== null ? `${adj >= 0 ? "+" : ""}$${adj.toLocaleString("en-US")}` : "—"}
-                    </span>
-                  </div>
-                );
-              })}
-              <div className="border-t border-border pt-2 mt-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Base Valuation</span>
-                  <span className="font-medium text-foreground">${base.toLocaleString("en-US")}</span>
-                </div>
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-muted-foreground">Total Adjustment</span>
-                  <span className={`font-semibold ${totalAdjustment >= 0 ? "text-emerald-500" : "text-destructive"}`}>
-                    {totalAdjustment >= 0 ? "+" : ""}${totalAdjustment.toLocaleString("en-US")}
+      <div className="space-y-6">
+        {risks.map((risk, i) => {
+          const adjustment = scores[i] !== null ? scores[i]! * ADJUSTMENT_PER_POINT : 0;
+          return (
+            <div key={risk.name} className="rounded-xl border border-border bg-card p-5 shadow-card">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="text-base font-semibold text-foreground">
+                  {i + 1}. {risk.name}
+                </h3>
+                {scores[i] !== null && (
+                  <span className={`text-sm font-semibold ${adjustment > 0 ? "text-emerald-500" : adjustment < 0 ? "text-destructive" : "text-muted-foreground"}`}>
+                    {adjustment >= 0 ? "+" : ""}${adjustment.toLocaleString("en-US")}
                   </span>
-                </div>
-                <div className="flex justify-between text-sm font-bold mt-2 pt-2 border-t border-border">
-                  <span className="text-foreground">Final Valuation</span>
-                  <span className="text-gradient">${valuation.toLocaleString("en-US")}</span>
-                </div>
+                )}
               </div>
+              <p className="text-sm text-foreground/80 mb-4">{risk.question}</p>
+              <RadioGroup
+                value={scores[i] !== null ? String(scores[i]) : undefined}
+                onValueChange={(v) => updateScore(i, v)}
+                className="space-y-2"
+              >
+                {risk.options.map((opt) => {
+                  const optColor = scoreOptions.find((s) => s.value === opt.score)?.color || "";
+                  return (
+                    <div
+                      key={opt.score}
+                      className={`flex items-center gap-2 rounded-md border px-3 py-2 transition-colors cursor-pointer ${
+                        scores[i] === opt.score
+                          ? "border-primary bg-primary/5"
+                          : "border-border hover:border-primary/40"
+                      }`}
+                      onClick={() => updateScore(i, String(opt.score))}
+                    >
+                      <RadioGroupItem
+                        value={String(opt.score)}
+                        id={`${risk.name}-${opt.score}`}
+                      />
+                      <Label
+                        htmlFor={`${risk.name}-${opt.score}`}
+                        className="text-sm cursor-pointer flex-1"
+                      >
+                        <span className="text-muted-foreground">{opt.label}</span>
+                      </Label>
+                    </div>
+                  );
+                })}
+              </RadioGroup>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </div>
   );

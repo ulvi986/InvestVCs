@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import ValuationGauge from "./ValuationGauge";
 
 const scoreToValue: Record<number, number> = {
   0: 0,
@@ -104,64 +103,41 @@ const BerkusMethod = ({ onValuationChange }: BerkusMethodProps) => {
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
-        <div className="space-y-6">
-          {components.map((comp, i) => (
-            <div key={comp.name} className="rounded-xl border border-border bg-card p-5 shadow-card">
-                <h3 className="text-base font-semibold text-foreground">
-                  {i + 1}. {comp.name}
-                </h3>
-              <p className="text-xs text-muted-foreground mb-3">{comp.subtitle}</p>
-              <p className="text-sm text-foreground/80 mb-4">{comp.question}</p>
-              <RadioGroup
-                value={scores[i] !== null ? String(scores[i]) : undefined}
-                onValueChange={(v) => updateScore(i, v)}
-                className="space-y-2"
-              >
-                {comp.options.map((opt) => (
-                  <div
-                    key={opt.score}
-                    className={`flex items-start gap-3 rounded-lg border p-3 transition-colors cursor-pointer ${
-                      scores[i] === opt.score
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/40"
-                    }`}
-                    onClick={() => updateScore(i, String(opt.score))}
+      <div className="space-y-6">
+        {components.map((comp, i) => (
+          <div key={comp.name} className="rounded-xl border border-border bg-card p-5 shadow-card">
+              <h3 className="text-base font-semibold text-foreground">
+                {i + 1}. {comp.name}
+              </h3>
+            <p className="text-xs text-muted-foreground mb-3">{comp.subtitle}</p>
+            <p className="text-sm text-foreground/80 mb-4">{comp.question}</p>
+            <RadioGroup
+              value={scores[i] !== null ? String(scores[i]) : undefined}
+              onValueChange={(v) => updateScore(i, v)}
+              className="space-y-2"
+            >
+              {comp.options.map((opt) => (
+                <div
+                  key={opt.score}
+                  className={`flex items-start gap-3 rounded-lg border p-3 transition-colors cursor-pointer ${
+                    scores[i] === opt.score
+                      ? "border-primary bg-primary/5"
+                      : "border-border hover:border-primary/40"
+                  }`}
+                  onClick={() => updateScore(i, String(opt.score))}
+                >
+                  <RadioGroupItem value={String(opt.score)} id={`${comp.name}-${opt.score}`} className="mt-0.5" />
+                  <Label
+                    htmlFor={`${comp.name}-${opt.score}`}
+                    className="text-sm cursor-pointer flex-1 leading-relaxed"
                   >
-                    <RadioGroupItem value={String(opt.score)} id={`${comp.name}-${opt.score}`} className="mt-0.5" />
-                    <Label
-                      htmlFor={`${comp.name}-${opt.score}`}
-                      className="text-sm cursor-pointer flex-1 leading-relaxed"
-                    >
-                      <span className="text-muted-foreground">{opt.label}</span>
-                    </Label>
-                  </div>
-                ))}
-              </RadioGroup>
-            </div>
-          ))}
-        </div>
-
-        <div className="space-y-6 lg:sticky lg:top-24 lg:self-start">
-          <ValuationGauge value={total} max={2500000} />
-          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h4 className="text-sm font-semibold text-foreground mb-3">Breakdown</h4>
-            <div className="space-y-2">
-              {components.map((comp, i) => (
-                <div key={comp.name} className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">{comp.name}</span>
-                  <span className="font-medium text-foreground">
-                    ${values[i].toLocaleString("en-US")}
-                  </span>
+                    <span className="text-muted-foreground">{opt.label}</span>
+                  </Label>
                 </div>
               ))}
-              <div className="border-t border-border pt-2 mt-2 flex justify-between text-sm font-bold">
-                <span className="text-foreground">Total</span>
-                <span className="text-gradient">${total.toLocaleString("en-US")}</span>
-              </div>
-            </div>
+            </RadioGroup>
           </div>
-        </div>
+        ))}
       </div>
     </div>
   );

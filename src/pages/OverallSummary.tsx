@@ -321,7 +321,7 @@ const OverallSummary = () => {
 
         {/* Module Comparison Bar Chart */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Modul Müqayisəsi</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Module Comparison</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={modules} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -347,13 +347,13 @@ const OverallSummary = () => {
         {/* Financial Snapshot Summary */}
         {hasFinancial && latestSnapshot && (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Son Maliyyə Hesabatı</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Latest Financial Report</h3>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Ümumi Gəlir", value: `$${numFmt(latestSnapshot.revenue.total)}`, icon: TrendingUp, positive: true },
-                { label: "Ümumi Xərclər", value: `$${numFmt(latestSnapshot.expenses.total)}`, icon: TrendingDown, positive: false },
-                { label: "Qalan Nağd", value: `$${numFmt(latestSnapshot.cashFlow.endingCash)}`, icon: Wallet, positive: latestSnapshot.cashFlow.endingCash > 0 },
-                { label: "Aktiv İstifadəçilər", value: numFmt(latestSnapshot.customerMetrics.activeUsers), icon: Users, positive: true },
+                { label: "Total Revenue", value: `$${numFmt(latestSnapshot.revenue.total)}`, icon: TrendingUp, positive: true },
+                { label: "Total Expenses", value: `$${numFmt(latestSnapshot.expenses.total)}`, icon: TrendingDown, positive: false },
+                { label: "Ending Cash", value: `$${numFmt(latestSnapshot.cashFlow.endingCash)}`, icon: Wallet, positive: latestSnapshot.cashFlow.endingCash > 0 },
+                { label: "Active Users", value: numFmt(latestSnapshot.customerMetrics.activeUsers), icon: Users, positive: true },
                 { label: "ARPU", value: `$${numFmt(latestSnapshot.customerMetrics.arpu)}`, icon: DollarSign, positive: true },
                 { label: "Churn Rate", value: `${numFmt(latestSnapshot.customerMetrics.churnRate * 100)}%`, icon: AlertTriangle, positive: latestSnapshot.customerMetrics.churnRate < 0.05 },
                 { label: "Burn Rate", value: `$${numFmt(latestSnapshot.cashFlow.monthlyBurnRate)}`, icon: TrendingDown, positive: latestSnapshot.cashFlow.monthlyBurnRate > 0 },
@@ -374,7 +374,7 @@ const OverallSummary = () => {
         {/* Valuation Summary */}
         {hasEvaluation && (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Qiymətləndirmə Nəticələri</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Valuation Results</h3>
             <div className="grid gap-4 sm:grid-cols-3">
               {[
                 { method: "Berkus", value: berkus, color: "text-primary" },
@@ -388,7 +388,7 @@ const OverallSummary = () => {
               ))}
             </div>
             <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-              <p className="text-sm text-muted-foreground">Ortalama Qiymətləndirmə</p>
+              <p className="text-sm text-muted-foreground">Average Valuation</p>
               <p className="text-2xl font-bold text-primary">${avgValuation.toLocaleString()}</p>
             </div>
           </div>
@@ -396,7 +396,7 @@ const OverallSummary = () => {
 
         {/* Advice */}
         <div>
-          <h3 className="text-xl font-bold text-foreground mb-4">💡 Tövsiyələr</h3>
+          <h3 className="text-xl font-bold text-foreground mb-4">💡 Recommendations</h3>
           <div className="grid gap-4 md:grid-cols-2">
             {advice.map((tip, i) => (
               <div key={i} className={`rounded-xl border p-5 ${typeStyles[tip.type]}`}>
