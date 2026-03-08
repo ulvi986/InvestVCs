@@ -69,9 +69,9 @@ const ProfilePage = () => {
 
     setSaving(false);
     if (error) {
-      toast.error("Profil yenilənə bilmədi");
+      toast.error("Failed to update profile");
     } else {
-      toast.success("Profil uğurla yeniləndi");
+      toast.success("Profile updated successfully");
     }
   };
 
