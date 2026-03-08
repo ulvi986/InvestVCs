@@ -183,7 +183,7 @@ const ProfilePage = () => {
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2">
             <BarChart3 className="h-5 w-5 text-primary" />
-            Maliyyə İcmalı
+            Financial Overview
           </h2>
 
           {avgValuation > 0 && (
