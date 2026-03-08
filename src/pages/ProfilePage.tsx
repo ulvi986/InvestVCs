@@ -241,7 +241,7 @@ const ProfilePage = () => {
               <StatCard
                 icon={<DollarSign className="h-5 w-5" />}
                 label="Burn Rate"
-                value={`$${Math.abs(latestSnapshot.cashFlow.monthlyBurnRate).toLocaleString()}/ay`}
+                value={`$${Math.abs(latestSnapshot.cashFlow.monthlyBurnRate).toLocaleString()}/mo`}
                 color="text-orange-500"
                 bg="bg-orange-500/10"
               />
