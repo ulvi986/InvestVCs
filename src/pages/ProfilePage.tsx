@@ -276,7 +276,7 @@ const ProfilePage = () => {
               <StatCard
                 icon={<DollarSign className="h-5 w-5" />}
                 label="Runway"
-                value={`${latestSnapshot.cashFlow.runway.toFixed(1)} ay`}
+                value={`${latestSnapshot.cashFlow.runway.toFixed(1)} months`}
                 color="text-green-600"
                 bg="bg-green-500/10"
               />
