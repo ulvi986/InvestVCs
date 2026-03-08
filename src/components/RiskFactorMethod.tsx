@@ -231,6 +231,7 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
           );
         })}
       </div>
+    </div>
   );
 };
 
