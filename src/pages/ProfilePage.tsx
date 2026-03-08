@@ -226,7 +226,7 @@ const ProfilePage = () => {
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <StatCard
                 icon={<TrendingUp className="h-5 w-5" />}
-                label="Ümumi Gəlir"
+                label="Total Revenue"
                 value={`$${latestSnapshot.revenue.total.toLocaleString()}`}
                 color="text-green-600"
                 bg="bg-green-500/10"
