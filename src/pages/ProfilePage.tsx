@@ -121,7 +121,7 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="surname">Soyad</Label>
+                <Label htmlFor="surname">Last Name</Label>
                 <Input
                   id="surname"
                   value={profile?.surname || ""}
