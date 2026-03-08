@@ -193,7 +193,7 @@ const ProfilePage = () => {
                   <Activity className="h-6 w-6 text-primary-foreground" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Ortalama Qiymətləndirmə</p>
+                  <p className="text-sm text-muted-foreground">Average Valuation</p>
                   <p className="text-2xl font-bold text-foreground">
                     ${avgValuation.toLocaleString()}
                   </p>
