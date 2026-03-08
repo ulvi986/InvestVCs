@@ -374,7 +374,7 @@ const OverallSummary = () => {
         {/* Valuation Summary */}
         {hasEvaluation && (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Qiymətləndirmə Nəticələri</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Valuation Results</h3>
             <div className="grid gap-4 sm:grid-cols-3">
               {[
                 { method: "Berkus", value: berkus, color: "text-primary" },
@@ -388,7 +388,7 @@ const OverallSummary = () => {
               ))}
             </div>
             <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-              <p className="text-sm text-muted-foreground">Ortalama Qiymətləndirmə</p>
+              <p className="text-sm text-muted-foreground">Average Valuation</p>
               <p className="text-2xl font-bold text-primary">${avgValuation.toLocaleString()}</p>
             </div>
           </div>
