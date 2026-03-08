@@ -136,10 +136,10 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label>Qeydiyyat tarixi</Label>
+                <Label>Registration Date</Label>
                 <div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
                   <CalendarDays className="h-4 w-4" />
-                  {user?.created_at ? new Date(user.created_at).toLocaleDateString("az-AZ") : "—"}
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US") : "—"}
                 </div>
               </div>
             </CardContent>
