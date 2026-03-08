@@ -129,7 +129,7 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>E-poçt</Label>
+                <Label>Email</Label>
                 <div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
                   <Mail className="h-4 w-4" />
                   {user?.email}
