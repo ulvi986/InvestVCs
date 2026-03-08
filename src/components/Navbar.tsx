@@ -1,7 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Menu, X } from "lucide-react";
+import { BarChart3, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const location = useLocation();
