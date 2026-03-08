@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
+  const { signOut } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
