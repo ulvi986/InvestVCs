@@ -247,7 +247,7 @@ const ProfilePage = () => {
               />
               <StatCard
                 icon={<Users className="h-5 w-5" />}
-                label="Aktiv İstifadəçilər"
+                label="Active Users"
                 value={latestSnapshot.customerMetrics.activeUsers.toLocaleString()}
                 color="text-primary"
                 bg="bg-primary/10"
