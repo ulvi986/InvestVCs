@@ -7,6 +7,7 @@ import { StartupProvider } from "@/context/StartupContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import StartupEvaluation from "./pages/StartupEvaluation";
+import ProfilePage from "./pages/ProfilePage";
 import PreparationPhase from "./pages/PreparationPhase";
 import ReadinessLevel from "./pages/ReadinessLevel";
 import OverallSummary from "./pages/OverallSummary";
