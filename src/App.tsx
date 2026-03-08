@@ -7,6 +7,7 @@ import { StartupProvider } from "@/context/StartupContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import Index from "./pages/Index";
 import StartupEvaluation from "./pages/StartupEvaluation";
+import ProfilePage from "./pages/ProfilePage";
 import PreparationPhase from "./pages/PreparationPhase";
 import ReadinessLevel from "./pages/ReadinessLevel";
 import OverallSummary from "./pages/OverallSummary";
@@ -42,6 +43,7 @@ const App = () => (
               <Route path="/signup" element={<AuthRoute><SignUp /></AuthRoute>} />
               <Route path="/signin" element={<AuthRoute><SignIn /></AuthRoute>} />
               <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
+              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
               <Route path="/preparation" element={<ProtectedRoute><PreparationPhase /></ProtectedRoute>} />
               <Route path="/readiness" element={<ProtectedRoute><ReadinessLevel /></ProtectedRoute>} />

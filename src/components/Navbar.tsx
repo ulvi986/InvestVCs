@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Menu, X, LogOut } from "lucide-react";
+import { BarChart3, Menu, X, LogOut, UserCircle } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -47,6 +47,11 @@ const Navbar = () => {
           <Link to="/evaluation">
             <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
               Start Evaluation
+            </Button>
+          </Link>
+          <Link to="/profile">
+            <Button variant="ghost" size="icon" title="Profil">
+              <UserCircle className="h-4 w-4" />
             </Button>
           </Link>
           <Button variant="ghost" size="icon" onClick={signOut} title="Çıxış">
