@@ -113,7 +113,7 @@ const ProfilePage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ad</Label>
+                <Label htmlFor="name">First Name</Label>
                 <Input
                   id="name"
                   value={profile?.name || ""}
