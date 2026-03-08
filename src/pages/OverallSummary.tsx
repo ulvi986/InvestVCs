@@ -396,7 +396,7 @@ const OverallSummary = () => {
 
         {/* Advice */}
         <div>
-          <h3 className="text-xl font-bold text-foreground mb-4">💡 Tövsiyələr</h3>
+          <h3 className="text-xl font-bold text-foreground mb-4">💡 Recommendations</h3>
           <div className="grid gap-4 md:grid-cols-2">
             {advice.map((tip, i) => (
               <div key={i} className={`rounded-xl border p-5 ${typeStyles[tip.type]}`}>
