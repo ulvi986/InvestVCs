@@ -163,7 +163,7 @@ const ProfilePage = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="startup_description">Startup haqqında</Label>
+                <Label htmlFor="startup_description">About Startup</Label>
                 <Textarea
                   id="startup_description"
                   value={profile?.startup_description || ""}
