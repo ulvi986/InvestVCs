@@ -173,7 +173,7 @@ const ProfilePage = () => {
               </div>
               <Button onClick={handleSave} disabled={saving} className="gradient-primary text-primary-foreground border-0">
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                Yadda saxla
+                Save
               </Button>
             </CardContent>
           </Card>
