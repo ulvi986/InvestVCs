@@ -155,7 +155,7 @@ const ProfilePage = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="startup_name">Startup adı</Label>
+                <Label htmlFor="startup_name">Startup Name</Label>
                 <Input
                   id="startup_name"
                   value={profile?.startup_name || ""}
