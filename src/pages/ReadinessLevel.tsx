@@ -180,6 +180,18 @@ function allMandatoryMet(level: Level, answers: Answers, prefix: string): boolea
   });
 }
 
+function getFinalLevel(levels: Level[], answers: Answers, prefix: string): number {
+  let finalLevel = 0;
+  for (const level of levels) {
+    if (isLevelCompleted(level, answers, prefix)) {
+      finalLevel = level.level;
+    } else {
+      break;
+    }
+  }
+  return finalLevel;
+}
+
 function getMaxUnlockedLevel(levels: Level[], answers: Answers, prefix: string, finalLevel: number): number {
   // The first incomplete level is always unlocked (finalLevel index)
   // Beyond that, unlock next level only if current level has all mandatory met
