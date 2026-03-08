@@ -12,16 +12,16 @@ const features = [
     link: "/evaluation",
   },
   {
-    icon: ClipboardList,
-    title: "Preparation Phase",
-    description: "Get ready for your evaluation with market research, team analysis, and financial planning.",
+    icon: DollarSign,
+    title: "Financial Management",
+    description: "Track revenue, expenses, cash flow, and customer metrics with date-based financial snapshots.",
     link: "/preparation",
   },
   {
-    icon: DollarSign,
-    title: "Example",
-    description: "See a full valuation example for an AI Fintech Startup with all three methods compared.",
-    link: "/example",
+    icon: ClipboardList,
+    title: "Readiness Level",
+    description: "Assess your Technology, Commercial, and Financial readiness levels step by step.",
+    link: "/readiness",
   },
 ];
 
