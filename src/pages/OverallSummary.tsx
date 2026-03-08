@@ -347,13 +347,13 @@ const OverallSummary = () => {
         {/* Financial Snapshot Summary */}
         {hasFinancial && latestSnapshot && (
           <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-            <h3 className="text-lg font-semibold text-foreground mb-4">Son Maliyyə Hesabatı</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-4">Latest Financial Report</h3>
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {[
-                { label: "Ümumi Gəlir", value: `$${numFmt(latestSnapshot.revenue.total)}`, icon: TrendingUp, positive: true },
-                { label: "Ümumi Xərclər", value: `$${numFmt(latestSnapshot.expenses.total)}`, icon: TrendingDown, positive: false },
-                { label: "Qalan Nağd", value: `$${numFmt(latestSnapshot.cashFlow.endingCash)}`, icon: Wallet, positive: latestSnapshot.cashFlow.endingCash > 0 },
-                { label: "Aktiv İstifadəçilər", value: numFmt(latestSnapshot.customerMetrics.activeUsers), icon: Users, positive: true },
+                { label: "Total Revenue", value: `$${numFmt(latestSnapshot.revenue.total)}`, icon: TrendingUp, positive: true },
+                { label: "Total Expenses", value: `$${numFmt(latestSnapshot.expenses.total)}`, icon: TrendingDown, positive: false },
+                { label: "Ending Cash", value: `$${numFmt(latestSnapshot.cashFlow.endingCash)}`, icon: Wallet, positive: latestSnapshot.cashFlow.endingCash > 0 },
+                { label: "Active Users", value: numFmt(latestSnapshot.customerMetrics.activeUsers), icon: Users, positive: true },
                 { label: "ARPU", value: `$${numFmt(latestSnapshot.customerMetrics.arpu)}`, icon: DollarSign, positive: true },
                 { label: "Churn Rate", value: `${numFmt(latestSnapshot.customerMetrics.churnRate * 100)}%`, icon: AlertTriangle, positive: latestSnapshot.customerMetrics.churnRate < 0.05 },
                 { label: "Burn Rate", value: `$${numFmt(latestSnapshot.cashFlow.monthlyBurnRate)}`, icon: TrendingDown, positive: latestSnapshot.cashFlow.monthlyBurnRate > 0 },
