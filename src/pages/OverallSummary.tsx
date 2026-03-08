@@ -321,7 +321,7 @@ const OverallSummary = () => {
 
         {/* Module Comparison Bar Chart */}
         <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">Modul Müqayisəsi</h3>
+          <h3 className="text-lg font-semibold text-foreground mb-4">Module Comparison</h3>
           <ResponsiveContainer width="100%" height={300}>
             <BarChart data={modules} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
