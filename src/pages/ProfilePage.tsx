@@ -285,8 +285,8 @@ const ProfilePage = () => {
             <Card className="border-border shadow-card">
               <CardContent className="py-12 text-center text-muted-foreground">
                 <BarChart3 className="mx-auto mb-3 h-10 w-10 opacity-40" />
-                <p>Hələ maliyyə məlumatı daxil edilməyib.</p>
-                <p className="text-sm mt-1">Financial Management bölməsindən data əlavə edin.</p>
+                <p>No financial data has been entered yet.</p>
+                <p className="text-sm mt-1">Add data from the Financial Management section.</p>
               </CardContent>
             </Card>
           )}
