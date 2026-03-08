@@ -172,9 +172,9 @@ function isLevelCompleted(level: Level, answers: Answers, prefix: string): boole
   return allMandatory && supportiveOk;
 }
 
-function hasAnyMandatory(level: Level, answers: Answers, prefix: string): boolean {
+function allMandatoryMet(level: Level, answers: Answers, prefix: string): boolean {
   const mandatory = level.criteria.filter(c => c.type === "M");
-  return mandatory.some((_, i) => {
+  return mandatory.every((_, i) => {
     const key = `${prefix}-${level.level}-M-${i}`;
     return answers[key] === true;
   });
@@ -193,18 +193,16 @@ function getFinalLevel(levels: Level[], answers: Answers, prefix: string): numbe
 }
 
 function getMaxUnlockedLevel(levels: Level[], answers: Answers, prefix: string, finalLevel: number): number {
+  // The first incomplete level is always unlocked (finalLevel index)
+  // Beyond that, unlock next level only if current level has all mandatory met
   let maxUnlocked = finalLevel;
   for (let i = finalLevel; i < levels.length; i++) {
-    if (i === finalLevel || hasAnyMandatory(levels[i], answers, prefix)) {
-      maxUnlocked = i;
-      if (hasAnyMandatory(levels[i], answers, prefix) && i + 1 < levels.length) {
-        maxUnlocked = i + 1;
-      }
-    } else {
+    maxUnlocked = i;
+    if (!allMandatoryMet(levels[i], answers, prefix)) {
       break;
     }
   }
-  return maxUnlocked;
+  return Math.min(maxUnlocked, levels.length - 1);
 }
 
 const ReadinessAssessment = ({
