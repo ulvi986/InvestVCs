@@ -17,7 +17,7 @@ const SignIn = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Zəhmət olmasa bütün sahələri doldurun");
+      toast.error("Please fill in all fields");
       return;
     }
 
@@ -28,7 +28,7 @@ const SignIn = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Uğurla daxil oldunuz!");
+      toast.success("Successfully signed in!");
       navigate("/");
     }
   };
@@ -43,30 +43,30 @@ const SignIn = () => {
             </div>
             StartupEval
           </Link>
-          <CardTitle className="text-2xl font-bold">Daxil olun</CardTitle>
-          <CardDescription>Hesabınıza daxil olun</CardDescription>
+          <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-poçt</Label>
+              <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="email@example.com" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Şifrə</Label>
-              <Input id="password" type="password" placeholder="Şifrəniz" value={password} onChange={e => setPassword(e.target.value)} />
+              <Label htmlFor="password">Password</Label>
+              <Input id="password" type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} />
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Daxil ol
+              Sign In
             </Button>
             <p className="text-sm text-muted-foreground">
-              Hesabınız yoxdur?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">Qeydiyyatdan keçin</Link>
+              Don't have an account?{" "}
+              <Link to="/signup" className="text-primary hover:underline font-medium">Sign Up</Link>
             </p>
           </CardFooter>
         </form>

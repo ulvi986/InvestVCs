@@ -28,11 +28,11 @@ const SignUp = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.surname || !form.email || !form.password || !form.startup_name) {
-      toast.error("Zəhmət olmasa bütün tələb olunan sahələri doldurun");
+      toast.error("Please fill in all required fields");
       return;
     }
     if (form.password.length < 6) {
-      toast.error("Şifrə ən azı 6 simvol olmalıdır");
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
@@ -55,7 +55,7 @@ const SignUp = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Qeydiyyat uğurlu oldu! E-poçtunuzu yoxlayın.");
+      toast.success("Registration successful! Please check your email.");
       navigate("/signin");
     }
   };
@@ -70,48 +70,48 @@ const SignUp = () => {
             </div>
             StartupEval
           </Link>
-          <CardTitle className="text-2xl font-bold">Qeydiyyat</CardTitle>
-          <CardDescription>Startup-ınızı qiymətləndirməyə başlayın</CardDescription>
+          <CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
+          <CardDescription>Start evaluating your startup</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">Ad *</Label>
-                <Input id="name" name="name" placeholder="Adınız" value={form.name} onChange={handleChange} />
+                <Label htmlFor="name">First Name *</Label>
+                <Input id="name" name="name" placeholder="Your first name" value={form.name} onChange={handleChange} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="surname">Soyad *</Label>
-                <Input id="surname" name="surname" placeholder="Soyadınız" value={form.surname} onChange={handleChange} />
+                <Label htmlFor="surname">Last Name *</Label>
+                <Input id="surname" name="surname" placeholder="Your last name" value={form.surname} onChange={handleChange} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-poçt *</Label>
+              <Label htmlFor="email">Email *</Label>
               <Input id="email" name="email" type="email" placeholder="email@example.com" value={form.email} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Şifrə *</Label>
-              <Input id="password" name="password" type="password" placeholder="Ən azı 6 simvol" value={form.password} onChange={handleChange} />
+              <Label htmlFor="password">Password *</Label>
+              <Input id="password" name="password" type="password" placeholder="At least 6 characters" value={form.password} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startup_name">Startup adı *</Label>
-              <Input id="startup_name" name="startup_name" placeholder="Startup-ınızın adı" value={form.startup_name} onChange={handleChange} />
+              <Label htmlFor="startup_name">Startup Name *</Label>
+              <Input id="startup_name" name="startup_name" placeholder="Your startup's name" value={form.startup_name} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startup_description">Startup haqqında</Label>
-              <Textarea id="startup_description" name="startup_description" placeholder="Startup-ınız haqqında qısa məlumat" value={form.startup_description} onChange={handleChange} rows={3} />
+              <Label htmlFor="startup_description">About Startup</Label>
+              <Textarea id="startup_description" name="startup_description" placeholder="Brief description of your startup" value={form.startup_description} onChange={handleChange} rows={3} />
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Qeydiyyatdan keç
+              Sign Up
             </Button>
             <p className="text-sm text-muted-foreground">
-              Artıq hesabınız var?{" "}
-              <Link to="/signin" className="text-primary hover:underline font-medium">Daxil olun</Link>
+              Already have an account?{" "}
+              <Link to="/signin" className="text-primary hover:underline font-medium">Sign In</Link>
             </p>
           </CardFooter>
         </form>
