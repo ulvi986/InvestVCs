@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Menu, X } from "lucide-react";
+import { BarChart3, Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
+  const { signOut } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -41,12 +43,15 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="hidden md:block">
+        <div className="hidden md:flex items-center gap-2">
           <Link to="/evaluation">
             <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
               Start Evaluation
             </Button>
           </Link>
+          <Button variant="ghost" size="icon" onClick={signOut} title="Çıxış">
+            <LogOut className="h-4 w-4" />
+          </Button>
         </div>
 
         {/* Mobile toggle */}
