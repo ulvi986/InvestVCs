@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      evaluations: {
+        Row: {
+          berkus: number
+          id: string
+          risk_factor: number
+          scorecard: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          berkus?: number
+          id?: string
+          risk_factor?: number
+          scorecard?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          berkus?: number
+          id?: string
+          risk_factor?: number
+          scorecard?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      financial_snapshots: {
+        Row: {
+          created_at: string
+          data: Json
+          date: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          date: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          date?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -41,6 +92,33 @@ export type Database = {
           startup_name?: string
           surname?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      readiness_answers: {
+        Row: {
+          crl_answers: Json
+          frl_answers: Json
+          id: string
+          trl_answers: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          crl_answers?: Json
+          frl_answers?: Json
+          id?: string
+          trl_answers?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          crl_answers?: Json
+          frl_answers?: Json
+          id?: string
+          trl_answers?: Json
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
