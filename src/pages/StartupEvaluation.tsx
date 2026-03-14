@@ -89,12 +89,18 @@ const StartupEvaluation = () => {
               <TabsTrigger value="chicago" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
                 First Chicago Method
               </TabsTrigger>
+              <TabsTrigger value="summary" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
+                📊 Summary & Advice
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="vc">
-              <VCMethod />
+              <VCMethod onValuationChange={setVcValue} />
             </TabsContent>
             <TabsContent value="chicago">
-              <SeedValuation />
+              <SeedValuation onValuationChange={setChicagoValue} />
+            </TabsContent>
+            <TabsContent value="summary">
+              <SeedEvaluationSummary vcMethod={vcValue} chicagoMethod={chicagoValue} />
             </TabsContent>
           </Tabs>
         )}
