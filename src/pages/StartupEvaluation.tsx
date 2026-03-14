@@ -37,7 +37,7 @@ const StartupEvaluation = () => {
                 : "bg-muted text-muted-foreground hover:bg-accent"
             }`}
           >
-            🌱 Pre-Seed $
+            💲 Pre-Seed
           </button>
           <button
             onClick={() => setStage("seed")}
