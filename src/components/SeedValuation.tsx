@@ -18,6 +18,8 @@ interface SeedValuationProps {
 const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
   const [revenue, setRevenue] = useState<number>(0);
   const [exitMultiple, setExitMultiple] = useState<number>(8);
+  const [customMultiple, setCustomMultiple] = useState<number>(20);
+  const [isOther, setIsOther] = useState(false);
   const [yearsToExit, setYearsToExit] = useState<number>(5);
   const [discountRates, setDiscountRates] = useState(DEFAULT_DISCOUNT_RATES);
   const [probabilities, setProbabilities] = useState({ worst: 20, base: 70, best: 10 });
