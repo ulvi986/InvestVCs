@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Info } from "lucide-react";
 
-const EXIT_MULTIPLES = [5, 8, 10, 15];
+const EXIT_MULTIPLES = [5, 8, 10, 15, "other"] as const;
 const DEFAULT_DISCOUNT_RATES = { worst: 50, base: 30, best: 20 };
 
 interface SeedValuationProps {
@@ -18,6 +18,8 @@ interface SeedValuationProps {
 const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
   const [revenue, setRevenue] = useState<number>(0);
   const [exitMultiple, setExitMultiple] = useState<number>(8);
+  const [customMultiple, setCustomMultiple] = useState<number>(20);
+  const [isOther, setIsOther] = useState(false);
   const [yearsToExit, setYearsToExit] = useState<number>(5);
   const [discountRates, setDiscountRates] = useState(DEFAULT_DISCOUNT_RATES);
   const [probabilities, setProbabilities] = useState({ worst: 20, base: 70, best: 10 });
@@ -90,16 +92,44 @@ const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
           </CardHeader>
           <CardContent>
             <RadioGroup
-              value={String(exitMultiple)}
-              onValueChange={v => setExitMultiple(Number(v))}
+              value={isOther ? "other" : String(exitMultiple)}
+              onValueChange={v => {
+                if (v === "other") {
+                  setIsOther(true);
+                  setExitMultiple(customMultiple);
+                } else {
+                  setIsOther(false);
+                  setExitMultiple(Number(v));
+                }
+              }}
               className="grid grid-cols-2 gap-3"
             >
-              {EXIT_MULTIPLES.map(m => (
+              {[5, 8, 10, 15].map(m => (
                 <div key={m} className="flex items-center space-x-2">
                   <RadioGroupItem value={String(m)} id={`mult-${m}`} />
                   <Label htmlFor={`mult-${m}`} className="cursor-pointer font-medium">{m}x</Label>
                 </div>
               ))}
+              <div className="flex items-center space-x-2 col-span-2">
+                <RadioGroupItem value="other" id="mult-other" />
+                <Label htmlFor="mult-other" className="cursor-pointer font-medium">Other</Label>
+                {isOther && (
+                  <div className="flex items-center gap-1 ml-2">
+                    <Input
+                      type="number"
+                      min={1}
+                      value={customMultiple}
+                      onChange={e => {
+                        const val = Number(e.target.value) || 1;
+                        setCustomMultiple(val);
+                        setExitMultiple(val);
+                      }}
+                      className="w-20 h-8"
+                    />
+                    <span className="text-sm text-muted-foreground">x</span>
+                  </div>
+                )}
+              </div>
             </RadioGroup>
             <p className="mt-3 text-xs text-muted-foreground">
               Exit Value = Revenue × Multiple = <span className="font-semibold text-foreground">${exitValue.toLocaleString()}</span>
