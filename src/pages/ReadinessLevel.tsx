@@ -102,6 +102,16 @@ const CRL_LEVELS: Level[] = [
     { type: "M", text: "Investor pitch deck available" },
     { type: "S", text: "Initial investor interest identified" },
   ]},
+  { level: 8, title: "Market Expansion", criteria: [
+    { type: "M", text: "New market segments or geographies identified" },
+    { type: "M", text: "Scalable sales process established" },
+    { type: "S", text: "Strategic partnerships formed for distribution" },
+  ]},
+  { level: 9, title: "Sustainable Growth", criteria: [
+    { type: "M", text: "Consistent revenue growth over 6+ months" },
+    { type: "M", text: "Brand recognition established in target market" },
+    { type: "S", text: "Customer referral or organic growth channel active" },
+  ]},
 ];
 
 const FRL_LEVELS: Level[] = [
