@@ -5,16 +5,18 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const links = [
-    { to: "/evaluation", label: "Startup Evaluation" },
-    { to: "/preparation", label: "Financial Management" },
-    { to: "/readiness", label: "Readiness Level" },
-    { to: "/summary", label: "📊 Overall Summary" },
-  ];
+  const links = user
+    ? [
+        { to: "/evaluation", label: "Startup Evaluation" },
+        { to: "/preparation", label: "Financial Management" },
+        { to: "/readiness", label: "Readiness Level" },
+        { to: "/summary", label: "📊 Overall Summary" },
+      ]
+    : [];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
@@ -43,21 +45,34 @@ const Navbar = () => {
           ))}
         </div>
 
-        <div className="hidden md:flex items-center gap-2">
-          <Link to="/evaluation">
-            <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
-              Start Evaluation
+        {user ? (
+          <div className="hidden md:flex items-center gap-2">
+            <Link to="/evaluation">
+              <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
+                Start Evaluation
+              </Button>
+            </Link>
+            <Link to="/profile">
+              <Button variant="ghost" size="icon" title="Profile">
+                <UserCircle className="h-4 w-4" />
+              </Button>
+            </Link>
+            <Button variant="ghost" size="icon" onClick={signOut} title="Sign Out">
+              <LogOut className="h-4 w-4" />
             </Button>
-          </Link>
-          <Link to="/profile">
-            <Button variant="ghost" size="icon" title="Profile">
-              <UserCircle className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Button variant="ghost" size="icon" onClick={signOut} title="Sign Out">
-            <LogOut className="h-4 w-4" />
-          </Button>
-        </div>
+          </div>
+        ) : (
+          <div className="hidden md:flex items-center gap-2">
+            <Link to="/signin">
+              <Button variant="ghost">Sign In</Button>
+            </Link>
+            <Link to="/signup">
+              <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
+                Get Started
+              </Button>
+            </Link>
+          </div>
+        )}
 
         {/* Mobile toggle */}
         <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -78,11 +93,29 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
-          <Link to="/evaluation" onClick={() => setMobileOpen(false)}>
-            <Button className="mt-2 w-full gradient-primary text-primary-foreground border-0">
-              Start Evaluation
-            </Button>
-          </Link>
+          {user ? (
+            <>
+              <Link to="/evaluation" onClick={() => setMobileOpen(false)}>
+                <Button className="mt-2 w-full gradient-primary text-primary-foreground border-0">
+                  Start Evaluation
+                </Button>
+              </Link>
+              <Button variant="ghost" className="mt-2 w-full" onClick={() => { signOut(); setMobileOpen(false); }}>
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/signin" onClick={() => setMobileOpen(false)}>
+                <Button variant="outline" className="mt-2 w-full">Sign In</Button>
+              </Link>
+              <Link to="/signup" onClick={() => setMobileOpen(false)}>
+                <Button className="mt-2 w-full gradient-primary text-primary-foreground border-0">
+                  Get Started
+                </Button>
+              </Link>
+            </>
+          )}
         </div>
       )}
     </nav>
