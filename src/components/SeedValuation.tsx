@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Info } from "lucide-react";
 
-const EXIT_MULTIPLES = [5, 8, 10, 15];
+const EXIT_MULTIPLES = [5, 8, 10, 15, "other"] as const;
 const DEFAULT_DISCOUNT_RATES = { worst: 50, base: 30, best: 20 };
 
 interface SeedValuationProps {
