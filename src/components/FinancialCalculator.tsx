@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, TrendingDown, Wallet, Users, Plus, X, CalendarIcon, Save } from "lucide-react";
-import { format } from "date-fns";
+import { TrendingUp, TrendingDown, Wallet, Users, Plus, X, CalendarIcon, Save, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, setMonth, setYear } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { FinancialSnapshot } from "@/pages/PreparationPhase";
@@ -86,6 +85,59 @@ const SectionCard = ({ icon: Icon, title, children }: { icon: React.ElementType;
     {children}
   </div>
 );
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+const MonthPicker = ({ selected, onSelect }: { selected: Date | undefined; onSelect: (d: Date) => void }) => {
+  const [viewYear, setViewYear] = useState(selected ? selected.getFullYear() : new Date().getFullYear());
+  const selectedMonth = selected ? selected.getMonth() : -1;
+  const selectedYear = selected ? selected.getFullYear() : -1;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="outline" className={cn("w-[200px] justify-start text-left font-normal", !selected && "text-muted-foreground")}>
+          <CalendarIcon className="mr-2 h-4 w-4" />
+          {selected ? format(selected, "MMM yyyy") : <span>Pick a month</span>}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[260px] p-3 pointer-events-auto" align="start">
+        <div className="flex items-center justify-between mb-3">
+          <button onClick={() => setViewYear(y => y - 1)} className="p-1 rounded hover:bg-muted transition-colors">
+            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
+          </button>
+          <span className="text-sm font-semibold text-foreground">{viewYear}</span>
+          <button onClick={() => setViewYear(y => y + 1)} className="p-1 rounded hover:bg-muted transition-colors">
+            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-2">
+          {MONTHS.map((m, i) => {
+            const isSelected = i === selectedMonth && viewYear === selectedYear;
+            return (
+              <button
+                key={m}
+                onClick={() => {
+                  const d = setMonth(setYear(new Date(), viewYear), i);
+                  d.setDate(1);
+                  onSelect(d);
+                }}
+                className={cn(
+                  "rounded-lg py-2 text-sm font-medium transition-colors",
+                  isSelected
+                    ? "gradient-primary text-primary-foreground"
+                    : "hover:bg-muted text-foreground"
+                )}
+              >
+                {m}
+              </button>
+            );
+          })}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+};
 
 interface FinancialCalculatorProps {
   onSave: (snapshot: FinancialSnapshot) => void;
@@ -197,17 +249,7 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
             <p className="text-xs text-muted-foreground">Choose the month/date for this financial entry</p>
           </div>
         </div>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" className={cn("w-[200px] justify-start text-left font-normal", !selectedDate && "text-muted-foreground")}>
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <Calendar mode="single" selected={selectedDate} onSelect={setSelectedDate} initialFocus className={cn("p-3 pointer-events-auto")} />
-          </PopoverContent>
-        </Popover>
+        <MonthPicker selected={selectedDate} onSelect={setSelectedDate} />
         <Button onClick={handleSave} className="gradient-primary text-primary-foreground border-0 gap-2">
           <Save className="h-4 w-4" /> Save to Dashboard
         </Button>
