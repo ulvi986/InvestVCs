@@ -5,6 +5,7 @@ import ScorecardMethod from "@/components/ScorecardMethod";
 import RiskFactorMethod from "@/components/RiskFactorMethod";
 import EvaluationSummary from "@/components/EvaluationSummary";
 import SeedValuation from "@/components/SeedValuation";
+import SeedEvaluationSummary from "@/components/SeedEvaluationSummary";
 import VCMethod from "@/components/VCMethod";
 import { useStartupContext } from "@/context/StartupContext";
 import { useState } from "react";
@@ -13,6 +14,8 @@ const StartupEvaluation = () => {
   const { evaluation } = useStartupContext();
   const { berkus, scorecard, riskFactor, setBerkus, setScorecard, setRiskFactor } = evaluation;
   const [stage, setStage] = useState<"pre-seed" | "seed">("pre-seed");
+  const [vcValue, setVcValue] = useState(0);
+  const [chicagoValue, setChicagoValue] = useState(0);
 
   return (
     <Layout>
@@ -34,7 +37,7 @@ const StartupEvaluation = () => {
                 : "bg-muted text-muted-foreground hover:bg-accent"
             }`}
           >
-            🌱 Pre-Seed
+            🌱 Pre-Seed $
           </button>
           <button
             onClick={() => setStage("seed")}
@@ -86,12 +89,18 @@ const StartupEvaluation = () => {
               <TabsTrigger value="chicago" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
                 First Chicago Method
               </TabsTrigger>
+              <TabsTrigger value="summary" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
+                📊 Summary & Advice
+              </TabsTrigger>
             </TabsList>
             <TabsContent value="vc">
-              <VCMethod />
+              <VCMethod onValuationChange={setVcValue} />
             </TabsContent>
             <TabsContent value="chicago">
-              <SeedValuation />
+              <SeedValuation onValuationChange={setChicagoValue} />
+            </TabsContent>
+            <TabsContent value="summary">
+              <SeedEvaluationSummary vcMethod={vcValue} chicagoMethod={chicagoValue} />
             </TabsContent>
           </Tabs>
         )}
