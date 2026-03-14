@@ -5,6 +5,7 @@ import ScorecardMethod from "@/components/ScorecardMethod";
 import RiskFactorMethod from "@/components/RiskFactorMethod";
 import EvaluationSummary from "@/components/EvaluationSummary";
 import SeedValuation from "@/components/SeedValuation";
+import VCMethod from "@/components/VCMethod";
 import { useStartupContext } from "@/context/StartupContext";
 import { useState } from "react";
 
@@ -77,7 +78,22 @@ const StartupEvaluation = () => {
             </TabsContent>
           </Tabs>
         ) : (
-          <SeedValuation />
+          <Tabs defaultValue="vc" className="space-y-6">
+            <TabsList className="bg-muted p-1 rounded-xl flex-wrap h-auto gap-1">
+              <TabsTrigger value="vc" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
+                VC Method
+              </TabsTrigger>
+              <TabsTrigger value="chicago" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
+                First Chicago Method
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="vc">
+              <VCMethod />
+            </TabsContent>
+            <TabsContent value="chicago">
+              <SeedValuation />
+            </TabsContent>
+          </Tabs>
         )}
       </div>
     </Layout>
