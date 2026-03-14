@@ -1,10 +1,9 @@
 import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, TrendingDown, Wallet, Users, Plus, X, CalendarIcon, Save } from "lucide-react";
-import { format } from "date-fns";
+import { TrendingUp, TrendingDown, Wallet, Users, Plus, X, CalendarIcon, Save, ChevronLeft, ChevronRight } from "lucide-react";
+import { format, setMonth, setYear } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import type { FinancialSnapshot } from "@/pages/PreparationPhase";
