@@ -5,6 +5,7 @@ import ScorecardMethod from "@/components/ScorecardMethod";
 import RiskFactorMethod from "@/components/RiskFactorMethod";
 import EvaluationSummary from "@/components/EvaluationSummary";
 import SeedValuation from "@/components/SeedValuation";
+import SeedEvaluationSummary from "@/components/SeedEvaluationSummary";
 import VCMethod from "@/components/VCMethod";
 import { useStartupContext } from "@/context/StartupContext";
 import { useState } from "react";
@@ -13,6 +14,8 @@ const StartupEvaluation = () => {
   const { evaluation } = useStartupContext();
   const { berkus, scorecard, riskFactor, setBerkus, setScorecard, setRiskFactor } = evaluation;
   const [stage, setStage] = useState<"pre-seed" | "seed">("pre-seed");
+  const [vcValue, setVcValue] = useState(0);
+  const [chicagoValue, setChicagoValue] = useState(0);
 
   return (
     <Layout>
