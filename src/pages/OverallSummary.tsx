@@ -11,7 +11,7 @@ import {
 } from "recharts";
 
 const TRL_COUNT = 9;
-const CRL_COUNT = 7;
+const CRL_COUNT = 9;
 const FRL_COUNT = 9;
 
 const TRL_CRITERIA = [[1,2],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
