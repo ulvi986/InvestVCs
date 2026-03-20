@@ -36,8 +36,8 @@ function getFinalLevelFromAnswers(answers: Record<string, boolean>, prefix: stri
 
 type Tip = { icon: typeof Lightbulb; title: string; text: string; type: "info" | "success" | "warning" };
 
-const numFmt = (v: number) => {
-  if (!isFinite(v) || isNaN(v)) return "—";
+const numFmt = (v: number | null | undefined) => {
+  if (v === null || v === undefined || !isFinite(v) || isNaN(v)) return "—";
   return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
 };
 
