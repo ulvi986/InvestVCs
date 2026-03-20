@@ -248,6 +248,11 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
         churnRate: calcs.churnRate, customerLifetime: calcs.customerLifetime,
         cac: calcs.cac, grossProfit: calcs.grossProfit, grossMargin: calcs.grossMargin, cltv: calcs.cltv,
       },
+      profitability: {
+        costOfInvestment: n(costOfInvestment), initialValue: n(initialValue), numberOfPeriods: n(numberOfPeriods),
+        roi: calcs.roi, growthRate: calcs.growthRate, cagr: calcs.cagr,
+        profitMargin: calcs.profitMargin, profitPercentage: calcs.profitPercentage,
+      },
     };
     onSave(snapshot);
     toast.success(`Financial data saved for ${format(selectedDate, "MMM yyyy")}`);
