@@ -14,31 +14,27 @@ const Navbar = () => {
   const links = user
     ? [
         ...(isAdmin ? [{ to: "/admin", label: "🛡️ Admin Panel" }] : []),
-        ...(isInvestor ? [{ to: "/investor", label: "📈 Investor Dashboard" }] : []),
-        ...(!isInvestor && !isAdmin
+        ...(isInvestor
+          ? [
+              { to: "/investor", label: "📈 Investor Dashboard" },
+              { to: "/vacancies", label: "💼 Vacancies" },
+              { to: "/profile", label: "👤 Profile" },
+            ]
+          : []),
+        ...(!isInvestor
           ? [
               { to: "/evaluation", label: "Startup Evaluation" },
               { to: "/preparation", label: "Financial Management" },
               { to: "/readiness", label: "Readiness Level" },
               { to: "/summary", label: "📊 Overall Summary" },
+              { to: "/vacancies", label: "💼 Vacancies" },
+              { to: "/profile", label: "👤 Profile" },
             ]
           : []),
-        { to: "/vacancies", label: "💼 Vacancies" },
-        { to: "/profile", label: "👤 Profile" },
       ]
     : [];
 
-  // For admin/investor, also show startup tools
-  const startupLinks = isAdmin || isInvestor
-    ? [
-        { to: "/evaluation", label: "Startup Evaluation" },
-        { to: "/preparation", label: "Financial Management" },
-        { to: "/readiness", label: "Readiness Level" },
-        { to: "/summary", label: "📊 Overall Summary" },
-      ]
-    : [];
-
-  const allLinks = [...links, ...startupLinks];
+  const allLinks = links;
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
