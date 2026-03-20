@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Shield, TrendingUp, Search, Globe, Layers } from "lucide-react";
+import { Shield, TrendingUp, Search, Globe, Layers, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ProfileRow {
@@ -45,6 +45,11 @@ function getFinalLevel(answers: Record<string, boolean>, prefix: string, count: 
   return finalLevel;
 }
 
+function numFmt(v: number | null | undefined): string {
+  if (v == null) return "—";
+  return "$" + v.toLocaleString();
+}
+
 const InvestorDashboard = () => {
   const { isInvestor, isInvestorPending, loading: roleLoading } = useUserRole();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
@@ -52,6 +57,7 @@ const InvestorDashboard = () => {
   const [readiness, setReadiness] = useState<ReadinessRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (roleLoading || !isInvestor) {
@@ -109,14 +115,18 @@ const InvestorDashboard = () => {
     );
   }
 
-  const filtered = profiles.filter((p) =>
-    !search ||
-    p.startup_name.toLowerCase().includes(search.toLowerCase()) ||
-    p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.surname.toLowerCase().includes(search.toLowerCase()) ||
-    (p.country ?? "").toLowerCase().includes(search.toLowerCase()) ||
-    (p.industry ?? "").toLowerCase().includes(search.toLowerCase())
-  );
+  const filtered = profiles.filter((p) => {
+    if (p.startup_name === "Investor") return false;
+    if (!search) return true;
+    const s = search.toLowerCase();
+    return (
+      p.startup_name.toLowerCase().includes(s) ||
+      p.name.toLowerCase().includes(s) ||
+      p.surname.toLowerCase().includes(s) ||
+      (p.country ?? "").toLowerCase().includes(s) ||
+      (p.industry ?? "").toLowerCase().includes(s)
+    );
+  });
 
   return (
     <Layout>
@@ -125,7 +135,7 @@ const InvestorDashboard = () => {
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
             <TrendingUp className="h-8 w-8 text-primary" /> Investor Dashboard
           </h1>
-          <p className="mt-2 text-muted-foreground">Browse all startups and their evaluation data.</p>
+          <p className="mt-2 text-muted-foreground">Browse all startups and their complete evaluation summary.</p>
         </div>
 
         <div className="mb-6 max-w-md relative">
@@ -151,59 +161,100 @@ const InvestorDashboard = () => {
               const crl = readData ? getFinalLevel(readData.crl_answers, "CRL", 9, CRL_CRITERIA) : 0;
               const frl = readData ? getFinalLevel(readData.frl_answers, "FRL", 9, FRL_CRITERIA) : 0;
 
-              return (
-                <div key={profile.id} className="rounded-xl border border-border bg-card p-6 shadow-card">
-                  <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
-                    <div>
-                      <h3 className="text-lg font-bold text-foreground">{profile.startup_name}</h3>
-                      <p className="text-sm text-muted-foreground">{profile.name} {profile.surname}</p>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {profile.country && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
-                            <Globe className="h-3 w-3" /> {profile.country}
-                          </span>
-                        )}
-                        {profile.industry && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent flex items-center gap-1">
-                            <Layers className="h-3 w-3" /> {profile.industry}
-                          </span>
-                        )}
-                      </div>
-                      {profile.startup_description && (
-                        <p className="text-sm text-muted-foreground mt-2 max-w-xl">{profile.startup_description}</p>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      Joined {new Date(profile.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
+              const berkus = evalData?.berkus ?? null;
+              const scorecard = evalData?.scorecard ?? null;
+              const riskFactor = evalData?.risk_factor ?? null;
 
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                    <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                      <p className="text-xs text-muted-foreground">Berkus</p>
-                      <p className="text-lg font-bold text-primary">${evalData?.berkus?.toLocaleString() ?? "—"}</p>
+              const vals = [berkus, scorecard, riskFactor].filter((v): v is number => v != null && v > 0);
+              const weightedAvg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+
+              const trlStatus = trl >= 9 ? "Completed" : trl >= 5 ? "Advanced" : trl >= 1 ? "In Progress" : "Not Started";
+              const crlStatus = crl >= 9 ? "Completed" : crl >= 5 ? "Advanced" : crl >= 1 ? "In Progress" : "Not Started";
+              const frlStatus = frl >= 9 ? "Completed" : frl >= 5 ? "Advanced" : frl >= 1 ? "In Progress" : "Not Started";
+
+              const isExpanded = expandedId === profile.id;
+
+              return (
+                <div key={profile.id} className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
+                  {/* Header - always visible */}
+                  <button
+                    onClick={() => setExpandedId(isExpanded ? null : profile.id)}
+                    className="w-full p-6 text-left hover:bg-muted/20 transition-colors"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3">
+                          <h3 className="text-lg font-bold text-foreground">{profile.startup_name}</h3>
+                          {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                        </div>
+                        <p className="text-sm text-muted-foreground">{profile.name} {profile.surname}</p>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          {profile.country && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                              <Globe className="h-3 w-3" /> {profile.country}
+                            </span>
+                          )}
+                          {profile.industry && (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent flex items-center gap-1">
+                              <Layers className="h-3 w-3" /> {profile.industry}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-xs text-muted-foreground mb-1">Weighted Avg Valuation</p>
+                        <p className="text-xl font-bold text-primary">{numFmt(weightedAvg)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Joined {new Date(profile.created_at).toLocaleDateString()}
+                        </p>
+                      </div>
                     </div>
-                    <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                      <p className="text-xs text-muted-foreground">Scorecard</p>
-                      <p className="text-lg font-bold text-primary">${evalData?.scorecard?.toLocaleString() ?? "—"}</p>
+                  </button>
+
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="border-t border-border p-6 space-y-6">
+                      {profile.startup_description && (
+                        <p className="text-sm text-muted-foreground max-w-2xl">{profile.startup_description}</p>
+                      )}
+
+                      {/* Valuation Methods */}
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-3">Pre-Seed Valuation Methods</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">Berkus Method</p>
+                            <p className="text-2xl font-bold text-primary">{numFmt(berkus)}</p>
+                          </div>
+                          <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">Scorecard Method</p>
+                            <p className="text-2xl font-bold text-primary">{numFmt(scorecard)}</p>
+                          </div>
+                          <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                            <p className="text-xs text-muted-foreground mb-1">Risk Factor Method</p>
+                            <p className="text-2xl font-bold text-primary">{numFmt(riskFactor)}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Weighted Average */}
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
+                        <p className="text-xs text-muted-foreground mb-1">Weighted Average Valuation</p>
+                        <p className="text-3xl font-bold text-primary">{numFmt(weightedAvg)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">Based on {vals.length} method(s)</p>
+                      </div>
+
+                      {/* Readiness Levels */}
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-3">Readiness Levels</h4>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                          <ReadinessCard label="Technology (TRL)" level={trl} status={trlStatus} />
+                          <ReadinessCard label="Commercial (CRL)" level={crl} status={crlStatus} />
+                          <ReadinessCard label="Financial (FRL)" level={frl} status={frlStatus} />
+                        </div>
+                      </div>
                     </div>
-                    <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                      <p className="text-xs text-muted-foreground">Risk Factor</p>
-                      <p className="text-lg font-bold text-primary">${evalData?.risk_factor?.toLocaleString() ?? "—"}</p>
-                    </div>
-                    <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                      <p className="text-xs text-muted-foreground">TRL</p>
-                      <p className="text-lg font-bold text-foreground">{trl}/9</p>
-                    </div>
-                    <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                      <p className="text-xs text-muted-foreground">CRL</p>
-                      <p className="text-lg font-bold text-foreground">{crl}/9</p>
-                    </div>
-                    <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                      <p className="text-xs text-muted-foreground">FRL</p>
-                      <p className="text-lg font-bold text-foreground">{frl}/9</p>
-                    </div>
-                  </div>
+                  )}
                 </div>
               );
             })}
@@ -213,5 +264,20 @@ const InvestorDashboard = () => {
     </Layout>
   );
 };
+
+function ReadinessCard({ label, level, status }: { label: string; level: number; status: string }) {
+  const pct = (level / 9) * 100;
+  const color = level >= 7 ? "bg-green-500" : level >= 4 ? "bg-amber-500" : "bg-red-400";
+  return (
+    <div className="rounded-lg border border-border p-4 bg-muted/30">
+      <p className="text-xs text-muted-foreground mb-1">{label}</p>
+      <p className="text-2xl font-bold text-foreground">{level}/9</p>
+      <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+        <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+      <p className="text-xs text-muted-foreground mt-1">{status}</p>
+    </div>
+  );
+}
 
 export default InvestorDashboard;
