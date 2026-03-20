@@ -13,6 +13,10 @@ import ReadinessLevel from "./pages/ReadinessLevel";
 import OverallSummary from "./pages/OverallSummary";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
+import InvestorSignUp from "./pages/InvestorSignUp";
+import AdminPanel from "./pages/AdminPanel";
+import InvestorDashboard from "./pages/InvestorDashboard";
+import StartupVacancies from "./pages/StartupVacancies";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -42,12 +46,16 @@ const App = () => (
             <Routes>
               <Route path="/signup" element={<AuthRoute><SignUp /></AuthRoute>} />
               <Route path="/signin" element={<AuthRoute><SignIn /></AuthRoute>} />
+              <Route path="/investor-signup" element={<AuthRoute><InvestorSignUp /></AuthRoute>} />
               <Route path="/" element={<Index />} />
               <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
               <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
               <Route path="/preparation" element={<ProtectedRoute><PreparationPhase /></ProtectedRoute>} />
               <Route path="/readiness" element={<ProtectedRoute><ReadinessLevel /></ProtectedRoute>} />
               <Route path="/summary" element={<ProtectedRoute><OverallSummary /></ProtectedRoute>} />
+              <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+              <Route path="/investor" element={<ProtectedRoute><InvestorDashboard /></ProtectedRoute>} />
+              <Route path="/vacancies" element={<ProtectedRoute><StartupVacancies /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
