@@ -227,56 +227,56 @@ const ProfilePage = () => {
               <StatCard
                 icon={<TrendingUp className="h-5 w-5" />}
                 label="Total Revenue"
-                value={`$${latestSnapshot.revenue.total.toLocaleString()}`}
+                value={`$${(latestSnapshot.revenue?.total ?? 0).toLocaleString()}`}
                 color="text-green-600"
                 bg="bg-green-500/10"
               />
               <StatCard
                 icon={<TrendingDown className="h-5 w-5" />}
                 label="Total Expenses"
-                value={`$${latestSnapshot.expenses.total.toLocaleString()}`}
+                value={`$${(latestSnapshot.expenses?.total ?? 0).toLocaleString()}`}
                 color="text-red-500"
                 bg="bg-red-500/10"
               />
               <StatCard
                 icon={<DollarSign className="h-5 w-5" />}
                 label="Burn Rate"
-                value={`$${Math.abs(latestSnapshot.cashFlow.monthlyBurnRate).toLocaleString()}/mo`}
+                value={`$${Math.abs(latestSnapshot.cashFlow?.monthlyBurnRate ?? 0).toLocaleString()}/mo`}
                 color="text-orange-500"
                 bg="bg-orange-500/10"
               />
               <StatCard
                 icon={<Users className="h-5 w-5" />}
                 label="Active Users"
-                value={latestSnapshot.customerMetrics.activeUsers.toLocaleString()}
+                value={(latestSnapshot.customerMetrics?.activeUsers ?? 0).toLocaleString()}
                 color="text-primary"
                 bg="bg-primary/10"
               />
               <StatCard
                 icon={<Activity className="h-5 w-5" />}
                 label="ARPU"
-                value={`$${latestSnapshot.customerMetrics.arpu.toLocaleString()}`}
+                value={`$${(latestSnapshot.customerMetrics?.arpu ?? 0).toLocaleString()}`}
                 color="text-primary"
                 bg="bg-primary/10"
               />
               <StatCard
                 icon={<BarChart3 className="h-5 w-5" />}
                 label="CLTV"
-                value={`$${latestSnapshot.customerMetrics.cltv.toLocaleString()}`}
+                value={`$${(latestSnapshot.customerMetrics?.cltv ?? 0).toLocaleString()}`}
                 color="text-accent"
                 bg="bg-accent/10"
               />
               <StatCard
                 icon={<TrendingDown className="h-5 w-5" />}
                 label="Churn Rate"
-                value={`${(latestSnapshot.customerMetrics.churnRate * 100).toFixed(1)}%`}
+                value={`${((latestSnapshot.customerMetrics?.churnRate ?? 0) * 100).toFixed(1)}%`}
                 color="text-red-500"
                 bg="bg-red-500/10"
               />
               <StatCard
                 icon={<DollarSign className="h-5 w-5" />}
                 label="Runway"
-                value={`${latestSnapshot.cashFlow.runway.toFixed(1)} months`}
+                value={`${(latestSnapshot.cashFlow?.runway ?? 0).toFixed(1)} months`}
                 color="text-green-600"
                 bg="bg-green-500/10"
               />
