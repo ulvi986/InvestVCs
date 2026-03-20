@@ -68,6 +68,10 @@ const SignIn = () => {
               Don't have an account?{" "}
               <Link to="/signup" className="text-primary hover:underline font-medium">Sign Up</Link>
             </p>
+            <p className="text-sm text-muted-foreground">
+              Are you an investor?{" "}
+              <Link to="/investor-signup" className="text-primary hover:underline font-medium">Investor Registration</Link>
+            </p>
           </CardFooter>
         </form>
       </Card>
