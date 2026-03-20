@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import { Shield, TrendingUp, Search } from "lucide-react";
+import { Shield, TrendingUp, Search, Globe, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ProfileRow {
@@ -11,6 +11,8 @@ interface ProfileRow {
   surname: string;
   startup_name: string;
   startup_description: string | null;
+  country: string | null;
+  industry: string | null;
   created_at: string;
 }
 
@@ -35,11 +37,9 @@ const FRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
 function getFinalLevel(answers: Record<string, boolean>, prefix: string, count: number, criteria: number[][]): number {
   let finalLevel = 0;
   for (let lvl = 1; lvl <= count; lvl++) {
-    const [mCount, sCount] = criteria[lvl - 1] || [2, 1];
+    const [mCount] = criteria[lvl - 1] || [2, 1];
     const allM = Array.from({ length: mCount }, (_, i) => answers[`${prefix}-${lvl}-M-${i}`] === true).every(Boolean);
-    const sMet = Array.from({ length: sCount }, (_, i) => answers[`${prefix}-${lvl}-S-${i}`] === true).filter(Boolean).length;
-    const sRequired = Math.ceil(sCount * 0.7);
-    if (allM && (sCount === 0 || sMet >= sRequired)) finalLevel = lvl;
+    if (allM) finalLevel = lvl;
     else break;
   }
   return finalLevel;
@@ -113,7 +113,9 @@ const InvestorDashboard = () => {
     !search ||
     p.startup_name.toLowerCase().includes(search.toLowerCase()) ||
     p.name.toLowerCase().includes(search.toLowerCase()) ||
-    p.surname.toLowerCase().includes(search.toLowerCase())
+    p.surname.toLowerCase().includes(search.toLowerCase()) ||
+    (p.country ?? "").toLowerCase().includes(search.toLowerCase()) ||
+    (p.industry ?? "").toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -129,7 +131,7 @@ const InvestorDashboard = () => {
         <div className="mb-6 max-w-md relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search startups..."
+            placeholder="Search startups, country, industry..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -155,8 +157,20 @@ const InvestorDashboard = () => {
                     <div>
                       <h3 className="text-lg font-bold text-foreground">{profile.startup_name}</h3>
                       <p className="text-sm text-muted-foreground">{profile.name} {profile.surname}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {profile.country && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
+                            <Globe className="h-3 w-3" /> {profile.country}
+                          </span>
+                        )}
+                        {profile.industry && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent flex items-center gap-1">
+                            <Layers className="h-3 w-3" /> {profile.industry}
+                          </span>
+                        )}
+                      </div>
                       {profile.startup_description && (
-                        <p className="text-sm text-muted-foreground mt-1 max-w-xl">{profile.startup_description}</p>
+                        <p className="text-sm text-muted-foreground mt-2 max-w-xl">{profile.startup_description}</p>
                       )}
                     </div>
                     <span className="text-xs text-muted-foreground">
