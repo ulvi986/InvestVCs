@@ -326,6 +326,9 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
             <Field label="Avg Purchase Value" value={avgPurchaseValue} onChange={setAvgPurchaseValue} />
             <Field label="Total Product Revenue" value={totalProductRevenue} onChange={setTotalProductRevenue} />
             <Field label="Total Production Costs" value={totalProductionCosts} onChange={setTotalProductionCosts} />
+            <Field label="Cost of Investment" value={costOfInvestment} onChange={setCostOfInvestment} />
+            <Field label="Initial Value" value={initialValue} onChange={setInitialValue} />
+            <CountField label="Number of Periods" value={numberOfPeriods} onChange={setNumberOfPeriods} hint="Number of periods for CAGR calculation" />
           </div>
           <div className="mt-3 space-y-0 divide-y divide-border/50">
             <ResultRow label="Active Users" value={calcs.activeUsers} prefix="" />
@@ -337,6 +340,11 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
             <ResultRow label="Gross Profit" value={calcs.grossProfit} />
             <ResultRow label="Gross Margin" value={calcs.grossMargin * 100} prefix="" suffix="%" />
             <ResultRow label="Customer Lifetime Value (CLTV)" value={calcs.cltv} bold highlight />
+            <ResultRow label="ROI (Return on Investment)" value={calcs.roi} prefix="" suffix="%" bold highlight />
+            <ResultRow label="Growth Rate" value={calcs.growthRate} prefix="" suffix="%" bold highlight />
+            <ResultRow label="CAGR (Compound Annual Growth Rate)" value={calcs.cagr} prefix="" suffix="%" bold highlight />
+            <ResultRow label="Profit Margin" value={calcs.profitMargin} prefix="" suffix="%" bold highlight />
+            <ResultRow label="Profit Percentage" value={calcs.profitPercentage} prefix="" suffix="%" bold highlight />
           </div>
         </SectionCard>
       </div>
