@@ -1,35 +1,57 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, Globe } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useLanguage, Language } from "@/context/LanguageContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import logoImg from "@/assets/logo.jpeg";
+
+const langLabels: Record<Language, string> = {
+  en: "English",
+  tr: "Türkçe",
+  az: "Azərbaycan",
+};
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin, isInvestor } = useUserRole();
+  const { isAdmin, isInvestor, isInvestorPending } = useUserRole();
+  const { t, language, setLanguage } = useLanguage();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  const isInvestorUser = isInvestor || isInvestorPending;
+
   const links = user
     ? [
-        ...(isAdmin ? [{ to: "/admin", label: "🛡️ Admin Panel" }] : []),
-        ...(isInvestor
+        ...(isAdmin ? [{ to: "/admin", label: t("nav.admin") }] : []),
+        // Investor: pending → only Profile; approved → full menu
+        ...(isInvestorUser
           ? [
-              { to: "/investor", label: "📈 Investor Dashboard" },
-              { to: "/vacancies", label: "💼 Vacancies" },
-              { to: "/profile", label: "👤 Profile" },
+              ...(isInvestor
+                ? [
+                    { to: "/investor", label: t("nav.investor_dashboard") },
+                    { to: "/vacancies", label: t("nav.vacancies") },
+                  ]
+                : []),
+              { to: "/profile", label: t("nav.profile") },
             ]
           : []),
-        ...(!isInvestor
+        // Startup users
+        ...(!isInvestorUser
           ? [
-              { to: "/evaluation", label: "Startup Evaluation" },
-              { to: "/preparation", label: "Financial Management" },
-              { to: "/readiness", label: "Readiness Level" },
-              { to: "/summary", label: "📊 Overall Summary" },
-              { to: "/vacancies", label: "💼 Vacancies" },
-              { to: "/profile", label: "👤 Profile" },
+              { to: "/evaluation", label: t("nav.evaluation") },
+              { to: "/preparation", label: t("nav.financial") },
+              { to: "/readiness", label: t("nav.readiness") },
+              { to: "/summary", label: t("nav.summary") },
+              { to: "/vacancies", label: t("nav.vacancies") },
+              { to: "/profile", label: t("nav.profile") },
             ]
           : []),
       ]
@@ -60,24 +82,45 @@ const Navbar = () => {
           ))}
         </div>
 
-        {user ? (
-          <div className="hidden lg:flex items-center gap-2">
-            <Button variant="ghost" size="icon" onClick={signOut} title="Sign Out">
+        <div className="hidden lg:flex items-center gap-2">
+          {/* Language switcher */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground">
+                <Globe className="h-4 w-4" />
+                {langLabels[language]}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {(Object.keys(langLabels) as Language[]).map((lang) => (
+                <DropdownMenuItem
+                  key={lang}
+                  onClick={() => setLanguage(lang)}
+                  className={language === lang ? "bg-primary/10 text-primary" : ""}
+                >
+                  {langLabels[lang]}
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          {user ? (
+            <Button variant="ghost" size="icon" onClick={signOut} title={t("nav.signout")}>
               <LogOut className="h-4 w-4" />
             </Button>
-          </div>
-        ) : (
-          <div className="hidden lg:flex items-center gap-2">
-            <Link to="/signin">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link to="/signup">
-              <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
-                Get Started
-              </Button>
-            </Link>
-          </div>
-        )}
+          ) : (
+            <>
+              <Link to="/signin">
+                <Button variant="ghost">{t("nav.signin")}</Button>
+              </Link>
+              <Link to="/signup">
+                <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
+                  {t("nav.signup")}
+                </Button>
+              </Link>
+            </>
+          )}
+        </div>
 
         {/* Mobile toggle */}
         <button className="lg:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
@@ -98,18 +141,36 @@ const Navbar = () => {
               {link.label}
             </Link>
           ))}
+
+          {/* Mobile language switcher */}
+          <div className="flex gap-2 mt-2 px-4">
+            {(Object.keys(langLabels) as Language[]).map((lang) => (
+              <button
+                key={lang}
+                onClick={() => setLanguage(lang)}
+                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
+                  language === lang
+                    ? "bg-primary/10 border-primary text-primary"
+                    : "border-border text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {langLabels[lang]}
+              </button>
+            ))}
+          </div>
+
           {user ? (
             <Button variant="ghost" className="mt-2 w-full" onClick={() => { signOut(); setMobileOpen(false); }}>
-              Sign Out
+              {t("nav.signout")}
             </Button>
           ) : (
             <>
               <Link to="/signin" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="mt-2 w-full">Sign In</Button>
+                <Button variant="outline" className="mt-2 w-full">{t("nav.signin")}</Button>
               </Link>
               <Link to="/signup" onClick={() => setMobileOpen(false)}>
                 <Button className="mt-2 w-full gradient-primary text-primary-foreground border-0">
-                  Get Started
+                  {t("nav.signup")}
                 </Button>
               </Link>
             </>

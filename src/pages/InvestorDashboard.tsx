@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
+import { useLanguage } from "@/context/LanguageContext";
 import { Shield, TrendingUp, Search, Globe, Layers, ChevronDown, ChevronUp } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -52,6 +53,7 @@ function numFmt(v: number | null | undefined): string {
 
 const InvestorDashboard = () => {
   const { isInvestor, isInvestorPending, loading: roleLoading } = useUserRole();
+  const { t } = useLanguage();
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [evaluations, setEvaluations] = useState<EvalRow[]>([]);
   const [readiness, setReadiness] = useState<ReadinessRow[]>([]);
@@ -82,7 +84,7 @@ const InvestorDashboard = () => {
   if (roleLoading) {
     return (
       <Layout>
-        <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Loading...</div>
+        <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">{t("common.loading")}</div>
       </Layout>
     );
   }
@@ -93,8 +95,8 @@ const InvestorDashboard = () => {
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center max-w-md">
             <Shield className="h-16 w-16 text-amber-500/50 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-foreground mb-2">Pending Approval</h2>
-            <p className="text-muted-foreground">Your investor application is under review. An admin will approve your access shortly.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">{t("investor.pending_title")}</h2>
+            <p className="text-muted-foreground">{t("investor.pending_desc")}</p>
           </div>
         </div>
       </Layout>
@@ -107,8 +109,8 @@ const InvestorDashboard = () => {
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
             <Shield className="h-16 w-16 text-destructive/50 mx-auto mb-4" />
-            <h2 className="text-2xl font-bold text-foreground mb-2">Access Denied</h2>
-            <p className="text-muted-foreground">You don't have investor privileges.</p>
+            <h2 className="text-2xl font-bold text-foreground mb-2">{t("investor.denied_title")}</h2>
+            <p className="text-muted-foreground">{t("investor.denied_desc")}</p>
           </div>
         </div>
       </Layout>
@@ -133,15 +135,15 @@ const InvestorDashboard = () => {
       <div className="container py-10">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-primary" /> Investor Dashboard
+            <TrendingUp className="h-8 w-8 text-primary" /> {t("investor.title")}
           </h1>
-          <p className="mt-2 text-muted-foreground">Browse all startups and their complete evaluation summary.</p>
+          <p className="mt-2 text-muted-foreground">{t("investor.desc")}</p>
         </div>
 
         <div className="mb-6 max-w-md relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search startups, country, industry..."
+            placeholder={t("investor.search")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-10"
@@ -149,9 +151,9 @@ const InvestorDashboard = () => {
         </div>
 
         {loading ? (
-          <p className="text-muted-foreground">Loading...</p>
+          <p className="text-muted-foreground">{t("common.loading")}</p>
         ) : filtered.length === 0 ? (
-          <p className="text-muted-foreground">No startups found.</p>
+          <p className="text-muted-foreground">{t("investor.no_startups")}</p>
         ) : (
           <div className="space-y-4">
             {filtered.map((profile) => {
@@ -168,15 +170,13 @@ const InvestorDashboard = () => {
               const vals = [berkus, scorecard, riskFactor].filter((v): v is number => v != null && v > 0);
               const weightedAvg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
 
-              const trlStatus = trl >= 9 ? "Completed" : trl >= 5 ? "Advanced" : trl >= 1 ? "In Progress" : "Not Started";
-              const crlStatus = crl >= 9 ? "Completed" : crl >= 5 ? "Advanced" : crl >= 1 ? "In Progress" : "Not Started";
-              const frlStatus = frl >= 9 ? "Completed" : frl >= 5 ? "Advanced" : frl >= 1 ? "In Progress" : "Not Started";
+              const getStatus = (level: number) =>
+                level >= 9 ? t("investor.completed") : level >= 5 ? t("investor.advanced") : level >= 1 ? t("investor.in_progress") : t("investor.not_started");
 
               const isExpanded = expandedId === profile.id;
 
               return (
                 <div key={profile.id} className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
-                  {/* Header - always visible */}
                   <button
                     onClick={() => setExpandedId(isExpanded ? null : profile.id)}
                     className="w-full p-6 text-left hover:bg-muted/20 transition-colors"
@@ -202,55 +202,51 @@ const InvestorDashboard = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xs text-muted-foreground mb-1">Weighted Avg Valuation</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg")}</p>
                         <p className="text-xl font-bold text-primary">{numFmt(weightedAvg)}</p>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Joined {new Date(profile.created_at).toLocaleDateString()}
+                          {t("investor.joined")} {new Date(profile.created_at).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                   </button>
 
-                  {/* Expanded details */}
                   {isExpanded && (
                     <div className="border-t border-border p-6 space-y-6">
                       {profile.startup_description && (
                         <p className="text-sm text-muted-foreground max-w-2xl">{profile.startup_description}</p>
                       )}
 
-                      {/* Valuation Methods */}
                       <div>
-                        <h4 className="text-sm font-semibold text-foreground mb-3">Pre-Seed Valuation Methods</h4>
+                        <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.preseed_methods")}</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                            <p className="text-xs text-muted-foreground mb-1">Berkus Method</p>
+                            <p className="text-xs text-muted-foreground mb-1">{t("investor.berkus")}</p>
                             <p className="text-2xl font-bold text-primary">{numFmt(berkus)}</p>
                           </div>
                           <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                            <p className="text-xs text-muted-foreground mb-1">Scorecard Method</p>
+                            <p className="text-xs text-muted-foreground mb-1">{t("investor.scorecard")}</p>
                             <p className="text-2xl font-bold text-primary">{numFmt(scorecard)}</p>
                           </div>
                           <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                            <p className="text-xs text-muted-foreground mb-1">Risk Factor Method</p>
+                            <p className="text-xs text-muted-foreground mb-1">{t("investor.risk_factor")}</p>
                             <p className="text-2xl font-bold text-primary">{numFmt(riskFactor)}</p>
                           </div>
                         </div>
                       </div>
 
-                      {/* Weighted Average */}
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">Weighted Average Valuation</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")}</p>
                         <p className="text-3xl font-bold text-primary">{numFmt(weightedAvg)}</p>
-                        <p className="text-xs text-muted-foreground mt-1">Based on {vals.length} method(s)</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t("investor.based_on")} {vals.length} {t("investor.methods")}</p>
                       </div>
 
-                      {/* Readiness Levels */}
                       <div>
-                        <h4 className="text-sm font-semibold text-foreground mb-3">Readiness Levels</h4>
+                        <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.readiness")}</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <ReadinessCard label="Technology (TRL)" level={trl} status={trlStatus} />
-                          <ReadinessCard label="Commercial (CRL)" level={crl} status={crlStatus} />
-                          <ReadinessCard label="Financial (FRL)" level={frl} status={frlStatus} />
+                          <ReadinessCard label={t("investor.trl")} level={trl} status={getStatus(trl)} />
+                          <ReadinessCard label={t("investor.crl")} level={crl} status={getStatus(crl)} />
+                          <ReadinessCard label={t("investor.frl")} level={frl} status={getStatus(frl)} />
                         </div>
                       </div>
                     </div>

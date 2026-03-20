@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { StartupProvider } from "@/context/StartupContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
+import { LanguageProvider } from "@/context/LanguageContext";
 import Index from "./pages/Index";
 import StartupEvaluation from "./pages/StartupEvaluation";
 import ProfilePage from "./pages/ProfilePage";
@@ -39,27 +40,29 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
-        <StartupProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/signup" element={<AuthRoute><SignUp /></AuthRoute>} />
-              <Route path="/signin" element={<AuthRoute><SignIn /></AuthRoute>} />
-              <Route path="/investor-signup" element={<AuthRoute><InvestorSignUp /></AuthRoute>} />
-              <Route path="/" element={<Index />} />
-              <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
-              <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
-              <Route path="/preparation" element={<ProtectedRoute><PreparationPhase /></ProtectedRoute>} />
-              <Route path="/readiness" element={<ProtectedRoute><ReadinessLevel /></ProtectedRoute>} />
-              <Route path="/summary" element={<ProtectedRoute><OverallSummary /></ProtectedRoute>} />
-              <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-              <Route path="/investor" element={<ProtectedRoute><InvestorDashboard /></ProtectedRoute>} />
-              <Route path="/vacancies" element={<ProtectedRoute><StartupVacancies /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </StartupProvider>
+        <LanguageProvider>
+          <StartupProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <Routes>
+                <Route path="/signup" element={<AuthRoute><SignUp /></AuthRoute>} />
+                <Route path="/signin" element={<AuthRoute><SignIn /></AuthRoute>} />
+                <Route path="/investor-signup" element={<AuthRoute><InvestorSignUp /></AuthRoute>} />
+                <Route path="/" element={<Index />} />
+                <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
+                <Route path="/preparation" element={<ProtectedRoute><PreparationPhase /></ProtectedRoute>} />
+                <Route path="/readiness" element={<ProtectedRoute><ReadinessLevel /></ProtectedRoute>} />
+                <Route path="/summary" element={<ProtectedRoute><OverallSummary /></ProtectedRoute>} />
+                <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+                <Route path="/investor" element={<ProtectedRoute><InvestorDashboard /></ProtectedRoute>} />
+                <Route path="/vacancies" element={<ProtectedRoute><StartupVacancies /></ProtectedRoute>} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </BrowserRouter>
+          </StartupProvider>
+        </LanguageProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
