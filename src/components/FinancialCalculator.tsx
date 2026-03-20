@@ -174,13 +174,18 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
   const [totalProductRevenue, setTotalProductRevenue] = useState("");
   const [totalProductionCosts, setTotalProductionCosts] = useState("");
 
+  // Profitability
+  const [costOfInvestment, setCostOfInvestment] = useState("");
+  const [initialValue, setInitialValue] = useState("");
+  const [numberOfPeriods, setNumberOfPeriods] = useState("");
+
   const n = (v: string) => parseFloat(v) || 0;
   const sumItems = (items: OtherItem[]) => items.reduce((s, it) => s + n(it.amount), 0);
 
   const otherIncomeTotal = sumItems(otherIncomeItems);
   const otherExpenseTotal = sumItems(otherExpenseItems);
 
-  const calcs = useMemo(() => {
+    const calcs = useMemo(() => {
     const totalRevenue = n(productSales) + n(subscription) + n(serviceFees) + otherIncomeTotal;
     const totalExpenses = n(salaries) + n(rent) + n(salesMarketing) + n(tech) + n(loanPayments) + otherExpenseTotal + n(taxes) + n(depreciation) + n(legalAccounting);
     const cashInflow = totalRevenue;
@@ -198,8 +203,18 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
     const grossProfit = n(totalProductRevenue) - n(totalProductionCosts);
     const grossMargin = n(totalProductRevenue) > 0 ? grossProfit / n(totalProductRevenue) : NaN;
     const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(arpu) ? arpu * grossMargin * customerLifetime : NaN;
-    return { totalRevenue, totalExpenses, cashInflow, cashOutflow, endingCash, monthlyBurnRate, runway, activeUsers, churnRate, arpu, avgRevenuePerCustomerPerMonth, customerLifetime, cac, grossProfit, grossMargin, cltv };
-  }, [productSales, subscription, serviceFees, otherIncomeTotal, salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting, startingCash, newCustomers, totalCustomersStart, lostCustomers, totalProductRevenue, totalProductionCosts]);
+    
+    // Profitability metrics
+    const netProfit = totalRevenue - totalExpenses;
+    const pv = endingCash; // Current Value = Ending Cash
+    const roi = n(costOfInvestment) > 0 ? ((pv - n(costOfInvestment)) / n(costOfInvestment)) * 100 : NaN;
+    const growthRate = n(initialValue) > 0 ? ((pv - n(initialValue)) / n(initialValue)) * 100 : NaN;
+    const cagr = n(initialValue) > 0 && n(numberOfPeriods) > 0 ? (Math.pow(pv / n(initialValue), 1 / n(numberOfPeriods)) - 1) * 100 : NaN;
+    const profitMargin = totalRevenue > 0 ? (netProfit / totalRevenue) * 100 : NaN;
+    const profitPercentage = totalExpenses > 0 ? (netProfit / totalExpenses) * 100 : NaN;
+
+    return { totalRevenue, totalExpenses, cashInflow, cashOutflow, endingCash, monthlyBurnRate, runway, activeUsers, churnRate, arpu, avgRevenuePerCustomerPerMonth, customerLifetime, cac, grossProfit, grossMargin, cltv, roi, growthRate, cagr, profitMargin, profitPercentage };
+  }, [productSales, subscription, serviceFees, otherIncomeTotal, salaries, rent, salesMarketing, tech, loanPayments, otherExpenseTotal, taxes, depreciation, legalAccounting, startingCash, newCustomers, totalCustomersStart, lostCustomers, totalProductRevenue, totalProductionCosts, costOfInvestment, initialValue, numberOfPeriods]);
 
   const addItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>) => setter((prev) => [...prev, { name: "", amount: "" }]);
   const removeItem = (setter: React.Dispatch<React.SetStateAction<OtherItem[]>>, i: number) => setter((prev) => prev.filter((_, idx) => idx !== i));
@@ -232,6 +247,11 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
         activeUsers: calcs.activeUsers, arpu: calcs.arpu, avgRevenuePerCustomerPerMonth: calcs.avgRevenuePerCustomerPerMonth,
         churnRate: calcs.churnRate, customerLifetime: calcs.customerLifetime,
         cac: calcs.cac, grossProfit: calcs.grossProfit, grossMargin: calcs.grossMargin, cltv: calcs.cltv,
+      },
+      profitability: {
+        costOfInvestment: n(costOfInvestment), initialValue: n(initialValue), numberOfPeriods: n(numberOfPeriods),
+        roi: calcs.roi, growthRate: calcs.growthRate, cagr: calcs.cagr,
+        profitMargin: calcs.profitMargin, profitPercentage: calcs.profitPercentage,
       },
     };
     onSave(snapshot);
@@ -306,6 +326,9 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
             <Field label="Avg Purchase Value" value={avgPurchaseValue} onChange={setAvgPurchaseValue} />
             <Field label="Total Product Revenue" value={totalProductRevenue} onChange={setTotalProductRevenue} />
             <Field label="Total Production Costs" value={totalProductionCosts} onChange={setTotalProductionCosts} />
+            <Field label="Cost of Investment" value={costOfInvestment} onChange={setCostOfInvestment} />
+            <Field label="Initial Value" value={initialValue} onChange={setInitialValue} />
+            <CountField label="Number of Periods" value={numberOfPeriods} onChange={setNumberOfPeriods} hint="Number of periods for CAGR calculation" />
           </div>
           <div className="mt-3 space-y-0 divide-y divide-border/50">
             <ResultRow label="Active Users" value={calcs.activeUsers} prefix="" />
@@ -317,6 +340,11 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
             <ResultRow label="Gross Profit" value={calcs.grossProfit} />
             <ResultRow label="Gross Margin" value={calcs.grossMargin * 100} prefix="" suffix="%" />
             <ResultRow label="Customer Lifetime Value (CLTV)" value={calcs.cltv} bold highlight />
+            <ResultRow label="ROI (Return on Investment)" value={calcs.roi} prefix="" suffix="%" bold highlight />
+            <ResultRow label="Growth Rate" value={calcs.growthRate} prefix="" suffix="%" bold highlight />
+            <ResultRow label="CAGR (Compound Annual Growth Rate)" value={calcs.cagr} prefix="" suffix="%" bold highlight />
+            <ResultRow label="Profit Margin" value={calcs.profitMargin} prefix="" suffix="%" bold highlight />
+            <ResultRow label="Profit Percentage" value={calcs.profitPercentage} prefix="" suffix="%" bold highlight />
           </div>
         </SectionCard>
       </div>
