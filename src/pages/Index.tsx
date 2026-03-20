@@ -4,14 +4,12 @@ import Layout from "@/components/Layout";
 import {
   ArrowRight,
   Shield,
-  BarChart3,
   TrendingUp,
   ClipboardList,
   DollarSign,
   Zap,
   Target,
   LineChart,
-  CheckCircle,
   Code,
   Rocket,
 } from "lucide-react";
