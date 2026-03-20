@@ -48,6 +48,16 @@ export type FinancialSnapshot = {
     grossMargin: number;
     cltv: number;
   };
+  profitability: {
+    costOfInvestment: number;
+    initialValue: number;
+    numberOfPeriods: number;
+    roi: number;
+    growthRate: number;
+    cagr: number;
+    profitMargin: number;
+    profitPercentage: number;
+  };
 };
 
 const PreparationPhase = () => {

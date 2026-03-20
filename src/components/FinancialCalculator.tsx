@@ -174,6 +174,11 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
   const [totalProductRevenue, setTotalProductRevenue] = useState("");
   const [totalProductionCosts, setTotalProductionCosts] = useState("");
 
+  // Profitability
+  const [costOfInvestment, setCostOfInvestment] = useState("");
+  const [initialValue, setInitialValue] = useState("");
+  const [numberOfPeriods, setNumberOfPeriods] = useState("");
+
   const n = (v: string) => parseFloat(v) || 0;
   const sumItems = (items: OtherItem[]) => items.reduce((s, it) => s + n(it.amount), 0);
 
