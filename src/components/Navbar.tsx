@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Menu, X, LogOut, UserCircle } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
+import logoImg from "@/assets/logo.jpeg";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
@@ -34,21 +35,17 @@ const Navbar = () => {
       ]
     : [];
 
-  const allLinks = links;
-
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
       <div className="container flex h-16 items-center justify-between">
         <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold text-foreground">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-            <BarChart3 className="h-4 w-4 text-primary-foreground" />
-          </div>
-          StartupEval
+          <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-lg object-cover" />
+          InvestVCs
         </Link>
 
         {/* Desktop nav */}
         <div className="hidden items-center gap-1 lg:flex">
-          {allLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -91,7 +88,7 @@ const Navbar = () => {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="border-t border-border bg-card p-4 lg:hidden">
-          {allLinks.map((link) => (
+          {links.map((link) => (
             <Link
               key={link.to}
               to={link.to}

@@ -6,7 +6,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
-import { BarChart3, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import logoImg from "@/assets/logo.jpeg";
 
 const SignIn = () => {
   const navigate = useNavigate();
@@ -38,10 +39,8 @@ const SignIn = () => {
       <Card className="w-full max-w-md shadow-elevated border-border">
         <CardHeader className="text-center space-y-2">
           <Link to="/" className="mx-auto flex items-center gap-2 font-display text-xl font-bold text-foreground">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-              <BarChart3 className="h-4 w-4 text-primary-foreground" />
-            </div>
-            StartupEval
+            <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-lg object-cover" />
+            InvestVCs
           </Link>
           <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>

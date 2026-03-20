@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
-import { BarChart3, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
+import logoImg from "@/assets/logo.jpeg";
 
 const COUNTRIES = [
   "Azerbaijan", "Turkey", "United States", "United Kingdom", "Germany", "France",
@@ -86,10 +87,8 @@ const SignUp = () => {
       <Card className="w-full max-w-lg shadow-elevated border-border">
         <CardHeader className="text-center space-y-2">
           <Link to="/" className="mx-auto flex items-center gap-2 font-display text-xl font-bold text-foreground">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg gradient-primary">
-              <BarChart3 className="h-4 w-4 text-primary-foreground" />
-            </div>
-            StartupEval
+            <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-lg object-cover" />
+            InvestVCs
           </Link>
           <CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
           <CardDescription>Start evaluating your startup</CardDescription>
