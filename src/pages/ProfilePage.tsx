@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useStartupContext } from "@/context/StartupContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -43,9 +44,12 @@ interface Profile {
 const ProfilePage = () => {
   const { user } = useAuth();
   const { financial, evaluation } = useStartupContext();
+  const { isInvestor, isInvestorPending } = useUserRole();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  const isInvestorUser = isInvestor || isInvestorPending;
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -122,6 +126,85 @@ const ProfilePage = () => {
     );
   }
 
+  // ─── INVESTOR PROFILE ───
+  if (isInvestorUser) {
+    return (
+      <Layout>
+        <div className="container py-10 space-y-8">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">Investor Profile</h1>
+            <p className="mt-2 text-muted-foreground">Your personal information</p>
+          </div>
+
+          <Card className="max-w-lg border-border shadow-card">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <User className="h-5 w-5 text-primary" />
+                Personal Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="name">First Name</Label>
+                  <Input id="name" value={profile?.name || ""} onChange={e => setProfile(p => p ? { ...p, name: e.target.value } : p)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="surname">Last Name</Label>
+                  <Input id="surname" value={profile?.surname || ""} onChange={e => setProfile(p => p ? { ...p, surname: e.target.value } : p)} />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+                  <Mail className="h-4 w-4" />
+                  {user?.email}
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Country</Label>
+                <Select value={profile?.country || ""} onValueChange={(val) => setProfile(p => p ? { ...p, country: val } : p)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Registration Date</Label>
+                <div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground">
+                  <CalendarDays className="h-4 w-4" />
+                  {user?.created_at ? new Date(user.created_at).toLocaleDateString("en-US") : "—"}
+                </div>
+              </div>
+
+              {isInvestorPending && (
+                <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700">
+                  ⏳ Your investor application is pending admin approval.
+                </div>
+              )}
+              {isInvestor && (
+                <div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-700">
+                  ✅ Approved Investor
+                </div>
+              )}
+
+              <Button onClick={handleSave} disabled={saving} className="gradient-primary text-primary-foreground border-0">
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Save
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </Layout>
+    );
+  }
+
+  // ─── STARTUP PROFILE ───
   return (
     <Layout>
       <div className="container py-10 space-y-8">
