@@ -1,15 +1,37 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Menu, X, LogOut, UserCircle } from "lucide-react";
+import { BarChart3, Menu, X, LogOut, UserCircle, Shield, TrendingUp, Briefcase } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin, isInvestor } = useUserRole();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const links = user
+    ? [
+        ...(isAdmin ? [{ to: "/admin", label: "🛡️ Admin Panel" }] : []),
+        ...(isInvestor ? [{ to: "/investor", label: "📈 Investor Dashboard" }] : []),
+        ...(!isInvestor && !isAdmin
+          ? [
+              { to: "/evaluation", label: "Startup Evaluation" },
+              { to: "/preparation", label: "Financial Management" },
+              { to: "/readiness", label: "Readiness Level" },
+              { to: "/summary", label: "📊 Overall Summary" },
+            ]
+          : []),
+        ...(isAdmin || isInvestor
+          ? []
+          : []),
+        { to: "/vacancies", label: "💼 Vacancies" },
+      ]
+    : [];
+
+  // For admin/investor, also show startup tools if they have startup role too
+  const startupLinks = isAdmin || isInvestor
     ? [
         { to: "/evaluation", label: "Startup Evaluation" },
         { to: "/preparation", label: "Financial Management" },
@@ -17,6 +39,8 @@ const Navbar = () => {
         { to: "/summary", label: "📊 Overall Summary" },
       ]
     : [];
+
+  const allLinks = [...links, ...startupLinks];
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-card/80 backdrop-blur-lg">
@@ -29,12 +53,12 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden items-center gap-1 md:flex">
-          {links.map((link) => (
+        <div className="hidden items-center gap-1 lg:flex">
+          {allLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className={`rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
+              className={`rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 location.pathname === link.to
                   ? "bg-primary/10 text-primary"
                   : "text-muted-foreground hover:text-foreground"
@@ -46,12 +70,7 @@ const Navbar = () => {
         </div>
 
         {user ? (
-          <div className="hidden md:flex items-center gap-2">
-            <Link to="/evaluation">
-              <Button className="gradient-primary text-primary-foreground border-0 shadow-elevated">
-                Start Evaluation
-              </Button>
-            </Link>
+          <div className="hidden lg:flex items-center gap-2">
             <Link to="/profile">
               <Button variant="ghost" size="icon" title="Profile">
                 <UserCircle className="h-4 w-4" />
@@ -62,7 +81,7 @@ const Navbar = () => {
             </Button>
           </div>
         ) : (
-          <div className="hidden md:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2">
             <Link to="/signin">
               <Button variant="ghost">Sign In</Button>
             </Link>
@@ -75,15 +94,15 @@ const Navbar = () => {
         )}
 
         {/* Mobile toggle */}
-        <button className="md:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="lg:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="border-t border-border bg-card p-4 md:hidden">
-          {links.map((link) => (
+        <div className="border-t border-border bg-card p-4 lg:hidden">
+          {allLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
@@ -95,10 +114,8 @@ const Navbar = () => {
           ))}
           {user ? (
             <>
-              <Link to="/evaluation" onClick={() => setMobileOpen(false)}>
-                <Button className="mt-2 w-full gradient-primary text-primary-foreground border-0">
-                  Start Evaluation
-                </Button>
+              <Link to="/profile" onClick={() => setMobileOpen(false)}>
+                <Button variant="ghost" className="mt-2 w-full">Profile</Button>
               </Link>
               <Button variant="ghost" className="mt-2 w-full" onClick={() => { signOut(); setMobileOpen(false); }}>
                 Sign Out

@@ -299,6 +299,36 @@ const OverallSummary = () => {
           </p>
         </div>
 
+        {/* Readiness Levels Summary */}
+        {hasReadiness && (
+          <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
+            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+              <Cpu className="h-5 w-5 text-primary" /> Readiness Levels
+            </h3>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {[
+                { label: "Technology (TRL)", level: trlLevel, max: TRL_COUNT, color: "text-primary", labels: ["Fundamental Concept","Defined Concept","Proof of Concept","Laboratory Prototype","Relevant Environment Testing","Pilot with Real Users","Operational Prototype","Certified Product","Commercial Deployment"] },
+                { label: "Commercial (CRL)", level: crlLevel, max: CRL_COUNT, color: "text-accent", labels: ["Problem Validation","Value Proposition","MVP Testing","First Sale","Repeat Customers","Growth Metrics","Investment Ready","Market Expansion","Sustainable Growth"] },
+                { label: "Funding (FRL)", level: frlLevel, max: FRL_COUNT, color: "text-purple-500", labels: ["Idea Stage","Financial Planning","First Funding","Pitch Preparation","Investor Materials","Investment Offer","Investor Discussions","Governance Ready","Funded"] },
+              ].map((r) => (
+                <div key={r.label} className="rounded-lg border border-border p-4 bg-muted/30">
+                  <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
+                  <p className={`text-2xl font-bold ${r.color}`}>{r.level} / {r.max}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    {r.level > 0 ? r.labels[r.level - 1] : "Not started"}
+                  </p>
+                  <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all duration-500"
+                      style={{ width: `${(r.level / r.max) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Global Health Score */}
         <div className="rounded-2xl border border-border bg-card p-8 shadow-card mb-8 flex flex-col items-center">
           <GlobalGauge score={globalScore} />
