@@ -165,21 +165,14 @@ type Answers = Record<string, boolean>;
 
 function isLevelCompleted(level: Level, answers: Answers, prefix: string): boolean {
   const mandatory = level.criteria.filter(c => c.type === "M");
-  const supportive = level.criteria.filter(c => c.type === "S");
 
   const allMandatory = mandatory.every((_, i) => {
     const key = `${prefix}-${level.level}-M-${i}`;
     return answers[key] === true;
   });
 
-  const supportiveMet = supportive.filter((_, i) => {
-    const key = `${prefix}-${level.level}-S-${i}`;
-    return answers[key] === true;
-  }).length;
-  const supportiveRequired = Math.ceil(supportive.length * 0.7);
-  const supportiveOk = supportive.length === 0 || supportiveMet >= supportiveRequired;
-
-  return allMandatory && supportiveOk;
+  // Level is completed when all mandatory criteria are met
+  return allMandatory;
 }
 
 function allMandatoryMet(level: Level, answers: Answers, prefix: string): boolean {

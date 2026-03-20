@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { Briefcase, Plus, Trash2, X } from "lucide-react";
+import { Briefcase, Plus, Trash2, X, Pencil, Mail, Clock, CheckCircle } from "lucide-react";
 
 interface Vacancy {
   id: string;
@@ -18,24 +19,30 @@ interface Vacancy {
   startup_description: string | null;
   job_description: string;
   specialization: string;
+  contact_email: string;
+  approved: boolean;
   created_at: string;
 }
 
+const emptyForm = {
+  startup_name: "",
+  country: "",
+  job_type: "",
+  startup_description: "",
+  job_description: "",
+  specialization: "",
+  contact_email: "",
+};
+
 const StartupVacancies = () => {
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-
-  const [form, setForm] = useState({
-    startup_name: "",
-    country: "",
-    job_type: "",
-    startup_description: "",
-    job_description: "",
-    specialization: "",
-  });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
 
   useEffect(() => {
     const load = async () => {
@@ -56,35 +63,86 @@ const StartupVacancies = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
-    if (!form.startup_name || !form.country || !form.job_type || !form.job_description || !form.specialization) {
+    if (!form.startup_name || !form.country || !form.job_type || !form.job_description || !form.specialization || !form.contact_email) {
       toast.error("Please fill in all required fields");
       return;
     }
 
     setSubmitting(true);
-    const { data, error } = await supabase
-      .from("startup_vacancies")
-      .insert({
-        user_id: user.id,
-        startup_name: form.startup_name,
-        country: form.country,
-        job_type: form.job_type,
-        startup_description: form.startup_description || null,
-        job_description: form.job_description,
-        specialization: form.specialization,
-      } as any)
-      .select()
-      .single();
 
-    setSubmitting(false);
-    if (error) {
-      toast.error("Failed to post vacancy");
+    if (editingId) {
+      // Update existing vacancy
+      const { error } = await supabase
+        .from("startup_vacancies")
+        .update({
+          startup_name: form.startup_name,
+          country: form.country,
+          job_type: form.job_type,
+          startup_description: form.startup_description || null,
+          job_description: form.job_description,
+          specialization: form.specialization,
+          contact_email: form.contact_email,
+        } as any)
+        .eq("id", editingId);
+
+      setSubmitting(false);
+      if (error) {
+        toast.error("Failed to update vacancy");
+      } else {
+        toast.success("Vacancy updated!");
+        setVacancies((prev) =>
+          prev.map((v) =>
+            v.id === editingId
+              ? { ...v, ...form, startup_description: form.startup_description || null }
+              : v
+          )
+        );
+        setForm(emptyForm);
+        setEditingId(null);
+        setShowForm(false);
+      }
     } else {
-      toast.success("Vacancy posted!");
-      setVacancies((prev) => [data as any, ...prev]);
-      setForm({ startup_name: "", country: "", job_type: "", startup_description: "", job_description: "", specialization: "" });
-      setShowForm(false);
+      // Create new vacancy
+      const { data, error } = await supabase
+        .from("startup_vacancies")
+        .insert({
+          user_id: user.id,
+          startup_name: form.startup_name,
+          country: form.country,
+          job_type: form.job_type,
+          startup_description: form.startup_description || null,
+          job_description: form.job_description,
+          specialization: form.specialization,
+          contact_email: form.contact_email,
+          approved: false,
+        } as any)
+        .select()
+        .single();
+
+      setSubmitting(false);
+      if (error) {
+        toast.error("Failed to post vacancy");
+      } else {
+        toast.success("Vacancy posted! It will be visible after admin approval.");
+        setVacancies((prev) => [data as any, ...prev]);
+        setForm(emptyForm);
+        setShowForm(false);
+      }
     }
+  };
+
+  const handleEdit = (v: Vacancy) => {
+    setForm({
+      startup_name: v.startup_name,
+      country: v.country,
+      job_type: v.job_type,
+      startup_description: v.startup_description || "",
+      job_description: v.job_description,
+      specialization: v.specialization,
+      contact_email: v.contact_email || "",
+    });
+    setEditingId(v.id);
+    setShowForm(true);
   };
 
   const handleDelete = async (id: string) => {
@@ -97,6 +155,17 @@ const StartupVacancies = () => {
     }
   };
 
+  const cancelForm = () => {
+    setShowForm(false);
+    setEditingId(null);
+    setForm(emptyForm);
+  };
+
+  // Regular users see only approved vacancies + their own
+  const visibleVacancies = isAdmin
+    ? vacancies
+    : vacancies.filter((v) => v.approved || v.user_id === user?.id);
+
   return (
     <Layout>
       <div className="container py-10">
@@ -108,16 +177,17 @@ const StartupVacancies = () => {
             <p className="mt-2 text-muted-foreground">Post and browse startup job opportunities.</p>
           </div>
           {user && (
-            <Button onClick={() => setShowForm(!showForm)} className="gap-2 gradient-primary text-primary-foreground border-0">
+            <Button onClick={() => showForm ? cancelForm() : setShowForm(true)} className="gap-2 gradient-primary text-primary-foreground border-0">
               {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               {showForm ? "Cancel" : "Post Vacancy"}
             </Button>
           )}
         </div>
 
-        {/* Post Form */}
+        {/* Post / Edit Form */}
         {showForm && (
           <form onSubmit={handleSubmit} className="rounded-xl border border-primary/20 bg-primary/5 p-6 mb-8 space-y-4">
+            <h3 className="text-lg font-semibold text-foreground">{editingId ? "Edit Vacancy" : "Post New Vacancy"}</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Startup Name *</Label>
@@ -137,6 +207,10 @@ const StartupVacancies = () => {
               </div>
             </div>
             <div className="space-y-2">
+              <Label>Contact Email *</Label>
+              <Input name="contact_email" type="email" placeholder="your@email.com" value={form.contact_email} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
               <Label>Startup Description</Label>
               <Textarea name="startup_description" placeholder="Brief description of your startup" value={form.startup_description} onChange={handleChange} rows={2} />
             </div>
@@ -144,16 +218,21 @@ const StartupVacancies = () => {
               <Label>Job Description *</Label>
               <Textarea name="job_description" placeholder="Describe the role, responsibilities, and requirements" value={form.job_description} onChange={handleChange} rows={4} />
             </div>
-            <Button type="submit" disabled={submitting} className="gradient-primary text-primary-foreground border-0">
-              {submitting ? "Posting..." : "Post Vacancy"}
-            </Button>
+            <div className="flex gap-2">
+              <Button type="submit" disabled={submitting} className="gradient-primary text-primary-foreground border-0">
+                {submitting ? "Saving..." : editingId ? "Update Vacancy" : "Post Vacancy"}
+              </Button>
+              {editingId && (
+                <Button type="button" variant="outline" onClick={cancelForm}>Cancel Edit</Button>
+              )}
+            </div>
           </form>
         )}
 
         {/* Vacancies List */}
         {loading ? (
           <p className="text-muted-foreground">Loading vacancies...</p>
-        ) : vacancies.length === 0 ? (
+        ) : visibleVacancies.length === 0 ? (
           <div className="text-center py-16">
             <Briefcase className="h-16 w-16 text-muted-foreground/30 mx-auto mb-4" />
             <p className="text-lg text-muted-foreground">No vacancies posted yet.</p>
@@ -161,11 +240,18 @@ const StartupVacancies = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            {vacancies.map((v) => (
-              <div key={v.id} className="rounded-xl border border-border bg-card p-6 shadow-card">
+            {visibleVacancies.map((v) => (
+              <div key={v.id} className={`rounded-xl border p-6 shadow-card ${!v.approved ? "border-amber-500/30 bg-amber-500/5" : "border-border bg-card"}`}>
                 <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
                   <div>
-                    <h3 className="text-lg font-bold text-foreground">{v.startup_name}</h3>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-lg font-bold text-foreground">{v.startup_name}</h3>
+                      {!v.approved && (
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> Pending Approval
+                        </span>
+                      )}
+                    </div>
                     <div className="flex flex-wrap gap-2 mt-1">
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">{v.country}</span>
                       <span className="text-xs font-medium px-2 py-1 rounded-full bg-accent/10 text-accent">{v.job_type}</span>
@@ -175,14 +261,25 @@ const StartupVacancies = () => {
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
                     {user?.id === v.user_id && (
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)} className="text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <>
+                        <Button variant="ghost" size="icon" onClick={() => handleEdit(v)} className="text-primary hover:text-primary" title="Edit">
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)} className="text-destructive hover:text-destructive" title="Delete">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
                 {v.startup_description && <p className="text-sm text-muted-foreground mb-3">{v.startup_description}</p>}
-                <p className="text-sm text-foreground leading-relaxed">{v.job_description}</p>
+                <p className="text-sm text-foreground leading-relaxed mb-3">{v.job_description}</p>
+                {v.contact_email && (
+                  <div className="flex items-center gap-2 text-sm text-primary">
+                    <Mail className="h-4 w-4" />
+                    <a href={`mailto:${v.contact_email}`} className="hover:underline">{v.contact_email}</a>
+                  </div>
+                )}
               </div>
             ))}
           </div>

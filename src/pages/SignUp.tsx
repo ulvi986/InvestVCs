@@ -6,8 +6,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import { BarChart3, Loader2 } from "lucide-react";
+
+const COUNTRIES = [
+  "Azerbaijan", "Turkey", "United States", "United Kingdom", "Germany", "France",
+  "Russia", "Georgia", "Kazakhstan", "Uzbekistan", "Ukraine", "Israel",
+  "United Arab Emirates", "Saudi Arabia", "India", "China", "Japan",
+  "South Korea", "Canada", "Australia", "Brazil", "Italy", "Spain",
+  "Netherlands", "Sweden", "Switzerland", "Singapore", "Estonia", "Poland", "Other"
+];
+
+const INDUSTRIES = [
+  "Technology", "FinTech", "HealthTech", "EdTech", "E-Commerce", "SaaS",
+  "AI / Machine Learning", "Cybersecurity", "IoT", "CleanTech / GreenTech",
+  "AgriTech", "FoodTech", "Gaming", "Media & Entertainment", "Real Estate / PropTech",
+  "Logistics & Supply Chain", "Travel & Tourism", "Social Media", "Blockchain / Web3",
+  "Biotech", "Robotics", "HR Tech", "Legal Tech", "InsurTech", "Other"
+];
 
 const SignUp = () => {
   const navigate = useNavigate();
@@ -19,6 +36,8 @@ const SignUp = () => {
     password: "",
     startup_name: "",
     startup_description: "",
+    country: "",
+    industry: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -27,7 +46,7 @@ const SignUp = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.surname || !form.email || !form.password || !form.startup_name) {
+    if (!form.name || !form.surname || !form.email || !form.password || !form.startup_name || !form.country || !form.industry) {
       toast.error("Please fill in all required fields");
       return;
     }
@@ -46,6 +65,8 @@ const SignUp = () => {
           surname: form.surname,
           startup_name: form.startup_name,
           startup_description: form.startup_description,
+          country: form.country,
+          industry: form.industry,
         },
         emailRedirectTo: window.location.origin,
       },
@@ -95,8 +116,34 @@ const SignUp = () => {
               <Input id="password" name="password" type="password" placeholder="At least 6 characters" value={form.password} onChange={handleChange} />
             </div>
             <div className="space-y-2">
+              <Label>Country *</Label>
+              <Select value={form.country} onValueChange={(val) => setForm(prev => ({ ...prev, country: val }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {COUNTRIES.map(c => (
+                    <SelectItem key={c} value={c}>{c}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="startup_name">Startup Name *</Label>
               <Input id="startup_name" name="startup_name" placeholder="Your startup's name" value={form.startup_name} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label>Industry *</Label>
+              <Select value={form.industry} onValueChange={(val) => setForm(prev => ({ ...prev, industry: val }))}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select your industry" />
+                </SelectTrigger>
+                <SelectContent>
+                  {INDUSTRIES.map(ind => (
+                    <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="startup_description">About Startup</Label>

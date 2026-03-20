@@ -5,7 +5,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { CheckCircle, XCircle, Users, BarChart3, DollarSign, Cpu, Briefcase, Shield, Clock } from "lucide-react";
+import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail } from "lucide-react";
 
 interface ProfileRow {
   id: string;
@@ -13,6 +13,8 @@ interface ProfileRow {
   surname: string;
   startup_name: string;
   startup_description: string | null;
+  country: string;
+  industry: string;
   created_at: string;
 }
 
@@ -47,6 +49,8 @@ interface VacancyRow {
   startup_description: string | null;
   job_description: string;
   specialization: string;
+  contact_email: string;
+  approved: boolean;
   created_at: string;
 }
 
@@ -57,11 +61,9 @@ const FRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
 function getFinalLevel(answers: Record<string, boolean>, prefix: string, count: number, criteria: number[][]): number {
   let finalLevel = 0;
   for (let lvl = 1; lvl <= count; lvl++) {
-    const [mCount, sCount] = criteria[lvl - 1] || [2, 1];
+    const [mCount] = criteria[lvl - 1] || [2, 1];
     const allM = Array.from({ length: mCount }, (_, i) => answers[`${prefix}-${lvl}-M-${i}`] === true).every(Boolean);
-    const sMet = Array.from({ length: sCount }, (_, i) => answers[`${prefix}-${lvl}-S-${i}`] === true).filter(Boolean).length;
-    const sRequired = Math.ceil(sCount * 0.7);
-    if (allM && (sCount === 0 || sMet >= sRequired)) finalLevel = lvl;
+    if (allM) finalLevel = lvl;
     else break;
   }
   return finalLevel;
@@ -98,28 +100,60 @@ const AdminPanel = () => {
   }, [isAdmin, roleLoading]);
 
   const approveInvestor = async (roleId: string) => {
-    const { error } = await supabase
-      .from("user_roles")
-      .update({ approved: true })
-      .eq("id", roleId);
-    if (error) {
-      toast.error("Failed to approve");
-    } else {
+    const { error } = await supabase.from("user_roles").update({ approved: true }).eq("id", roleId);
+    if (error) toast.error("Failed to approve");
+    else {
       toast.success("Investor approved!");
       setRoles((prev) => prev.map((r) => (r.id === roleId ? { ...r, approved: true } : r)));
     }
   };
 
   const rejectInvestor = async (roleId: string) => {
-    const { error } = await supabase
-      .from("user_roles")
-      .delete()
-      .eq("id", roleId);
-    if (error) {
-      toast.error("Failed to reject");
-    } else {
+    const { error } = await supabase.from("user_roles").delete().eq("id", roleId);
+    if (error) toast.error("Failed to reject");
+    else {
       toast.success("Investor rejected");
       setRoles((prev) => prev.filter((r) => r.id !== roleId));
+    }
+  };
+
+  const deleteStartup = async (profileId: string) => {
+    if (!confirm("Are you sure you want to delete this startup and all its data?")) return;
+
+    // Delete related data first, then profile
+    await Promise.all([
+      supabase.from("evaluations").delete().eq("user_id", profileId),
+      supabase.from("readiness_answers").delete().eq("user_id", profileId),
+      supabase.from("financial_snapshots").delete().eq("user_id", profileId),
+      supabase.from("startup_vacancies").delete().eq("user_id", profileId),
+    ]);
+
+    const { error } = await supabase.from("profiles").delete().eq("id", profileId);
+    if (error) toast.error("Failed to delete startup");
+    else {
+      toast.success("Startup deleted");
+      setProfiles((prev) => prev.filter((p) => p.id !== profileId));
+      setEvaluations((prev) => prev.filter((e) => e.user_id !== profileId));
+      setReadiness((prev) => prev.filter((r) => r.user_id !== profileId));
+      setVacancies((prev) => prev.filter((v) => v.user_id !== profileId));
+    }
+  };
+
+  const approveVacancy = async (id: string) => {
+    const { error } = await supabase.from("startup_vacancies").update({ approved: true } as any).eq("id", id);
+    if (error) toast.error("Failed to approve vacancy");
+    else {
+      toast.success("Vacancy approved!");
+      setVacancies((prev) => prev.map((v) => (v.id === id ? { ...v, approved: true } : v)));
+    }
+  };
+
+  const deleteVacancy = async (id: string) => {
+    const { error } = await supabase.from("startup_vacancies").delete().eq("id", id);
+    if (error) toast.error("Failed to delete vacancy");
+    else {
+      toast.success("Vacancy deleted");
+      setVacancies((prev) => prev.filter((v) => v.id !== id));
     }
   };
 
@@ -151,6 +185,8 @@ const AdminPanel = () => {
 
   const pendingInvestors = roles.filter((r) => r.role === "investor" && !r.approved);
   const approvedInvestors = roles.filter((r) => r.role === "investor" && r.approved);
+  const pendingVacancies = vacancies.filter((v) => !v.approved);
+  const approvedVacancies = vacancies.filter((v) => v.approved);
 
   return (
     <Layout>
@@ -171,7 +207,7 @@ const AdminPanel = () => {
               <DollarSign className="h-4 w-4" /> Investors ({pendingInvestors.length} pending)
             </TabsTrigger>
             <TabsTrigger value="vacancies" className="rounded-lg gap-2">
-              <Briefcase className="h-4 w-4" /> Vacancies ({vacancies.length})
+              <Briefcase className="h-4 w-4" /> Vacancies ({pendingVacancies.length} pending)
             </TabsTrigger>
           </TabsList>
 
@@ -198,13 +234,26 @@ const AdminPanel = () => {
                           <p className="text-sm text-muted-foreground">
                             {profile.name} {profile.surname}
                           </p>
+                          <div className="flex flex-wrap gap-2 mt-1">
+                            {(profile as any).country && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{(profile as any).country}</span>
+                            )}
+                            {(profile as any).industry && (
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent">{(profile as any).industry}</span>
+                            )}
+                          </div>
                           {profile.startup_description && (
                             <p className="text-sm text-muted-foreground mt-1 max-w-xl">{profile.startup_description}</p>
                           )}
                         </div>
-                        <span className="text-xs text-muted-foreground">
-                          Joined {new Date(profile.created_at).toLocaleDateString()}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">
+                            Joined {new Date(profile.created_at).toLocaleDateString()}
+                          </span>
+                          <Button variant="ghost" size="icon" onClick={() => deleteStartup(profile.id)} className="text-destructive hover:text-destructive" title="Delete Startup">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -245,7 +294,7 @@ const AdminPanel = () => {
             {pendingInvestors.length > 0 && (
               <div className="mb-8">
                 <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-amber-500" /> Pending Approval
+                  <Clock className="h-5 w-5 text-amber-500" /> Pending Approval ({pendingInvestors.length})
                 </h3>
                 <div className="space-y-3">
                   {pendingInvestors.map((r) => {
@@ -294,11 +343,54 @@ const AdminPanel = () => {
 
           {/* Vacancies Tab */}
           <TabsContent value="vacancies">
-            {vacancies.length === 0 ? (
-              <p className="text-muted-foreground">No vacancies posted yet.</p>
+            {/* Pending Vacancies */}
+            {pendingVacancies.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                  <Clock className="h-5 w-5 text-amber-500" /> Pending Approval ({pendingVacancies.length})
+                </h3>
+                <div className="space-y-4">
+                  {pendingVacancies.map((v) => {
+                    const p = getProfile(v.user_id);
+                    return (
+                      <div key={v.id} className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-6">
+                        <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
+                          <div>
+                            <h4 className="text-lg font-bold text-foreground">{v.startup_name}</h4>
+                            <p className="text-sm text-muted-foreground">{v.country} · {v.job_type} · {v.specialization}</p>
+                            {p && <p className="text-xs text-muted-foreground mt-1">Posted by {p.name} {p.surname}</p>}
+                            {v.contact_email && (
+                              <p className="text-xs text-primary mt-1 flex items-center gap-1">
+                                <Mail className="h-3 w-3" /> {v.contact_email}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
+                            <Button size="sm" onClick={() => approveVacancy(v.id)} className="gap-1 bg-accent text-accent-foreground hover:bg-accent/90">
+                              <CheckCircle className="h-4 w-4" /> Approve
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => deleteVacancy(v.id)} className="gap-1">
+                              <Trash2 className="h-4 w-4" /> Delete
+                            </Button>
+                          </div>
+                        </div>
+                        {v.startup_description && <p className="text-sm text-muted-foreground mb-2">{v.startup_description}</p>}
+                        <p className="text-sm text-foreground">{v.job_description}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Approved Vacancies */}
+            <h3 className="text-lg font-semibold text-foreground mb-4">Approved Vacancies ({approvedVacancies.length})</h3>
+            {approvedVacancies.length === 0 ? (
+              <p className="text-muted-foreground">No approved vacancies yet.</p>
             ) : (
               <div className="space-y-4">
-                {vacancies.map((v) => {
+                {approvedVacancies.map((v) => {
                   const p = getProfile(v.user_id);
                   return (
                     <div key={v.id} className="rounded-xl border border-border bg-card p-6 shadow-card">
@@ -307,8 +399,18 @@ const AdminPanel = () => {
                           <h4 className="text-lg font-bold text-foreground">{v.startup_name}</h4>
                           <p className="text-sm text-muted-foreground">{v.country} · {v.job_type} · {v.specialization}</p>
                           {p && <p className="text-xs text-muted-foreground mt-1">Posted by {p.name} {p.surname}</p>}
+                          {v.contact_email && (
+                            <p className="text-xs text-primary mt-1 flex items-center gap-1">
+                              <Mail className="h-3 w-3" /> {v.contact_email}
+                            </p>
+                          )}
                         </div>
-                        <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
+                          <Button size="sm" variant="destructive" onClick={() => deleteVacancy(v.id)} className="gap-1">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                       {v.startup_description && <p className="text-sm text-muted-foreground mb-2">{v.startup_description}</p>}
                       <p className="text-sm text-foreground">{v.job_description}</p>

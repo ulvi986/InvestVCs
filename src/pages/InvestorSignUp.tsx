@@ -35,8 +35,8 @@ const InvestorSignUp = () => {
 
     setLoading(true);
 
-    // 1. Sign up user
-    const { data: authData, error: authError } = await supabase.auth.signUp({
+    // Sign up user with is_investor flag - trigger will auto-assign investor role
+    const { error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
       options: {
@@ -45,27 +45,18 @@ const InvestorSignUp = () => {
           surname: form.surname,
           startup_name: "Investor",
           startup_description: "",
+          is_investor: "true",
         },
         emailRedirectTo: window.location.origin,
       },
     });
 
+    setLoading(false);
     if (authError) {
-      setLoading(false);
       toast.error(authError.message);
       return;
     }
 
-    // 2. If user was created, request investor role (pending approval)
-    if (authData.user) {
-      await supabase.from("user_roles").insert({
-        user_id: authData.user.id,
-        role: "investor",
-        approved: false,
-      } as any);
-    }
-
-    setLoading(false);
     toast.success("Registration submitted! An admin will review your request.");
     navigate("/signin");
   };

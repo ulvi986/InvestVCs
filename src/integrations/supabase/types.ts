@@ -67,8 +67,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          country: string | null
           created_at: string
           id: string
+          industry: string | null
           name: string
           startup_description: string | null
           startup_name: string
@@ -76,8 +78,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          country?: string | null
           created_at?: string
           id: string
+          industry?: string | null
           name: string
           startup_description?: string | null
           startup_name: string
@@ -85,8 +89,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          country?: string | null
           created_at?: string
           id?: string
+          industry?: string | null
           name?: string
           startup_description?: string | null
           startup_name?: string
@@ -124,6 +130,8 @@ export type Database = {
       }
       startup_vacancies: {
         Row: {
+          approved: boolean | null
+          contact_email: string | null
           country: string
           created_at: string
           id: string
@@ -136,6 +144,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          approved?: boolean | null
+          contact_email?: string | null
           country: string
           created_at?: string
           id?: string
@@ -148,6 +158,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          approved?: boolean | null
+          contact_email?: string | null
           country?: string
           created_at?: string
           id?: string

@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BarChart3, Menu, X, LogOut, UserCircle, Shield, TrendingUp, Briefcase } from "lucide-react";
+import { BarChart3, Menu, X, LogOut, UserCircle } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -23,14 +23,12 @@ const Navbar = () => {
               { to: "/summary", label: "📊 Overall Summary" },
             ]
           : []),
-        ...(isAdmin || isInvestor
-          ? []
-          : []),
         { to: "/vacancies", label: "💼 Vacancies" },
+        { to: "/profile", label: "👤 Profile" },
       ]
     : [];
 
-  // For admin/investor, also show startup tools if they have startup role too
+  // For admin/investor, also show startup tools
   const startupLinks = isAdmin || isInvestor
     ? [
         { to: "/evaluation", label: "Startup Evaluation" },
@@ -71,11 +69,6 @@ const Navbar = () => {
 
         {user ? (
           <div className="hidden lg:flex items-center gap-2">
-            <Link to="/profile">
-              <Button variant="ghost" size="icon" title="Profile">
-                <UserCircle className="h-4 w-4" />
-              </Button>
-            </Link>
             <Button variant="ghost" size="icon" onClick={signOut} title="Sign Out">
               <LogOut className="h-4 w-4" />
             </Button>
@@ -113,14 +106,9 @@ const Navbar = () => {
             </Link>
           ))}
           {user ? (
-            <>
-              <Link to="/profile" onClick={() => setMobileOpen(false)}>
-                <Button variant="ghost" className="mt-2 w-full">Profile</Button>
-              </Link>
-              <Button variant="ghost" className="mt-2 w-full" onClick={() => { signOut(); setMobileOpen(false); }}>
-                Sign Out
-              </Button>
-            </>
+            <Button variant="ghost" className="mt-2 w-full" onClick={() => { signOut(); setMobileOpen(false); }}>
+              Sign Out
+            </Button>
           ) : (
             <>
               <Link to="/signin" onClick={() => setMobileOpen(false)}>

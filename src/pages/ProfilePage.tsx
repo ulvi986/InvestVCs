@@ -8,17 +8,36 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import {
   User, Building2, Mail, CalendarDays, Loader2, Save,
-  TrendingUp, TrendingDown, Users, DollarSign, BarChart3, Activity
+  TrendingUp, TrendingDown, Users, DollarSign, BarChart3, Activity, Globe, Layers
 } from "lucide-react";
+
+const COUNTRIES = [
+  "Azerbaijan", "Turkey", "United States", "United Kingdom", "Germany", "France",
+  "Russia", "Georgia", "Kazakhstan", "Uzbekistan", "Ukraine", "Israel",
+  "United Arab Emirates", "Saudi Arabia", "India", "China", "Japan",
+  "South Korea", "Canada", "Australia", "Brazil", "Italy", "Spain",
+  "Netherlands", "Sweden", "Switzerland", "Singapore", "Estonia", "Poland", "Other"
+];
+
+const INDUSTRIES = [
+  "Technology", "FinTech", "HealthTech", "EdTech", "E-Commerce", "SaaS",
+  "AI / Machine Learning", "Cybersecurity", "IoT", "CleanTech / GreenTech",
+  "AgriTech", "FoodTech", "Gaming", "Media & Entertainment", "Real Estate / PropTech",
+  "Logistics & Supply Chain", "Travel & Tourism", "Social Media", "Blockchain / Web3",
+  "Biotech", "Robotics", "HR Tech", "Legal Tech", "InsurTech", "Other"
+];
 
 interface Profile {
   name: string;
   surname: string;
   startup_name: string;
   startup_description: string;
+  country: string;
+  industry: string;
 }
 
 const ProfilePage = () => {
@@ -33,21 +52,28 @@ const ProfilePage = () => {
       if (!user) return;
       const { data, error } = await supabase
         .from("profiles")
-        .select("name, surname, startup_name, startup_description")
+        .select("name, surname, startup_name, startup_description, country, industry")
         .eq("id", user.id)
         .single();
 
       if (error) {
-        console.error(error);
-        // Fallback to user metadata
         setProfile({
           name: user.user_metadata?.name || "",
           surname: user.user_metadata?.surname || "",
           startup_name: user.user_metadata?.startup_name || "",
           startup_description: user.user_metadata?.startup_description || "",
+          country: user.user_metadata?.country || "",
+          industry: user.user_metadata?.industry || "",
         });
       } else {
-        setProfile(data);
+        setProfile({
+          name: data.name ?? "",
+          surname: data.surname ?? "",
+          startup_name: data.startup_name ?? "",
+          startup_description: data.startup_description ?? "",
+          country: (data as any).country ?? "",
+          industry: (data as any).industry ?? "",
+        });
       }
       setLoading(false);
     };
@@ -64,7 +90,9 @@ const ProfilePage = () => {
         surname: profile.surname,
         startup_name: profile.startup_name,
         startup_description: profile.startup_description,
-      })
+        country: profile.country,
+        industry: profile.industry,
+      } as any)
       .eq("id", user.id);
 
     setSaving(false);
@@ -103,7 +131,6 @@ const ProfilePage = () => {
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Profile Info Card */}
           <Card className="lg:col-span-1 border-border shadow-card">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -114,19 +141,11 @@ const ProfilePage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="name">First Name</Label>
-                <Input
-                  id="name"
-                  value={profile?.name || ""}
-                  onChange={e => setProfile(p => p ? { ...p, name: e.target.value } : p)}
-                />
+                <Input id="name" value={profile?.name || ""} onChange={e => setProfile(p => p ? { ...p, name: e.target.value } : p)} />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="surname">Last Name</Label>
-                <Input
-                  id="surname"
-                  value={profile?.surname || ""}
-                  onChange={e => setProfile(p => p ? { ...p, surname: e.target.value } : p)}
-                />
+                <Input id="surname" value={profile?.surname || ""} onChange={e => setProfile(p => p ? { ...p, surname: e.target.value } : p)} />
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>
@@ -134,6 +153,19 @@ const ProfilePage = () => {
                   <Mail className="h-4 w-4" />
                   {user?.email}
                 </div>
+              </div>
+              <div className="space-y-2">
+                <Label>Country</Label>
+                <Select value={profile?.country || ""} onValueChange={(val) => setProfile(p => p ? { ...p, country: val } : p)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRIES.map(c => (
+                      <SelectItem key={c} value={c}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label>Registration Date</Label>
@@ -145,7 +177,6 @@ const ProfilePage = () => {
             </CardContent>
           </Card>
 
-          {/* Startup Info Card */}
           <Card className="lg:col-span-2 border-border shadow-card">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -156,20 +187,24 @@ const ProfilePage = () => {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="startup_name">Startup Name</Label>
-                <Input
-                  id="startup_name"
-                  value={profile?.startup_name || ""}
-                  onChange={e => setProfile(p => p ? { ...p, startup_name: e.target.value } : p)}
-                />
+                <Input id="startup_name" value={profile?.startup_name || ""} onChange={e => setProfile(p => p ? { ...p, startup_name: e.target.value } : p)} />
+              </div>
+              <div className="space-y-2">
+                <Label>Industry</Label>
+                <Select value={profile?.industry || ""} onValueChange={(val) => setProfile(p => p ? { ...p, industry: val } : p)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select industry" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {INDUSTRIES.map(ind => (
+                      <SelectItem key={ind} value={ind}>{ind}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="startup_description">About Startup</Label>
-                <Textarea
-                  id="startup_description"
-                  value={profile?.startup_description || ""}
-                  onChange={e => setProfile(p => p ? { ...p, startup_description: e.target.value } : p)}
-                  rows={4}
-                />
+                <Textarea id="startup_description" value={profile?.startup_description || ""} onChange={e => setProfile(p => p ? { ...p, startup_description: e.target.value } : p)} rows={4} />
               </div>
               <Button onClick={handleSave} disabled={saving} className="gradient-primary text-primary-foreground border-0">
                 {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
@@ -194,9 +229,7 @@ const ProfilePage = () => {
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Average Valuation</p>
-                  <p className="text-2xl font-bold text-foreground">
-                    ${avgValuation.toLocaleString()}
-                  </p>
+                  <p className="text-2xl font-bold text-foreground">${avgValuation.toLocaleString()}</p>
                 </div>
                 <div className="ml-auto grid grid-cols-3 gap-6 text-center">
                   {evaluation.berkus > 0 && (
@@ -224,62 +257,14 @@ const ProfilePage = () => {
 
           {latestSnapshot ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-              <StatCard
-                icon={<TrendingUp className="h-5 w-5" />}
-                label="Total Revenue"
-                value={`$${(latestSnapshot.revenue?.total ?? 0).toLocaleString()}`}
-                color="text-green-600"
-                bg="bg-green-500/10"
-              />
-              <StatCard
-                icon={<TrendingDown className="h-5 w-5" />}
-                label="Total Expenses"
-                value={`$${(latestSnapshot.expenses?.total ?? 0).toLocaleString()}`}
-                color="text-red-500"
-                bg="bg-red-500/10"
-              />
-              <StatCard
-                icon={<DollarSign className="h-5 w-5" />}
-                label="Burn Rate"
-                value={`$${Math.abs(latestSnapshot.cashFlow?.monthlyBurnRate ?? 0).toLocaleString()}/mo`}
-                color="text-orange-500"
-                bg="bg-orange-500/10"
-              />
-              <StatCard
-                icon={<Users className="h-5 w-5" />}
-                label="Active Users"
-                value={(latestSnapshot.customerMetrics?.activeUsers ?? 0).toLocaleString()}
-                color="text-primary"
-                bg="bg-primary/10"
-              />
-              <StatCard
-                icon={<Activity className="h-5 w-5" />}
-                label="ARPU"
-                value={`$${(latestSnapshot.customerMetrics?.arpu ?? 0).toLocaleString()}`}
-                color="text-primary"
-                bg="bg-primary/10"
-              />
-              <StatCard
-                icon={<BarChart3 className="h-5 w-5" />}
-                label="CLTV"
-                value={`$${(latestSnapshot.customerMetrics?.cltv ?? 0).toLocaleString()}`}
-                color="text-accent"
-                bg="bg-accent/10"
-              />
-              <StatCard
-                icon={<TrendingDown className="h-5 w-5" />}
-                label="Churn Rate"
-                value={`${((latestSnapshot.customerMetrics?.churnRate ?? 0) * 100).toFixed(1)}%`}
-                color="text-red-500"
-                bg="bg-red-500/10"
-              />
-              <StatCard
-                icon={<DollarSign className="h-5 w-5" />}
-                label="Runway"
-                value={`${(latestSnapshot.cashFlow?.runway ?? 0).toFixed(1)} months`}
-                color="text-green-600"
-                bg="bg-green-500/10"
-              />
+              <StatCard icon={<TrendingUp className="h-5 w-5" />} label="Total Revenue" value={`$${(latestSnapshot.revenue?.total ?? 0).toLocaleString()}`} color="text-green-600" bg="bg-green-500/10" />
+              <StatCard icon={<TrendingDown className="h-5 w-5" />} label="Total Expenses" value={`$${(latestSnapshot.expenses?.total ?? 0).toLocaleString()}`} color="text-red-500" bg="bg-red-500/10" />
+              <StatCard icon={<DollarSign className="h-5 w-5" />} label="Burn Rate" value={`$${Math.abs(latestSnapshot.cashFlow?.monthlyBurnRate ?? 0).toLocaleString()}/mo`} color="text-orange-500" bg="bg-orange-500/10" />
+              <StatCard icon={<Users className="h-5 w-5" />} label="Active Users" value={(latestSnapshot.customerMetrics?.activeUsers ?? 0).toLocaleString()} color="text-primary" bg="bg-primary/10" />
+              <StatCard icon={<Activity className="h-5 w-5" />} label="ARPU" value={`$${(latestSnapshot.customerMetrics?.arpu ?? 0).toLocaleString()}`} color="text-primary" bg="bg-primary/10" />
+              <StatCard icon={<BarChart3 className="h-5 w-5" />} label="CLTV" value={`$${(latestSnapshot.customerMetrics?.cltv ?? 0).toLocaleString()}`} color="text-accent" bg="bg-accent/10" />
+              <StatCard icon={<TrendingDown className="h-5 w-5" />} label="Churn Rate" value={`${((latestSnapshot.customerMetrics?.churnRate ?? 0) * 100).toFixed(1)}%`} color="text-red-500" bg="bg-red-500/10" />
+              <StatCard icon={<DollarSign className="h-5 w-5" />} label="Runway" value={`${(latestSnapshot.cashFlow?.runway ?? 0).toFixed(1)} months`} color="text-green-600" bg="bg-green-500/10" />
             </div>
           ) : (
             <Card className="border-border shadow-card">
