@@ -69,6 +69,7 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          email: string | null
           id: string
           industry: string | null
           name: string
@@ -80,6 +81,7 @@ export type Database = {
         Insert: {
           country?: string | null
           created_at?: string
+          email?: string | null
           id: string
           industry?: string | null
           name: string
@@ -91,6 +93,7 @@ export type Database = {
         Update: {
           country?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           industry?: string | null
           name?: string
