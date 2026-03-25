@@ -327,6 +327,7 @@ const InvestorDashboard = () => {
                         ) : (
                           <p className="text-sm text-muted-foreground italic">{t("investor.no_financial")}</p>
                         )}
+                      </div>
 
                       <div>
                         <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.readiness")}</h4>
