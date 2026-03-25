@@ -197,6 +197,10 @@ const AdminPanel = () => {
   const getProfile = (userId: string) => profiles.find((p) => p.id === userId);
   const getEval = (userId: string) => evaluations.find((e) => e.user_id === userId);
   const getReadiness = (userId: string) => readiness.find((r) => r.user_id === userId);
+  const getLatestFinancial = (userId: string) => {
+    const userF = financials.filter((f) => f.user_id === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return userF[0]?.data;
+  };
 
   const pendingInvestors = roles.filter((r) => r.role === "investor" && !r.approved);
   const approvedInvestors = roles.filter((r) => r.role === "investor" && r.approved);
