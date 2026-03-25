@@ -264,25 +264,59 @@ const InvestorDashboard = () => {
                         {latestFinancial ? (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                              <p className="text-xs text-muted-foreground mb-1">{t("investor.revenue")}</p>
-                              <p className="text-lg font-bold text-foreground">
-                                {numFmt(latestFinancial.revenue?.total)}
-                              </p>
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <TrendingUp className="h-3 w-3 text-accent" />
+                                <p className="text-xs text-muted-foreground">{t("investor.revenue")}</p>
+                              </div>
+                              <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.revenue?.total)}</p>
                             </div>
                             <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                              <p className="text-xs text-muted-foreground mb-1">{t("investor.expenses")}</p>
-                              <p className="text-lg font-bold text-foreground">
-                                {numFmt(latestFinancial.expenses?.total)}
-                              </p>
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <TrendingDown className="h-3 w-3 text-destructive" />
+                                <p className="text-xs text-muted-foreground">{t("investor.expenses")}</p>
+                              </div>
+                              <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.expenses?.total)}</p>
                             </div>
                             <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                              <p className="text-xs text-muted-foreground mb-1">{t("investor.burn_rate")}</p>
-                              <p className="text-lg font-bold text-foreground">
-                                {numFmt(latestFinancial.cashFlow?.monthlyBurnRate)}
-                              </p>
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <Wallet className="h-3 w-3 text-primary" />
+                                <p className="text-xs text-muted-foreground">Ending Cash</p>
+                              </div>
+                              <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.cashFlow?.endingCash)}</p>
                             </div>
                             <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                              <p className="text-xs text-muted-foreground mb-1">{t("investor.runway")}</p>
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <UsersIcon className="h-3 w-3 text-accent" />
+                                <p className="text-xs text-muted-foreground">Active Users</p>
+                              </div>
+                              <p className="text-lg font-bold text-foreground">{latestFinancial.customerMetrics?.activeUsers ?? "—"}</p>
+                            </div>
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <DollarSign className="h-3 w-3 text-accent" />
+                                <p className="text-xs text-muted-foreground">ARPU</p>
+                              </div>
+                              <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.customerMetrics?.arpu)}</p>
+                            </div>
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <AlertTriangle className="h-3 w-3 text-destructive" />
+                                <p className="text-xs text-muted-foreground">{t("investor.burn_rate")}</p>
+                              </div>
+                              <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.cashFlow?.monthlyBurnRate)}</p>
+                            </div>
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <Target className="h-3 w-3 text-primary" />
+                                <p className="text-xs text-muted-foreground">CLTV</p>
+                              </div>
+                              <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.customerMetrics?.cltv)}</p>
+                            </div>
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <div className="flex items-center justify-center gap-1 mb-1">
+                                <Wallet className="h-3 w-3 text-accent" />
+                                <p className="text-xs text-muted-foreground">{t("investor.runway")}</p>
+                              </div>
                               <p className="text-lg font-bold text-foreground">
                                 {latestFinancial.cashFlow?.runway != null
                                   ? `${Math.round(latestFinancial.cashFlow.runway)} ${t("investor.months")}`
@@ -293,7 +327,6 @@ const InvestorDashboard = () => {
                         ) : (
                           <p className="text-sm text-muted-foreground italic">{t("investor.no_financial")}</p>
                         )}
-                      </div>
 
                       <div>
                         <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.readiness")}</h4>
