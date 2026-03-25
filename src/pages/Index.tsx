@@ -15,124 +15,105 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
-
-const features = [
-  {
-    icon: Shield,
-    title: "Pre-Seed & Seed Valuation",
-    description:
-      "Berkus, Scorecard, Risk Factor, VC Method, and First Chicago — all in one place with instant results.",
-    link: "/evaluation",
-  },
-  {
-    icon: DollarSign,
-    title: "Financial Management",
-    description:
-      "Track revenue, expenses, burn rate, runway, CLTV, and more with monthly snapshots and dashboards.",
-    link: "/preparation",
-  },
-  {
-    icon: ClipboardList,
-    title: "Readiness Assessment",
-    description:
-      "Measure your TRL, CRL, and FRL levels to understand exactly where your startup stands.",
-    link: "/readiness",
-  },
-];
-
-const stats = [
-  { value: "5+", label: "Valuation Methods" },
-  { value: "15+", label: "Financial Metrics" },
-  { value: "3", label: "Readiness Levels" },
-  { value: "∞", label: "Snapshots" },
-];
-
-const steps = [
-  {
-    icon: Code,
-    title: "Sign Up",
-    description: "Create your free account in seconds.",
-  },
-  {
-    icon: Target,
-    title: "Input Your Data",
-    description: "Fill in valuation methods, financials, and readiness checks.",
-  },
-  {
-    icon: LineChart,
-    title: "Get Insights",
-    description: "Receive instant valuations, charts, and strategic advice.",
-  },
-  {
-    icon: Rocket,
-    title: "Pitch with Confidence",
-    description: "Use data-backed valuations in investor conversations.",
-  },
-];
+import { useLanguage } from "@/context/LanguageContext";
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 30 },
+  hidden: { opacity: 0, y: 20 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.12, duration: 0.5, ease: "easeOut" as const },
+    transition: { delay: i * 0.1, duration: 0.6, ease: "easeOut" as const },
   }),
 };
 
 const scaleIn = {
-  hidden: { opacity: 0, scale: 0.9 },
+  hidden: { opacity: 0, scale: 0.95 },
   visible: (i: number) => ({
     opacity: 1,
     scale: 1,
-    transition: { delay: i * 0.08, duration: 0.4 },
+    transition: { delay: i * 0.08, duration: 0.5 },
   }),
 };
 
 const Index = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
+
+  const features = [
+    {
+      icon: Shield,
+      title: t("landing.feature1_title"),
+      description: t("landing.feature1_desc"),
+      link: "/evaluation",
+    },
+    {
+      icon: DollarSign,
+      title: t("landing.feature2_title"),
+      description: t("landing.feature2_desc"),
+      link: "/preparation",
+    },
+    {
+      icon: ClipboardList,
+      title: t("landing.feature3_title"),
+      description: t("landing.feature3_desc"),
+      link: "/readiness",
+    },
+  ];
+
+  const stats = [
+    { value: "5+", label: t("landing.stat_valuation") },
+    { value: "15+", label: t("landing.stat_metrics") },
+    { value: "3", label: t("landing.stat_readiness") },
+    { value: "∞", label: t("landing.stat_snapshots") },
+  ];
+
+  const steps = [
+    { icon: Code, title: t("landing.step1_title"), description: t("landing.step1_desc") },
+    { icon: Target, title: t("landing.step2_title"), description: t("landing.step2_desc") },
+    { icon: LineChart, title: t("landing.step3_title"), description: t("landing.step3_desc") },
+    { icon: Rocket, title: t("landing.step4_title"), description: t("landing.step4_desc") },
+  ];
 
   return (
     <Layout>
       {/* Hero */}
       <section className="relative overflow-hidden">
         <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217_91%_60%/0.08),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(172_66%_50%/0.06),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217_91%_60%/0.05),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(172_66%_50%/0.04),transparent_60%)]" />
 
-        <div className="container relative py-24 lg:py-36">
+        <div className="container relative py-28 lg:py-40">
           <div className="mx-auto max-w-4xl text-center">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-xs font-semibold text-primary mb-6">
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-5 py-2 text-xs font-medium text-primary mb-8">
                 <Zap className="h-3.5 w-3.5" />
-                Built for Founders & Developers
+                {t("landing.badge")}
               </span>
             </motion.div>
 
             <motion.h1
-              className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-7xl leading-[1.1]"
+              className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl leading-[1.15]"
               initial="hidden"
               animate="visible"
               variants={fadeUp}
               custom={1}
             >
-              Know Your Startup's{" "}
-              <span className="text-gradient">True Value</span>
+              {t("landing.hero_title")}{" "}
+              <span className="text-gradient">{t("landing.hero_highlight")}</span>
               <br />
-              <span className="text-muted-foreground text-3xl sm:text-4xl lg:text-5xl font-bold">
-                Before Investors Do
+              <span className="text-muted-foreground text-2xl sm:text-3xl lg:text-4xl font-semibold">
+                {t("landing.hero_sub")}
               </span>
             </motion.h1>
 
             <motion.p
-              className="mx-auto mt-8 max-w-2xl text-lg text-muted-foreground leading-relaxed"
+              className="mx-auto mt-8 max-w-2xl text-base text-muted-foreground leading-relaxed"
               initial="hidden"
               animate="visible"
               variants={fadeUp}
               custom={2}
             >
-              Stop guessing. Use the same valuation frameworks VCs use — Berkus, Scorecard,
-              Risk Factor, VC Method & First Chicago — to calculate, track, and present your
-              startup's worth with confidence.
+              {t("landing.hero_desc")}
             </motion.p>
 
             <motion.div
@@ -146,9 +127,9 @@ const Index = () => {
                 <Link to="/evaluation">
                   <Button
                     size="lg"
-                    className="gradient-primary text-primary-foreground border-0 shadow-elevated px-8 text-base h-12"
+                    className="gradient-primary text-primary-foreground border-0 shadow-elevated px-8 text-sm h-11 rounded-xl"
                   >
-                    Go to Dashboard
+                    {t("landing.go_dashboard")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
@@ -157,15 +138,15 @@ const Index = () => {
                   <Link to="/signup">
                     <Button
                       size="lg"
-                      className="gradient-primary text-primary-foreground border-0 shadow-elevated px-8 text-base h-12"
+                      className="gradient-primary text-primary-foreground border-0 shadow-elevated px-8 text-sm h-11 rounded-xl"
                     >
-                      Get Started — Free
+                      {t("landing.get_started")}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                   <Link to="/signin">
-                    <Button variant="outline" size="lg" className="px-8 text-base h-12">
-                      Sign In
+                    <Button variant="outline" size="lg" className="px-8 text-sm h-11 rounded-xl">
+                      {t("landing.signin")}
                     </Button>
                   </Link>
                 </>
@@ -176,8 +157,8 @@ const Index = () => {
       </section>
 
       {/* Stats */}
-      <section className="border-y border-border bg-card/50">
-        <div className="container py-12">
+      <section className="border-y border-border/50 bg-card/30">
+        <div className="container py-14">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {stats.map((s, i) => (
               <motion.div
@@ -189,8 +170,8 @@ const Index = () => {
                 variants={scaleIn}
                 custom={i}
               >
-                <p className="text-3xl font-extrabold text-gradient">{s.value}</p>
-                <p className="mt-1 text-sm text-muted-foreground">{s.label}</p>
+                <p className="text-3xl font-bold text-gradient">{s.value}</p>
+                <p className="mt-2 text-sm text-muted-foreground">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -198,56 +179,56 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="py-24">
+      <section className="py-28">
         <div className="container">
           <div className="text-center mb-16">
             <motion.h2
-              className="text-3xl font-bold text-foreground sm:text-4xl"
+              className="text-3xl font-bold text-foreground"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeUp}
               custom={0}
             >
-              Everything You Need to{" "}
-              <span className="text-gradient">Evaluate & Prepare</span>
+              {t("landing.features_title")}{" "}
+              <span className="text-gradient">{t("landing.features_highlight")}</span>
             </motion.h2>
             <motion.p
-              className="mt-4 text-muted-foreground max-w-xl mx-auto"
+              className="mt-4 text-muted-foreground max-w-xl mx-auto text-sm"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeUp}
               custom={1}
             >
-              Three powerful modules designed to take your startup from idea to investor-ready.
+              {t("landing.features_desc")}
             </motion.p>
           </div>
 
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
-                className="group relative rounded-2xl border border-border bg-card p-8 shadow-card hover:shadow-elevated hover:border-primary/20 transition-all duration-300"
+                className="group relative rounded-2xl border border-border/60 bg-card p-8 shadow-card hover:shadow-elevated hover:border-primary/15 transition-all duration-500"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
               >
-                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl gradient-primary shadow-lg">
-                  <f.icon className="h-6 w-6 text-primary-foreground" />
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-sm">
+                  <f.icon className="h-5 w-5 text-primary-foreground" />
                 </div>
-                <h3 className="text-xl font-bold text-foreground mb-3">{f.title}</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-3">{f.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                   {f.description}
                 </p>
                 <Link
                   to={user ? f.link : "/signup"}
-                  className="inline-flex items-center text-sm font-semibold text-primary group-hover:gap-2 gap-1 transition-all"
+                  className="inline-flex items-center text-sm font-medium text-primary group-hover:gap-2 gap-1 transition-all"
                 >
-                  Explore
-                  <ArrowRight className="h-4 w-4" />
+                  {t("landing.explore")}
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Link>
               </motion.div>
             ))}
@@ -256,28 +237,28 @@ const Index = () => {
       </section>
 
       {/* How it Works */}
-      <section className="py-24 bg-muted/30">
+      <section className="py-28 bg-muted/20">
         <div className="container">
           <div className="text-center mb-16">
             <motion.h2
-              className="text-3xl font-bold text-foreground sm:text-4xl"
+              className="text-3xl font-bold text-foreground"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeUp}
               custom={0}
             >
-              How It Works
+              {t("landing.how_title")}
             </motion.h2>
             <motion.p
-              className="mt-4 text-muted-foreground"
+              className="mt-4 text-muted-foreground text-sm"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
               variants={fadeUp}
               custom={1}
             >
-              Four simple steps to data-driven startup valuation.
+              {t("landing.how_desc")}
             </motion.p>
           </div>
 
@@ -285,21 +266,21 @@ const Index = () => {
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
-                className="relative rounded-2xl border border-border bg-card p-6 text-center shadow-card"
+                className="relative rounded-2xl border border-border/60 bg-card p-6 text-center shadow-card"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
               >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground shadow-md">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground shadow-sm">
                   {i + 1}
                 </div>
                 <div className="mt-4 mb-4 flex justify-center">
-                  <step.icon className="h-8 w-8 text-primary" />
+                  <step.icon className="h-7 w-7 text-primary/80" />
                 </div>
-                <h4 className="font-semibold text-foreground mb-2">{step.title}</h4>
-                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
+                <h4 className="font-semibold text-foreground mb-2 text-sm">{step.title}</h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
               </motion.div>
             ))}
           </div>
@@ -307,7 +288,7 @@ const Index = () => {
       </section>
 
       {/* CTA */}
-      <section className="py-24">
+      <section className="py-28">
         <div className="container">
           <motion.div
             className="relative overflow-hidden rounded-3xl gradient-primary p-12 text-center shadow-elevated md:p-16"
@@ -317,21 +298,21 @@ const Index = () => {
             variants={scaleIn}
             custom={0}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(0_0%_100%/0.1),transparent_70%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(0_0%_100%/0.08),transparent_70%)]" />
             <div className="relative">
-              <h2 className="text-3xl font-extrabold text-primary-foreground sm:text-4xl">
-                Ready to Know What You're Worth?
+              <h2 className="text-3xl font-bold text-primary-foreground">
+                {t("landing.cta_title")}
               </h2>
-              <p className="mt-4 text-primary-foreground/80 max-w-lg mx-auto">
-                Join founders who use data — not guesswork — to negotiate with investors.
+              <p className="mt-4 text-primary-foreground/75 max-w-lg mx-auto text-sm">
+                {t("landing.cta_desc")}
               </p>
               <div className="mt-8">
                 <Link to={user ? "/evaluation" : "/signup"}>
                   <Button
                     size="lg"
-                    className="bg-white text-primary hover:bg-white/90 border-0 px-8 text-base h-12 font-bold shadow-lg"
+                    className="bg-white text-primary hover:bg-white/90 border-0 px-8 text-sm h-11 font-semibold shadow-lg rounded-xl"
                   >
-                    {user ? "Go to Dashboard" : "Start Free Evaluation"}
+                    {user ? t("landing.go_dashboard") : t("landing.cta_btn")}
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </Link>
