@@ -280,32 +280,107 @@ const AdminPanel = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">Berkus</p>
-                          <p className="text-lg font-bold text-primary">${evalData?.berkus?.toLocaleString() ?? "—"}</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">Scorecard</p>
-                          <p className="text-lg font-bold text-primary">${evalData?.scorecard?.toLocaleString() ?? "—"}</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">Risk Factor</p>
-                          <p className="text-lg font-bold text-primary">${evalData?.risk_factor?.toLocaleString() ?? "—"}</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">TRL</p>
-                          <p className="text-lg font-bold text-foreground">{trl}/9</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">CRL</p>
-                          <p className="text-lg font-bold text-foreground">{crl}/9</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">FRL</p>
-                          <p className="text-lg font-bold text-foreground">{frl}/9</p>
-                        </div>
-                      </div>
+                      {(() => {
+                        const latestF = getLatestFinancial(profile.id);
+                        return (
+                          <>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">Berkus</p>
+                                <p className="text-lg font-bold text-primary">{numFmt(evalData?.berkus)}</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">Scorecard</p>
+                                <p className="text-lg font-bold text-primary">{numFmt(evalData?.scorecard)}</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">Risk Factor</p>
+                                <p className="text-lg font-bold text-primary">{numFmt(evalData?.risk_factor)}</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">TRL</p>
+                                <p className="text-lg font-bold text-foreground">{trl}/9</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">CRL</p>
+                                <p className="text-lg font-bold text-foreground">{crl}/9</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">FRL</p>
+                                <p className="text-lg font-bold text-foreground">{frl}/9</p>
+                              </div>
+                            </div>
+
+                            {latestF && (
+                              <div className="mt-4">
+                                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                                  <DollarSign className="h-4 w-4 text-primary" /> Financial Report
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <TrendingUp className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">Revenue</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.revenue?.total)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <TrendingDown className="h-3 w-3 text-destructive" />
+                                      <p className="text-xs text-muted-foreground">Expenses</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.expenses?.total)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Wallet className="h-3 w-3 text-primary" />
+                                      <p className="text-xs text-muted-foreground">Ending Cash</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.cashFlow?.endingCash)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Users className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">Active Users</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{latestF.customerMetrics?.activeUsers ?? "—"}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <DollarSign className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">ARPU</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.customerMetrics?.arpu)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <AlertTriangle className="h-3 w-3 text-destructive" />
+                                      <p className="text-xs text-muted-foreground">Burn Rate</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.cashFlow?.monthlyBurnRate)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Target className="h-3 w-3 text-primary" />
+                                      <p className="text-xs text-muted-foreground">CLTV</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.customerMetrics?.cltv)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Wallet className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">Runway</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">
+                                      {latestF.cashFlow?.runway != null ? `${Math.round(latestF.cashFlow.runway)} mo` : "—"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   );
                 })}
