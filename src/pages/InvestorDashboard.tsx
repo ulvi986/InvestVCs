@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/context/LanguageContext";
-import { Shield, TrendingUp, Search, Globe, Layers, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
+import { Shield, TrendingUp, TrendingDown, Search, Globe, Layers, ChevronDown, ChevronUp, DollarSign, Wallet, Target, AlertTriangle, Users as UsersIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ProfileRow {
