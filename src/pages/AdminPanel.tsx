@@ -5,17 +5,24 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail } from "lucide-react";
+import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle } from "lucide-react";
 
 interface ProfileRow {
   id: string;
   name: string;
   surname: string;
+  email: string;
   startup_name: string;
   startup_description: string | null;
   country: string;
   industry: string;
   created_at: string;
+}
+
+interface FinancialSnapshotRow {
+  user_id: string;
+  date: string;
+  data: any;
 }
 
 interface EvalRow {
