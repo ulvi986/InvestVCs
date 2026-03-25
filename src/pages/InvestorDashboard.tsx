@@ -3,7 +3,7 @@ import Layout from "@/components/Layout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/context/LanguageContext";
-import { Shield, TrendingUp, Search, Globe, Layers, ChevronDown, ChevronUp } from "lucide-react";
+import { Shield, TrendingUp, Search, Globe, Layers, ChevronDown, ChevronUp, DollarSign } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ProfileRow {
@@ -29,6 +29,12 @@ interface ReadinessRow {
   trl_answers: Record<string, boolean>;
   crl_answers: Record<string, boolean>;
   frl_answers: Record<string, boolean>;
+}
+
+interface FinancialSnapshotRow {
+  user_id: string;
+  date: string;
+  data: any;
 }
 
 const TRL_CRITERIA = [[1,2],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
@@ -57,6 +63,7 @@ const InvestorDashboard = () => {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [evaluations, setEvaluations] = useState<EvalRow[]>([]);
   const [readiness, setReadiness] = useState<ReadinessRow[]>([]);
+  const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -68,14 +75,16 @@ const InvestorDashboard = () => {
     }
 
     const load = async () => {
-      const [pRes, eRes, rRes] = await Promise.all([
+      const [pRes, eRes, rRes, fRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("readiness_answers").select("*"),
+        supabase.from("financial_snapshots").select("*"),
       ]);
       setProfiles((pRes.data as any[]) ?? []);
       setEvaluations((eRes.data as any[]) ?? []);
       setReadiness((rRes.data as any[]) ?? []);
+      setFinancials((fRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
@@ -159,6 +168,11 @@ const InvestorDashboard = () => {
             {filtered.map((profile) => {
               const evalData = evaluations.find((e) => e.user_id === profile.id);
               const readData = readiness.find((r) => r.user_id === profile.id);
+              const userFinancials = financials
+                .filter((f) => f.user_id === profile.id)
+                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+              const latestFinancial = userFinancials[0]?.data;
+
               const trl = readData ? getFinalLevel(readData.trl_answers, "TRL", 9, TRL_CRITERIA) : 0;
               const crl = readData ? getFinalLevel(readData.crl_answers, "CRL", 9, CRL_CRITERIA) : 0;
               const frl = readData ? getFinalLevel(readData.frl_answers, "FRL", 9, FRL_CRITERIA) : 0;
@@ -239,6 +253,46 @@ const InvestorDashboard = () => {
                         <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")}</p>
                         <p className="text-3xl font-bold text-primary">{numFmt(weightedAvg)}</p>
                         <p className="text-xs text-muted-foreground mt-1">{t("investor.based_on")} {vals.length} {t("investor.methods")}</p>
+                      </div>
+
+                      {/* Financial Overview */}
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                          <DollarSign className="h-4 w-4 text-primary" />
+                          {t("investor.financial")}
+                        </h4>
+                        {latestFinancial ? (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <p className="text-xs text-muted-foreground mb-1">{t("investor.revenue")}</p>
+                              <p className="text-lg font-bold text-foreground">
+                                {numFmt(latestFinancial.revenue?.total)}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <p className="text-xs text-muted-foreground mb-1">{t("investor.expenses")}</p>
+                              <p className="text-lg font-bold text-foreground">
+                                {numFmt(latestFinancial.expenses?.total)}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <p className="text-xs text-muted-foreground mb-1">{t("investor.burn_rate")}</p>
+                              <p className="text-lg font-bold text-foreground">
+                                {numFmt(latestFinancial.cashFlow?.monthlyBurnRate)}
+                              </p>
+                            </div>
+                            <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                              <p className="text-xs text-muted-foreground mb-1">{t("investor.runway")}</p>
+                              <p className="text-lg font-bold text-foreground">
+                                {latestFinancial.cashFlow?.runway != null
+                                  ? `${Math.round(latestFinancial.cashFlow.runway)} ${t("investor.months")}`
+                                  : "—"}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-sm text-muted-foreground italic">{t("investor.no_financial")}</p>
+                        )}
                       </div>
 
                       <div>

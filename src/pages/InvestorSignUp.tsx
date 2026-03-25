@@ -5,13 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/sonner";
 import { Loader2, TrendingUp } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import logoImg from "@/assets/logo.jpeg";
 
 const InvestorSignUp = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const [ethicalAgreed, setEthicalAgreed] = useState(false);
   const [form, setForm] = useState({
     name: "",
     surname: "",
@@ -33,10 +37,13 @@ const InvestorSignUp = () => {
       toast.error("Password must be at least 6 characters");
       return;
     }
+    if (!ethicalAgreed) {
+      toast.error(t("auth.ethical_required"));
+      return;
+    }
 
     setLoading(true);
 
-    // Sign up user with is_investor flag - trigger will auto-assign investor role
     const { error: authError } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
@@ -72,46 +79,60 @@ const InvestorSignUp = () => {
           </Link>
           <div className="flex items-center justify-center gap-2 text-accent">
             <TrendingUp className="h-5 w-5" />
-            <span className="text-sm font-semibold">Investor Registration</span>
+            <span className="text-sm font-semibold">{t("auth.investor_reg")}</span>
           </div>
-          <CardTitle className="text-2xl font-bold">Investor Sign Up</CardTitle>
-          <CardDescription>Apply for investor access. Admin approval required.</CardDescription>
+          <CardTitle className="text-2xl font-bold">{t("auth.investor_signup")}</CardTitle>
+          <CardDescription>{t("auth.investor_signup_desc")}</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">First Name *</Label>
-                <Input id="name" name="name" placeholder="Name" value={form.name} onChange={handleChange} />
+                <Label htmlFor="name">{t("profile.first_name")} *</Label>
+                <Input id="name" name="name" placeholder={t("profile.first_name")} value={form.name} onChange={handleChange} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="surname">Last Name *</Label>
-                <Input id="surname" name="surname" placeholder="Surname" value={form.surname} onChange={handleChange} />
+                <Label htmlFor="surname">{t("profile.last_name")} *</Label>
+                <Input id="surname" name="surname" placeholder={t("profile.last_name")} value={form.surname} onChange={handleChange} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t("auth.email")} *</Label>
               <Input id="email" name="email" type="email" placeholder="investor@example.com" value={form.email} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
+              <Label htmlFor="password">{t("auth.password")} *</Label>
               <Input id="password" name="password" type="password" placeholder="At least 6 characters" value={form.password} onChange={handleChange} />
+            </div>
+
+            {/* Ethical Agreement */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">{t("auth.ethical_title")}</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t("auth.ethical_text")}</p>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="ethical"
+                  checked={ethicalAgreed}
+                  onCheckedChange={(checked) => setEthicalAgreed(checked === true)}
+                />
+                <Label htmlFor="ethical" className="text-sm cursor-pointer">{t("auth.ethical_agreement")}</Label>
+              </div>
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Apply as Investor
+              {t("auth.apply_investor")}
             </Button>
             <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/signin" className="text-primary hover:underline font-medium">Sign In</Link>
+              {t("auth.have_account")}{" "}
+              <Link to="/signin" className="text-primary hover:underline font-medium">{t("auth.signin")}</Link>
             </p>
             <p className="text-sm text-muted-foreground">
-              Are you a startup?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">Sign Up as Startup</Link>
+              {t("auth.startup_q")}{" "}
+              <Link to="/signup" className="text-primary hover:underline font-medium">{t("auth.signup")}</Link>
             </p>
           </CardFooter>
         </form>

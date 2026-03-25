@@ -7,8 +7,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import logoImg from "@/assets/logo.jpeg";
 
 const COUNTRIES = [
@@ -29,7 +31,9 @@ const INDUSTRIES = [
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
+  const [ethicalAgreed, setEthicalAgreed] = useState(false);
   const [form, setForm] = useState({
     name: "",
     surname: "",
@@ -53,6 +57,10 @@ const SignUp = () => {
     }
     if (form.password.length < 6) {
       toast.error("Password must be at least 6 characters");
+      return;
+    }
+    if (!ethicalAgreed) {
+      toast.error(t("auth.ethical_required"));
       return;
     }
 
@@ -90,35 +98,35 @@ const SignUp = () => {
             <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-lg object-cover" />
             InvestVCs
           </Link>
-          <CardTitle className="text-2xl font-bold">Sign Up</CardTitle>
-          <CardDescription>Start evaluating your startup</CardDescription>
+          <CardTitle className="text-2xl font-bold">{t("auth.signup")}</CardTitle>
+          <CardDescription>{t("auth.signup_desc")}</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="name">First Name *</Label>
-                <Input id="name" name="name" placeholder="Your first name" value={form.name} onChange={handleChange} />
+                <Label htmlFor="name">{t("profile.first_name")} *</Label>
+                <Input id="name" name="name" placeholder={t("profile.first_name")} value={form.name} onChange={handleChange} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="surname">Last Name *</Label>
-                <Input id="surname" name="surname" placeholder="Your last name" value={form.surname} onChange={handleChange} />
+                <Label htmlFor="surname">{t("profile.last_name")} *</Label>
+                <Input id="surname" name="surname" placeholder={t("profile.last_name")} value={form.surname} onChange={handleChange} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email *</Label>
+              <Label htmlFor="email">{t("auth.email")} *</Label>
               <Input id="email" name="email" type="email" placeholder="email@example.com" value={form.email} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password *</Label>
+              <Label htmlFor="password">{t("auth.password")} *</Label>
               <Input id="password" name="password" type="password" placeholder="At least 6 characters" value={form.password} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label>Country *</Label>
+              <Label>{t("profile.country")} *</Label>
               <Select value={form.country} onValueChange={(val) => setForm(prev => ({ ...prev, country: val }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select your country" />
+                  <SelectValue placeholder={t("profile.country")} />
                 </SelectTrigger>
                 <SelectContent>
                   {COUNTRIES.map(c => (
@@ -128,14 +136,14 @@ const SignUp = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startup_name">Startup Name *</Label>
-              <Input id="startup_name" name="startup_name" placeholder="Your startup's name" value={form.startup_name} onChange={handleChange} />
+              <Label htmlFor="startup_name">{t("profile.startup_name")} *</Label>
+              <Input id="startup_name" name="startup_name" placeholder={t("profile.startup_name")} value={form.startup_name} onChange={handleChange} />
             </div>
             <div className="space-y-2">
-              <Label>Industry *</Label>
+              <Label>{t("profile.industry")} *</Label>
               <Select value={form.industry} onValueChange={(val) => setForm(prev => ({ ...prev, industry: val }))}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select your industry" />
+                  <SelectValue placeholder={t("profile.industry")} />
                 </SelectTrigger>
                 <SelectContent>
                   {INDUSTRIES.map(ind => (
@@ -145,23 +153,37 @@ const SignUp = () => {
               </Select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="startup_description">About Startup</Label>
-              <Textarea id="startup_description" name="startup_description" placeholder="Brief description of your startup" value={form.startup_description} onChange={handleChange} rows={3} />
+              <Label htmlFor="startup_description">{t("profile.about")}</Label>
+              <Textarea id="startup_description" name="startup_description" placeholder={t("profile.about")} value={form.startup_description} onChange={handleChange} rows={3} />
+            </div>
+
+            {/* Ethical Agreement */}
+            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">{t("auth.ethical_title")}</h4>
+              <p className="text-xs text-muted-foreground leading-relaxed">{t("auth.ethical_text")}</p>
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="ethical"
+                  checked={ethicalAgreed}
+                  onCheckedChange={(checked) => setEthicalAgreed(checked === true)}
+                />
+                <Label htmlFor="ethical" className="text-sm cursor-pointer">{t("auth.ethical_agreement")}</Label>
+              </div>
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign Up
+              {t("auth.signup")}
             </Button>
             <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <Link to="/signin" className="text-primary hover:underline font-medium">Sign In</Link>
+              {t("auth.have_account")}{" "}
+              <Link to="/signin" className="text-primary hover:underline font-medium">{t("auth.signin")}</Link>
             </p>
             <p className="text-sm text-muted-foreground">
-              Are you an investor?{" "}
-              <Link to="/investor-signup" className="text-primary hover:underline font-medium">Investor Registration</Link>
+              {t("auth.investor_q")}{" "}
+              <Link to="/investor-signup" className="text-primary hover:underline font-medium">{t("auth.investor_reg")}</Link>
             </p>
           </CardFooter>
         </form>
