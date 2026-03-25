@@ -250,9 +250,14 @@ const AdminPanel = () => {
                       <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                         <div>
                           <h3 className="text-lg font-bold text-foreground">{profile.startup_name}</h3>
-                          <p className="text-sm text-muted-foreground">
+                         <p className="text-sm text-muted-foreground">
                             {profile.name} {profile.surname}
                           </p>
+                          {(profile as any).email && (
+                            <p className="text-xs text-primary mt-0.5 flex items-center gap-1">
+                              <Mail className="h-3 w-3" /> {(profile as any).email}
+                            </p>
+                          )}
                           <div className="flex flex-wrap gap-2 mt-1">
                             {(profile as any).country && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{(profile as any).country}</span>
