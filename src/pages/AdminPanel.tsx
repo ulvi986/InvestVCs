@@ -83,28 +83,36 @@ const AdminPanel = () => {
   const [readiness, setReadiness] = useState<ReadinessRow[]>([]);
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
+  const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (roleLoading || !isAdmin) return;
 
     const load = async () => {
-      const [pRes, eRes, rRes, rolesRes, vRes] = await Promise.all([
+      const [pRes, eRes, rRes, rolesRes, vRes, fRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("readiness_answers").select("*"),
         supabase.from("user_roles").select("*"),
         supabase.from("startup_vacancies").select("*").order("created_at", { ascending: false }),
+        supabase.from("financial_snapshots").select("*"),
       ]);
       setProfiles((pRes.data as any[]) ?? []);
       setEvaluations((eRes.data as any[]) ?? []);
       setReadiness((rRes.data as any[]) ?? []);
       setRoles((rolesRes.data as any[]) ?? []);
       setVacancies((vRes.data as any[]) ?? []);
+      setFinancials((fRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
   }, [isAdmin, roleLoading]);
+
+  const numFmt = (v: number | null | undefined) => {
+    if (v === null || v === undefined || !isFinite(v) || isNaN(v)) return "—";
+    return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  };
 
   const approveInvestor = async (roleId: string) => {
     const { error } = await supabase.from("user_roles").update({ approved: true }).eq("id", roleId);
