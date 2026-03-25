@@ -5,17 +5,24 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail } from "lucide-react";
+import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle } from "lucide-react";
 
 interface ProfileRow {
   id: string;
   name: string;
   surname: string;
+  email: string;
   startup_name: string;
   startup_description: string | null;
   country: string;
   industry: string;
   created_at: string;
+}
+
+interface FinancialSnapshotRow {
+  user_id: string;
+  date: string;
+  data: any;
 }
 
 interface EvalRow {
@@ -76,28 +83,36 @@ const AdminPanel = () => {
   const [readiness, setReadiness] = useState<ReadinessRow[]>([]);
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
+  const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (roleLoading || !isAdmin) return;
 
     const load = async () => {
-      const [pRes, eRes, rRes, rolesRes, vRes] = await Promise.all([
+      const [pRes, eRes, rRes, rolesRes, vRes, fRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("readiness_answers").select("*"),
         supabase.from("user_roles").select("*"),
         supabase.from("startup_vacancies").select("*").order("created_at", { ascending: false }),
+        supabase.from("financial_snapshots").select("*"),
       ]);
       setProfiles((pRes.data as any[]) ?? []);
       setEvaluations((eRes.data as any[]) ?? []);
       setReadiness((rRes.data as any[]) ?? []);
       setRoles((rolesRes.data as any[]) ?? []);
       setVacancies((vRes.data as any[]) ?? []);
+      setFinancials((fRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
   }, [isAdmin, roleLoading]);
+
+  const numFmt = (v: number | null | undefined) => {
+    if (v === null || v === undefined || !isFinite(v) || isNaN(v)) return "—";
+    return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 2 });
+  };
 
   const approveInvestor = async (roleId: string) => {
     const { error } = await supabase.from("user_roles").update({ approved: true }).eq("id", roleId);
@@ -182,6 +197,10 @@ const AdminPanel = () => {
   const getProfile = (userId: string) => profiles.find((p) => p.id === userId);
   const getEval = (userId: string) => evaluations.find((e) => e.user_id === userId);
   const getReadiness = (userId: string) => readiness.find((r) => r.user_id === userId);
+  const getLatestFinancial = (userId: string) => {
+    const userF = financials.filter((f) => f.user_id === userId).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return userF[0]?.data;
+  };
 
   const pendingInvestors = roles.filter((r) => r.role === "investor" && !r.approved);
   const approvedInvestors = roles.filter((r) => r.role === "investor" && r.approved);
@@ -231,9 +250,14 @@ const AdminPanel = () => {
                       <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
                         <div>
                           <h3 className="text-lg font-bold text-foreground">{profile.startup_name}</h3>
-                          <p className="text-sm text-muted-foreground">
+                         <p className="text-sm text-muted-foreground">
                             {profile.name} {profile.surname}
                           </p>
+                          {(profile as any).email && (
+                            <p className="text-xs text-primary mt-0.5 flex items-center gap-1">
+                              <Mail className="h-3 w-3" /> {(profile as any).email}
+                            </p>
+                          )}
                           <div className="flex flex-wrap gap-2 mt-1">
                             {(profile as any).country && (
                               <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{(profile as any).country}</span>
@@ -256,32 +280,107 @@ const AdminPanel = () => {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">Berkus</p>
-                          <p className="text-lg font-bold text-primary">${evalData?.berkus?.toLocaleString() ?? "—"}</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">Scorecard</p>
-                          <p className="text-lg font-bold text-primary">${evalData?.scorecard?.toLocaleString() ?? "—"}</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">Risk Factor</p>
-                          <p className="text-lg font-bold text-primary">${evalData?.risk_factor?.toLocaleString() ?? "—"}</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">TRL</p>
-                          <p className="text-lg font-bold text-foreground">{trl}/9</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">CRL</p>
-                          <p className="text-lg font-bold text-foreground">{crl}/9</p>
-                        </div>
-                        <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
-                          <p className="text-xs text-muted-foreground">FRL</p>
-                          <p className="text-lg font-bold text-foreground">{frl}/9</p>
-                        </div>
-                      </div>
+                      {(() => {
+                        const latestF = getLatestFinancial(profile.id);
+                        return (
+                          <>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">Berkus</p>
+                                <p className="text-lg font-bold text-primary">{numFmt(evalData?.berkus)}</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">Scorecard</p>
+                                <p className="text-lg font-bold text-primary">{numFmt(evalData?.scorecard)}</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">Risk Factor</p>
+                                <p className="text-lg font-bold text-primary">{numFmt(evalData?.risk_factor)}</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">TRL</p>
+                                <p className="text-lg font-bold text-foreground">{trl}/9</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">CRL</p>
+                                <p className="text-lg font-bold text-foreground">{crl}/9</p>
+                              </div>
+                              <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground">FRL</p>
+                                <p className="text-lg font-bold text-foreground">{frl}/9</p>
+                              </div>
+                            </div>
+
+                            {latestF && (
+                              <div className="mt-4">
+                                <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                                  <DollarSign className="h-4 w-4 text-primary" /> Financial Report
+                                </h4>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <TrendingUp className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">Revenue</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.revenue?.total)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <TrendingDown className="h-3 w-3 text-destructive" />
+                                      <p className="text-xs text-muted-foreground">Expenses</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.expenses?.total)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Wallet className="h-3 w-3 text-primary" />
+                                      <p className="text-xs text-muted-foreground">Ending Cash</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.cashFlow?.endingCash)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Users className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">Active Users</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{latestF.customerMetrics?.activeUsers ?? "—"}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <DollarSign className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">ARPU</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.customerMetrics?.arpu)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <AlertTriangle className="h-3 w-3 text-destructive" />
+                                      <p className="text-xs text-muted-foreground">Burn Rate</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.cashFlow?.monthlyBurnRate)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Target className="h-3 w-3 text-primary" />
+                                      <p className="text-xs text-muted-foreground">CLTV</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">{numFmt(latestF.customerMetrics?.cltv)}</p>
+                                  </div>
+                                  <div className="rounded-lg border border-border p-3 bg-muted/30 text-center">
+                                    <div className="flex items-center justify-center gap-1 mb-1">
+                                      <Wallet className="h-3 w-3 text-accent" />
+                                      <p className="text-xs text-muted-foreground">Runway</p>
+                                    </div>
+                                    <p className="text-lg font-bold text-foreground">
+                                      {latestF.cashFlow?.runway != null ? `${Math.round(latestF.cashFlow.runway)} mo` : "—"}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
                     </div>
                   );
                 })}

@@ -16,6 +16,7 @@ import {
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
+import heroBg from "@/assets/hero-bg.jpg";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -78,9 +79,12 @@ const Index = () => {
     <Layout>
       {/* Hero */}
       <section className="relative overflow-hidden">
-        <div className="absolute inset-0 gradient-hero" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217_91%_60%/0.05),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(172_66%_50%/0.04),transparent_60%)]" />
+        <div className="absolute inset-0">
+          <img src={heroBg} alt="" className="h-full w-full object-cover" width={1920} height={1080} />
+          <div className="absolute inset-0 bg-background/80" />
+        </div>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217_91%_60%/0.08),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(172_66%_50%/0.06),transparent_60%)]" />
 
         <div className="container relative py-28 lg:py-40">
           <div className="mx-auto max-w-4xl text-center">
