@@ -53,8 +53,8 @@ function getFinalLevel(answers: Record<string, boolean>, prefix: string, count: 
 }
 
 function numFmt(v: number | null | undefined): string {
-  if (v == null) return "—";
-  return "$" + v.toLocaleString();
+  if (v == null || !isFinite(v) || isNaN(v)) return "—";
+  return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 2 });
 }
 
 const InvestorDashboard = () => {
