@@ -140,14 +140,8 @@ const InvestorDashboard = () => {
   });
 
   return (
-    <DashboardLayout>
-      <div className="container py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <TrendingUp className="h-8 w-8 text-primary" /> {t("investor.title")}
-          </h1>
-          <p className="mt-2 text-muted-foreground">{t("investor.desc")}</p>
-        </div>
+    <DashboardLayout title={t("investor.title")} subtitle={t("investor.desc")}>
+      <div className="space-y-6">
 
         <div className="mb-6 max-w-md relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
