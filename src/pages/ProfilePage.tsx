@@ -118,18 +118,18 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   // ─── INVESTOR PROFILE ───
   if (isInvestorUser) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="container py-10 space-y-8">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Investor Profile</h1>
@@ -200,13 +200,13 @@ const ProfilePage = () => {
             </CardContent>
           </Card>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   // ─── STARTUP PROFILE ───
   return (
-    <Layout>
+    <DashboardLayout>
       <div className="container py-10 space-y-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Profile</h1>
@@ -360,7 +360,7 @@ const ProfilePage = () => {
           )}
         </div>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 
