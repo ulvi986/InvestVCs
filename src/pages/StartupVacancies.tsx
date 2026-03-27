@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -167,7 +167,7 @@ const StartupVacancies = () => {
     : vacancies.filter((v) => v.approved || v.user_id === user?.id);
 
   return (
-    <Layout>
+    <DashboardLayout>
       <div className="container py-10">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
           <div>
@@ -285,7 +285,7 @@ const StartupVacancies = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

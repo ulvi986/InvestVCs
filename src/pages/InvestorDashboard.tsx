@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/context/LanguageContext";
@@ -92,15 +92,15 @@ const InvestorDashboard = () => {
 
   if (roleLoading) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">{t("common.loading")}</div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   if (isInvestorPending) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center max-w-md">
             <Shield className="h-16 w-16 text-amber-500/50 mx-auto mb-4" />
@@ -108,13 +108,13 @@ const InvestorDashboard = () => {
             <p className="text-muted-foreground">{t("investor.pending_desc")}</p>
           </div>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   if (!isInvestor) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
             <Shield className="h-16 w-16 text-destructive/50 mx-auto mb-4" />
@@ -122,7 +122,7 @@ const InvestorDashboard = () => {
             <p className="text-muted-foreground">{t("investor.denied_desc")}</p>
           </div>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
@@ -140,7 +140,7 @@ const InvestorDashboard = () => {
   });
 
   return (
-    <Layout>
+    <DashboardLayout>
       <div className="container py-10">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
@@ -345,7 +345,7 @@ const InvestorDashboard = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Cpu, ShoppingCart, Landmark, ChevronRight, Lock, Info } from "lucide-react";
@@ -373,7 +373,7 @@ const ReadinessLevel = () => {
   const { trlAnswers, crlAnswers, frlAnswers, setTrlAnswers, setCrlAnswers, setFrlAnswers } = readiness;
 
   return (
-    <Layout>
+    <DashboardLayout>
       <div className="container py-10">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Startup Readiness Level Assessment</h1>
@@ -406,7 +406,7 @@ const ReadinessLevel = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 
