@@ -274,7 +274,7 @@ const InvestorDashboard = () => {
                             <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <Wallet className="h-3 w-3 text-primary" />
-                                <p className="text-xs text-muted-foreground">Ending Cash</p>
+                                <p className="text-xs text-muted-foreground">{t("summary.ending_cash")}</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.cashFlow?.endingCash)}</p>
                             </div>
