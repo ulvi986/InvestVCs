@@ -7,10 +7,12 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import logoImg from "@/assets/logo.jpeg";
 
 const SignIn = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -18,7 +20,7 @@ const SignIn = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
-      toast.error("Please fill in all fields");
+      toast.error(t("vacancies.fill_required"));
       return;
     }
 
@@ -29,7 +31,7 @@ const SignIn = () => {
     if (error) {
       toast.error(error.message);
     } else {
-      toast.success("Successfully signed in!");
+      toast.success(t("auth.signin") + " ✓");
       navigate("/");
     }
   };
@@ -42,34 +44,34 @@ const SignIn = () => {
             <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-lg object-cover" />
             InvestVCs
           </Link>
-          <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
-          <CardDescription>Sign in to your account</CardDescription>
+          <CardTitle className="text-2xl font-bold">{t("auth.signin")}</CardTitle>
+          <CardDescription>{t("auth.signin_desc")}</CardDescription>
         </CardHeader>
 
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("auth.email")}</Label>
               <Input id="email" type="email" placeholder="email@example.com" value={email} onChange={e => setEmail(e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="Your password" value={password} onChange={e => setPassword(e.target.value)} />
+              <Label htmlFor="password">{t("auth.password")}</Label>
+              <Input id="password" type="password" placeholder="••••••" value={password} onChange={e => setPassword(e.target.value)} />
             </div>
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
             <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Sign In
+              {t("auth.signin")}
             </Button>
             <p className="text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link to="/signup" className="text-primary hover:underline font-medium">Sign Up</Link>
+              {t("auth.no_account")}{" "}
+              <Link to="/signup" className="text-primary hover:underline font-medium">{t("auth.signup")}</Link>
             </p>
             <p className="text-sm text-muted-foreground">
-              Are you an investor?{" "}
-              <Link to="/investor-signup" className="text-primary hover:underline font-medium">Investor Registration</Link>
+              {t("auth.investor_q")}{" "}
+              <Link to="/investor-signup" className="text-primary hover:underline font-medium">{t("auth.investor_reg")}</Link>
             </p>
           </CardFooter>
         </form>
