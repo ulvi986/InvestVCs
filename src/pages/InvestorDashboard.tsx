@@ -281,7 +281,7 @@ const InvestorDashboard = () => {
                             <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <UsersIcon className="h-3 w-3 text-accent" />
-                                <p className="text-xs text-muted-foreground">Active Users</p>
+                                <p className="text-xs text-muted-foreground">{t("summary.active_users")}</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{latestFinancial.customerMetrics?.activeUsers ?? "—"}</p>
                             </div>
