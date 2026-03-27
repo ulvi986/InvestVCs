@@ -1,163 +1,31 @@
 import { useState, useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { useLanguage } from "@/context/LanguageContext";
 
 const ADJUSTMENT_PER_POINT = 250000;
 
-const scoreOptions = [
-  { value: -2, label: "Very High Risk", color: "text-destructive" },
-  { value: -1, label: "High Risk", color: "text-orange-500" },
-  { value: 0, label: "Average", color: "text-muted-foreground" },
-  { value: 1, label: "Low Risk", color: "text-emerald-500" },
-  { value: 2, label: "Very Low Risk", color: "text-primary" },
+const riskKeys = [
+  "management", "stage", "legislation", "supply", "sales_marketing",
+  "funding", "competition", "technology", "international", "reputation",
+  "exit", "political",
 ];
 
-const risks = [
-  {
-    name: "Management Risk",
-    question: "The strength and experience of the startup's team",
-    options: [
-      { score: -2, label: "Team is inexperienced and unbalanced" },
-      { score: -1, label: "Experience is weak" },
-      { score: 0, label: "Average level" },
-      { score: 1, label: "Experienced and balanced team" },
-      { score: 2, label: "Proven successful team" },
-    ],
-  },
-  {
-    name: "Stage of Business Risk",
-    question: "What stage is the startup at?",
-    options: [
-      { score: -2, label: "Idea" },
-      { score: -1, label: "Prototype" },
-      { score: 0, label: "MVP" },
-      { score: 1, label: "Traction (customers exist)" },
-      { score: 2, label: "Revenue (generating income)" },
-    ],
-  },
-  {
-    name: "Legislation / Political Risk",
-    question: "Regulatory and government policy risk for the startup's operating sector",
-    options: [
-      { score: -2, label: "Legal uncertainty exists" },
-      { score: -1, label: "Certain risks are present" },
-      { score: 0, label: "Standard legal risk" },
-      { score: 1, label: "Legal framework is strong" },
-      { score: 2, label: "Patents/IP are protected and risk is minimal" },
-    ],
-  },
-  {
-    name: "Supply Chain / Technology Risk",
-    question: "How reliable and scalable is the technology used by the startup?",
-    options: [
-      { score: -2, label: "Technology is unproven" },
-      { score: -1, label: "Unstable" },
-      { score: 0, label: "Medium technical risk" },
-      { score: 1, label: "Stable product" },
-      { score: 2, label: "Measurable and scalable technology" },
-    ],
-  },
-  {
-    name: "Sales & Marketing Risk",
-    question: "How developed and reliable is the startup's sales and marketing strategy?",
-    options: [
-      { score: -2, label: "No sales strategy" },
-      { score: -1, label: "Unclear GTM plan" },
-      { score: 0, label: "Standard plan" },
-      { score: 1, label: "Structured GTM" },
-      { score: 2, label: "Proven sales channel" },
-    ],
-  },
-  {
-    name: "Funding / Capital Raising Risk",
-    question: "How secure and accessible is funding for the startup?",
-    options: [
-      { score: -2, label: "Difficult to raise capital" },
-      { score: -1, label: "Risky financial situation" },
-      { score: 0, label: "Normal" },
-      { score: 1, label: "Strong investor interest" },
-      { score: 2, label: "Easy access to capital" },
-    ],
-  },
-  {
-    name: "Competition Risk",
-    question: "How favorable is the competitive environment for the startup?",
-    options: [
-      { score: -2, label: "Very strong competitors" },
-      { score: -1, label: "Strong competition" },
-      { score: 0, label: "Moderate competition" },
-      { score: 1, label: "Competitive advantage exists" },
-      { score: 2, label: "Clear and strong differentiation" },
-    ],
-  },
-  {
-    name: "Technology Obsolescence Risk",
-    question: "How resilient is the startup's technology against becoming obsolete?",
-    options: [
-      { score: -2, label: "Technology may become outdated quickly" },
-      { score: -1, label: "Could have a short lifespan" },
-      { score: 0, label: "Normal risk" },
-      { score: 1, label: "Long-lasting technology" },
-      { score: 2, label: "Deep technological barrier" },
-    ],
-  },
-  {
-    name: "International Risk",
-    question: "How feasible is international expansion for the startup?",
-    options: [
-      { score: -2, label: "Global expansion is difficult" },
-      { score: -1, label: "Dependent on local market" },
-      { score: 0, label: "Moderate" },
-      { score: 1, label: "Regional expansion possible" },
-      { score: 2, label: "Suitable for a global model" },
-    ],
-  },
-  {
-    name: "Reputation Risk",
-    question: "How strong and reliable is the startup's reputation and brand image?",
-    options: [
-      { score: -2, label: "Trust issues exist" },
-      { score: -1, label: "Weak brand" },
-      { score: 0, label: "Normal" },
-      { score: 1, label: "Strong reputation" },
-      { score: 2, label: "Strong brand image" },
-    ],
-  },
-  {
-    name: "Exit Risk",
-    question: "How clear and achievable is the startup's exit strategy?",
-    options: [
-      { score: -2, label: "No exit strategy" },
-      { score: -1, label: "Unclear" },
-      { score: 0, label: "Moderate" },
-      { score: 1, label: "Clear exit plan" },
-      { score: 2, label: "Real exit potential" },
-    ],
-  },
-  {
-    name: "Political / Macro Risk",
-    question: "How stable and favorable is the political and macroeconomic environment for the startup?",
-    options: [
-      { score: -2, label: "High political risk" },
-      { score: -1, label: "Macro risks exist" },
-      { score: 0, label: "Normal" },
-      { score: 1, label: "Stable environment" },
-      { score: 2, label: "Strong economic environment" },
-    ],
-  },
-];
+const scoreValues = [-2, -1, 0, 1, 2];
+const scoreKeys = ["very_high", "high", "average", "low", "very_low"];
+const scoreColors = ["text-destructive", "text-orange-500", "text-muted-foreground", "text-emerald-500", "text-primary"];
 
 interface RiskFactorMethodProps {
   onValuationChange?: (value: number) => void;
 }
 
 const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
+  const { t } = useLanguage();
   const baseValuation = 250000;
-  const [scores, setScores] = useState<(number | null)[]>(Array(risks.length).fill(null));
+  const [scores, setScores] = useState<(number | null)[]>(Array(riskKeys.length).fill(null));
 
-  const base = baseValuation;
   const totalAdjustment = scores.reduce((sum, s) => sum + (s !== null ? s * ADJUSTMENT_PER_POINT : 0), 0);
-  const valuation = Math.max(0, base + totalAdjustment);
+  const valuation = Math.max(0, baseValuation + totalAdjustment);
 
   useEffect(() => {
     onValuationChange?.(valuation);
@@ -174,20 +42,20 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
   return (
     <div className="space-y-8">
       <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-        <h3 className="text-base font-semibold text-foreground mb-1">Base Valuation</h3>
+        <h3 className="text-base font-semibold text-foreground mb-1">{t("risk.base_val")}</h3>
         <p className="text-sm text-muted-foreground">
-          Fixed at <span className="font-semibold text-foreground">$250,000</span> USD. Each risk score point adjusts the valuation by $250,000.
+          {t("risk.base_val_desc")}
         </p>
       </div>
 
       <div className="space-y-6">
-        {risks.map((risk, i) => {
+        {riskKeys.map((key, i) => {
           const adjustment = scores[i] !== null ? scores[i]! * ADJUSTMENT_PER_POINT : 0;
           return (
-            <div key={risk.name} className="rounded-xl border border-border bg-card p-5 shadow-card">
+            <div key={key} className="rounded-xl border border-border bg-card p-5 shadow-card">
               <div className="flex items-center justify-between mb-1">
                 <h3 className="text-base font-semibold text-foreground">
-                  {i + 1}. {risk.name}
+                  {i + 1}. {t(`risk.${key}`)}
                 </h3>
                 {scores[i] !== null && (
                   <span className={`text-sm font-semibold ${adjustment > 0 ? "text-emerald-500" : adjustment < 0 ? "text-destructive" : "text-muted-foreground"}`}>
@@ -195,37 +63,28 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
                   </span>
                 )}
               </div>
-              <p className="text-sm text-foreground/80 mb-4">{risk.question}</p>
+              <p className="text-sm text-foreground/80 mb-4">{t(`risk.${key}_q`)}</p>
               <RadioGroup
                 value={scores[i] !== null ? String(scores[i]) : undefined}
                 onValueChange={(v) => updateScore(i, v)}
                 className="space-y-2"
               >
-                {risk.options.map((opt) => {
-                  const optColor = scoreOptions.find((s) => s.value === opt.score)?.color || "";
-                  return (
-                    <div
-                      key={opt.score}
-                      className={`flex items-center gap-2 rounded-md border px-3 py-2 transition-colors cursor-pointer ${
-                        scores[i] === opt.score
-                          ? "border-primary bg-primary/5"
-                          : "border-border hover:border-primary/40"
-                      }`}
-                      onClick={() => updateScore(i, String(opt.score))}
-                    >
-                      <RadioGroupItem
-                        value={String(opt.score)}
-                        id={`${risk.name}-${opt.score}`}
-                      />
-                      <Label
-                        htmlFor={`${risk.name}-${opt.score}`}
-                        className="text-sm cursor-pointer flex-1"
-                      >
-                        <span className="text-muted-foreground">{opt.label}</span>
-                      </Label>
-                    </div>
-                  );
-                })}
+                {scoreValues.map((val, si) => (
+                  <div
+                    key={val}
+                    className={`flex items-center gap-2 rounded-md border px-3 py-2 transition-colors cursor-pointer ${
+                      scores[i] === val
+                        ? "border-primary bg-primary/5"
+                        : "border-border hover:border-primary/40"
+                    }`}
+                    onClick={() => updateScore(i, String(val))}
+                  >
+                    <RadioGroupItem value={String(val)} id={`${key}-${val}`} />
+                    <Label htmlFor={`${key}-${val}`} className="text-sm cursor-pointer flex-1">
+                      <span className={`font-medium ${scoreColors[si]}`}>{t(`risk.${scoreKeys[si]}`)}</span>
+                    </Label>
+                  </div>
+                ))}
               </RadioGroup>
             </div>
           );
