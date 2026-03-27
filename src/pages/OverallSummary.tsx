@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useStartupContext } from "@/context/StartupContext";
 import { useMemo } from "react";
 import {
