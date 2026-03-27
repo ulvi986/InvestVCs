@@ -60,14 +60,6 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
   const latest = snapshots[snapshots.length - 1];
   const safe = (v: number) => (isFinite(v) && !isNaN(v) ? v : 0);
 
-  // Cumulative totals across all snapshots
-  const cumulative = useMemo(() => {
-    const totalRevenue = snapshots.reduce((sum, s) => sum + s.revenue.total, 0);
-    const totalExpenses = snapshots.reduce((sum, s) => sum + s.expenses.total, 0);
-    const totalNewCustomers = snapshots.reduce((sum, s) => sum + s.customerMetrics.newCustomers, 0);
-    const totalLostCustomers = snapshots.reduce((sum, s) => sum + s.customerMetrics.lostCustomers, 0);
-    return { totalRevenue, totalExpenses, totalNewCustomers, totalLostCustomers };
-  }, [snapshots]);
 
   const chartData = snapshots.map((s) => ({
     date: format(s.date, "dd MMM yyyy"),
