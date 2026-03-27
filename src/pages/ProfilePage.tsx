@@ -129,12 +129,8 @@ const ProfilePage = () => {
   // ─── INVESTOR PROFILE ───
   if (isInvestorUser) {
     return (
-      <DashboardLayout>
-        <div className="container py-10 space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Investor Profile</h1>
-            <p className="mt-2 text-muted-foreground">Your personal information</p>
-          </div>
+      <DashboardLayout title="Investor Profile" subtitle="Your personal information">
+        <div className="space-y-8">
 
           <Card className="max-w-lg border-border shadow-card">
             <CardHeader className="pb-4">
