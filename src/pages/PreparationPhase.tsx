@@ -82,8 +82,7 @@ const PreparationPhase = () => {
             <FinancialDashboard snapshots={snapshots} onRemove={removeSnapshot} />
           </TabsContent>
         </Tabs>
-      </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 
