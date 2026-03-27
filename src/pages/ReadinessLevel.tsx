@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { useMemo } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CheckCircle2, XCircle, Cpu, ShoppingCart, Landmark, ChevronRight, Lock, Info } from "lucide-react";
@@ -373,15 +373,7 @@ const ReadinessLevel = () => {
   const { trlAnswers, crlAnswers, frlAnswers, setTrlAnswers, setCrlAnswers, setFrlAnswers } = readiness;
 
   return (
-    <Layout>
-      <div className="container py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Startup Readiness Level Assessment</h1>
-          <p className="mt-2 text-muted-foreground">
-            Assess your startup across three dimensions: Technology, Commercial, and Funding readiness. Each level must be completed sequentially.
-          </p>
-        </div>
-
+    <DashboardLayout title="Startup Readiness Level Assessment" subtitle="Assess your startup across three dimensions: Technology, Commercial, and Funding readiness.">
         <Tabs defaultValue="trl" className="space-y-6">
           <TabsList className="bg-muted p-1 rounded-xl h-auto gap-1 flex-wrap">
             <TabsTrigger value="trl" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card gap-2">
@@ -405,8 +397,7 @@ const ReadinessLevel = () => {
             <ReadinessAssessment levels={FRL_LEVELS} prefix="FRL" icon={Landmark} color="gradient-primary" answers={frlAnswers} setAnswers={setFrlAnswers} />
           </TabsContent>
         </Tabs>
-      </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

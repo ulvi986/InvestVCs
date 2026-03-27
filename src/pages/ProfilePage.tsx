@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useStartupContext } from "@/context/StartupContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -118,23 +118,19 @@ const ProfilePage = () => {
 
   if (loading) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   // ─── INVESTOR PROFILE ───
   if (isInvestorUser) {
     return (
-      <Layout>
-        <div className="container py-10 space-y-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Investor Profile</h1>
-            <p className="mt-2 text-muted-foreground">Your personal information</p>
-          </div>
+      <DashboardLayout title="Investor Profile" subtitle="Your personal information">
+        <div className="space-y-8">
 
           <Card className="max-w-lg border-border shadow-card">
             <CardHeader className="pb-4">
@@ -200,18 +196,14 @@ const ProfilePage = () => {
             </CardContent>
           </Card>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   // ─── STARTUP PROFILE ───
   return (
-    <Layout>
-      <div className="container py-10 space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-          <p className="mt-2 text-muted-foreground">Your personal and startup information</p>
-        </div>
+    <DashboardLayout title="Profile" subtitle="Your personal and startup information">
+      <div className="space-y-8">
 
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-1 border-border shadow-card">
@@ -360,7 +352,7 @@ const ProfilePage = () => {
           )}
         </div>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

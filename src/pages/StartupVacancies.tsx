@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -167,22 +167,16 @@ const StartupVacancies = () => {
     : vacancies.filter((v) => v.approved || v.user_id === user?.id);
 
   return (
-    <Layout>
-      <div className="container py-10">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-              <Briefcase className="h-8 w-8 text-primary" /> Startup Vacancies
-            </h1>
-            <p className="mt-2 text-muted-foreground">Post and browse startup job opportunities.</p>
-          </div>
-          {user && (
+    <DashboardLayout title="Startup Vacancies" subtitle="Post and browse startup job opportunities.">
+      <div className="space-y-6">
+        {user && (
+          <div className="flex justify-end">
             <Button onClick={() => showForm ? cancelForm() : setShowForm(true)} className="gap-2 gradient-primary text-primary-foreground border-0">
               {showForm ? <X className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
               {showForm ? "Cancel" : "Post Vacancy"}
             </Button>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Post / Edit Form */}
         {showForm && (
@@ -285,7 +279,7 @@ const StartupVacancies = () => {
           </div>
         )}
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -174,15 +174,15 @@ const AdminPanel = () => {
 
   if (roleLoading) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center text-muted-foreground">Loading...</div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
   if (!isAdmin) {
     return (
-      <Layout>
+      <DashboardLayout>
         <div className="flex min-h-[60vh] items-center justify-center">
           <div className="text-center">
             <Shield className="h-16 w-16 text-destructive/50 mx-auto mb-4" />
@@ -190,7 +190,7 @@ const AdminPanel = () => {
             <p className="text-muted-foreground">You don't have admin privileges.</p>
           </div>
         </div>
-      </Layout>
+      </DashboardLayout>
     );
   }
 
@@ -208,14 +208,8 @@ const AdminPanel = () => {
   const approvedVacancies = vacancies.filter((v) => v.approved);
 
   return (
-    <Layout>
-      <div className="container py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Shield className="h-8 w-8 text-primary" /> Admin Panel
-          </h1>
-          <p className="mt-2 text-muted-foreground">Manage startups, investors, and vacancies.</p>
-        </div>
+    <DashboardLayout title="Admin Panel" subtitle="Manage startups, investors, and vacancies.">
+      <div className="space-y-6">
 
         <Tabs defaultValue="startups" className="space-y-6">
           <TabsList className="bg-muted p-1 rounded-xl h-auto gap-1 flex-wrap">
@@ -521,7 +515,7 @@ const AdminPanel = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 
