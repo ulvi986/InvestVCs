@@ -2,30 +2,32 @@ import { useState, useMemo } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { TrendingUp, TrendingDown, Wallet, Users, Plus, X, CalendarIcon, Save, ChevronLeft, ChevronRight } from "lucide-react";
-import { format, setMonth, setYear } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { TrendingUp, TrendingDown, Wallet, Users, Plus, X, CalendarIcon, Save, DollarSign, BarChart3 } from "lucide-react";
+import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 import type { FinancialSnapshot } from "@/pages/PreparationPhase";
 
 type OtherItem = { name: string; amount: string };
 
 const DynamicItems = ({
-  items, onAdd, onRemove, onChangeName, onChangeAmount, label,
+  items, onAdd, onRemove, onChangeName, onChangeAmount, label, addLabel,
 }: {
   items: OtherItem[]; onAdd: () => void; onRemove: (i: number) => void;
-  onChangeName: (i: number, v: string) => void; onChangeAmount: (i: number, v: string) => void; label: string;
+  onChangeName: (i: number, v: string) => void; onChangeAmount: (i: number, v: string) => void; label: string; addLabel: string;
 }) => (
   <div className="py-2">
     <div className="flex items-center justify-between mb-2">
       <span className="text-sm text-muted-foreground">{label}</span>
       <Button variant="ghost" size="sm" onClick={onAdd} className="h-7 gap-1 text-xs text-primary hover:text-primary">
-        <Plus className="h-3 w-3" /> Add
+        <Plus className="h-3 w-3" /> {addLabel}
       </Button>
     </div>
     {items.map((item, i) => (
       <div key={i} className="flex items-center gap-2 mb-2 ml-2">
-        <Input placeholder="Name" value={item.name} onChange={(e) => onChangeName(i, e.target.value)} className="flex-1 text-sm h-8" />
+        <Input placeholder={label} value={item.name} onChange={(e) => onChangeName(i, e.target.value)} className="flex-1 text-sm h-8" />
         <div className="flex items-center gap-1">
           <span className="text-xs text-muted-foreground">$</span>
           <Input type="number" placeholder="0" value={item.amount} onChange={(e) => onChangeAmount(i, e.target.value)} className="w-24 text-right text-sm h-8" />
@@ -86,65 +88,14 @@ const SectionCard = ({ icon: Icon, title, children }: { icon: React.ElementType;
   </div>
 );
 
-const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-
-const MonthPicker = ({ selected, onSelect }: { selected: Date | undefined; onSelect: (d: Date) => void }) => {
-  const [viewYear, setViewYear] = useState(selected ? selected.getFullYear() : new Date().getFullYear());
-  const selectedMonth = selected ? selected.getMonth() : -1;
-  const selectedYear = selected ? selected.getFullYear() : -1;
-
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant="outline" className={cn("w-[200px] justify-start text-left font-normal", !selected && "text-muted-foreground")}>
-          <CalendarIcon className="mr-2 h-4 w-4" />
-          {selected ? format(selected, "MMM yyyy") : <span>Pick a month</span>}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className="w-[260px] p-3 pointer-events-auto" align="start">
-        <div className="flex items-center justify-between mb-3">
-          <button onClick={() => setViewYear(y => y - 1)} className="p-1 rounded hover:bg-muted transition-colors">
-            <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-          </button>
-          <span className="text-sm font-semibold text-foreground">{viewYear}</span>
-          <button onClick={() => setViewYear(y => y + 1)} className="p-1 rounded hover:bg-muted transition-colors">
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
-          </button>
-        </div>
-        <div className="grid grid-cols-3 gap-2">
-          {MONTHS.map((m, i) => {
-            const isSelected = i === selectedMonth && viewYear === selectedYear;
-            return (
-              <button
-                key={m}
-                onClick={() => {
-                  const d = setMonth(setYear(new Date(), viewYear), i);
-                  d.setDate(1);
-                  onSelect(d);
-                }}
-                className={cn(
-                  "rounded-lg py-2 text-sm font-medium transition-colors",
-                  isSelected
-                    ? "gradient-primary text-primary-foreground"
-                    : "hover:bg-muted text-foreground"
-                )}
-              >
-                {m}
-              </button>
-            );
-          })}
-        </div>
-      </PopoverContent>
-    </Popover>
-  );
-};
-
 interface FinancialCalculatorProps {
   onSave: (snapshot: FinancialSnapshot) => void;
 }
 
 const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
+  const { t } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [calendarOpen, setCalendarOpen] = useState(false);
 
   // Revenue
   const [productSales, setProductSales] = useState("");
@@ -185,7 +136,7 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
   const otherIncomeTotal = sumItems(otherIncomeItems);
   const otherExpenseTotal = sumItems(otherExpenseItems);
 
-    const calcs = useMemo(() => {
+  const calcs = useMemo(() => {
     const totalRevenue = n(productSales) + n(subscription) + n(serviceFees) + otherIncomeTotal;
     const totalExpenses = n(salaries) + n(rent) + n(salesMarketing) + n(tech) + n(loanPayments) + otherExpenseTotal + n(taxes) + n(depreciation) + n(legalAccounting);
     const cashInflow = totalRevenue;
@@ -203,10 +154,8 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
     const grossProfit = n(totalProductRevenue) - n(totalProductionCosts);
     const grossMargin = n(totalProductRevenue) > 0 ? grossProfit / n(totalProductRevenue) : NaN;
     const cltv = isFinite(customerLifetime) && isFinite(grossMargin) && isFinite(arpu) ? arpu * grossMargin * customerLifetime : NaN;
-    
-    // Profitability metrics
     const netProfit = totalRevenue - totalExpenses;
-    const pv = endingCash; // Current Value = Ending Cash
+    const pv = endingCash;
     const roi = n(costOfInvestment) > 0 ? ((pv - n(costOfInvestment)) / n(costOfInvestment)) * 100 : NaN;
     const growthRate = n(initialValue) > 0 ? ((pv - n(initialValue)) / n(initialValue)) * 100 : NaN;
     const cagr = n(initialValue) > 0 && n(numberOfPeriods) > 0 ? (Math.pow(pv / n(initialValue), 1 / n(numberOfPeriods)) - 1) * 100 : NaN;
@@ -223,7 +172,7 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
 
   const handleSave = () => {
     if (!selectedDate) {
-      toast.error("Please select a date first.");
+      toast.error(t("financial.pick_date"));
       return;
     }
     const snapshot: FinancialSnapshot = {
@@ -255,7 +204,7 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
       },
     };
     onSave(snapshot);
-    toast.success(`Financial data saved for ${format(selectedDate, "MMM yyyy")}`);
+    toast.success(`${t("financial.save_dashboard")} — ${format(selectedDate, "dd MMM yyyy")}`);
   };
 
   return (
@@ -265,89 +214,115 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
         <div className="flex items-center gap-3 flex-1">
           <CalendarIcon className="h-5 w-5 text-primary" />
           <div>
-            <p className="text-sm font-semibold text-foreground">Select Date</p>
-            <p className="text-xs text-muted-foreground">Choose the month/date for this financial entry</p>
+            <p className="text-sm font-semibold text-foreground">{t("financial.select_date")}</p>
+            <p className="text-xs text-muted-foreground">{t("financial.select_date_desc")}</p>
           </div>
         </div>
-        <MonthPicker selected={selectedDate} onSelect={setSelectedDate} />
+        <Popover open={calendarOpen} onOpenChange={setCalendarOpen}>
+          <PopoverTrigger asChild>
+            <Button variant="outline" className={cn("w-[200px] justify-start text-left font-normal", !selectedDate && "text-muted-foreground")}>
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {selectedDate ? format(selectedDate, "dd MMM yyyy") : <span>{t("financial.pick_date")}</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={(d) => { setSelectedDate(d); setCalendarOpen(false); }}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </PopoverContent>
+        </Popover>
         <Button onClick={handleSave} className="gradient-primary text-primary-foreground border-0 gap-2">
-          <Save className="h-4 w-4" /> Save to Dashboard
+          <Save className="h-4 w-4" /> {t("financial.save_dashboard")}
         </Button>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Revenue */}
-        <SectionCard icon={TrendingUp} title="Revenue & Income">
+        <SectionCard icon={TrendingUp} title={t("financial.revenue_income")}>
           <div className="divide-y divide-border/50">
-            <Field label="Product Sales" value={productSales} onChange={setProductSales} />
-            <Field label="Subscription / MRR" value={subscription} onChange={setSubscription} />
-            <Field label="Service Fees" value={serviceFees} onChange={setServiceFees} />
-            <DynamicItems label="Other Income" items={otherIncomeItems} onAdd={() => addItem(setOtherIncomeItems)} onRemove={(i) => removeItem(setOtherIncomeItems, i)} onChangeName={(i, v) => updateItemName(setOtherIncomeItems, i, v)} onChangeAmount={(i, v) => updateItemAmount(setOtherIncomeItems, i, v)} />
+            <Field label={t("financial.product_sales")} value={productSales} onChange={setProductSales} />
+            <Field label={t("financial.subscription")} value={subscription} onChange={setSubscription} />
+            <Field label={t("financial.service_fees")} value={serviceFees} onChange={setServiceFees} />
+            <DynamicItems label={t("financial.other_income")} addLabel={t("financial.add")} items={otherIncomeItems} onAdd={() => addItem(setOtherIncomeItems)} onRemove={(i) => removeItem(setOtherIncomeItems, i)} onChangeName={(i, v) => updateItemName(setOtherIncomeItems, i, v)} onChangeAmount={(i, v) => updateItemAmount(setOtherIncomeItems, i, v)} />
           </div>
-          <ResultRow label="Total Revenue" value={calcs.totalRevenue} bold highlight />
+          <ResultRow label={t("financial.total_revenue")} value={calcs.totalRevenue} bold highlight />
         </SectionCard>
 
         {/* Expenses */}
-        <SectionCard icon={TrendingDown} title="Expenses">
+        <SectionCard icon={TrendingDown} title={t("financial.expenses")}>
           <div className="divide-y divide-border/50">
-            <Field label="Salaries" value={salaries} onChange={setSalaries} />
-            <Field label="Rent" value={rent} onChange={setRent} />
-            <Field label="Sales / Marketing" value={salesMarketing} onChange={setSalesMarketing} />
-            <Field label="Tech (Server etc.)" value={tech} onChange={setTech} />
-            <Field label="Loan Payments" value={loanPayments} onChange={setLoanPayments} />
-            <DynamicItems label="Other Expenses" items={otherExpenseItems} onAdd={() => addItem(setOtherExpenseItems)} onRemove={(i) => removeItem(setOtherExpenseItems, i)} onChangeName={(i, v) => updateItemName(setOtherExpenseItems, i, v)} onChangeAmount={(i, v) => updateItemAmount(setOtherExpenseItems, i, v)} />
-            <Field label="Taxes" value={taxes} onChange={setTaxes} />
-            <Field label="Depreciation / Amortization" value={depreciation} onChange={setDepreciation} />
-            <Field label="Legal / Accounting" value={legalAccounting} onChange={setLegalAccounting} />
+            <Field label={t("financial.salaries")} value={salaries} onChange={setSalaries} />
+            <Field label={t("financial.rent")} value={rent} onChange={setRent} />
+            <Field label={t("financial.sales_marketing")} value={salesMarketing} onChange={setSalesMarketing} />
+            <Field label={t("financial.tech")} value={tech} onChange={setTech} />
+            <Field label={t("financial.loan_payments")} value={loanPayments} onChange={setLoanPayments} />
+            <DynamicItems label={t("financial.other_expenses")} addLabel={t("financial.add")} items={otherExpenseItems} onAdd={() => addItem(setOtherExpenseItems)} onRemove={(i) => removeItem(setOtherExpenseItems, i)} onChangeName={(i, v) => updateItemName(setOtherExpenseItems, i, v)} onChangeAmount={(i, v) => updateItemAmount(setOtherExpenseItems, i, v)} />
+            <Field label={t("financial.taxes")} value={taxes} onChange={setTaxes} />
+            <Field label={t("financial.depreciation")} value={depreciation} onChange={setDepreciation} />
+            <Field label={t("financial.legal_accounting")} value={legalAccounting} onChange={setLegalAccounting} />
           </div>
-          <ResultRow label="Total Expenses" value={calcs.totalExpenses} bold />
+          <ResultRow label={t("financial.total_expenses")} value={calcs.totalExpenses} bold />
         </SectionCard>
 
         {/* Cash Flow */}
-        <SectionCard icon={Wallet} title="Cash Flow">
+        <SectionCard icon={Wallet} title={t("financial.cash_flow")}>
           <div className="divide-y divide-border/50">
-            <Field label="Starting Cash" value={startingCash} onChange={setStartingCash} />
+            <Field label={t("financial.starting_cash")} value={startingCash} onChange={setStartingCash} />
           </div>
           <div className="mt-3 space-y-0 divide-y divide-border/50">
-            <ResultRow label="Cash Inflow" value={calcs.cashInflow} />
-            <ResultRow label="Cash Outflow" value={calcs.cashOutflow} />
-            <ResultRow label="Ending Cash" value={calcs.endingCash} bold highlight />
-            <ResultRow label="Monthly Burn Rate" value={calcs.monthlyBurnRate} />
-            <ResultRow label="Runway" value={calcs.runway} prefix="" suffix=" months" />
+            <ResultRow label={t("financial.cash_inflow")} value={calcs.cashInflow} />
+            <ResultRow label={t("financial.cash_outflow")} value={calcs.cashOutflow} />
+            <ResultRow label={t("financial.ending_cash")} value={calcs.endingCash} bold highlight />
+            <ResultRow label={t("financial.monthly_burn_rate")} value={calcs.monthlyBurnRate} />
+            <ResultRow label={t("financial.runway")} value={calcs.runway} prefix="" suffix={` ${t("financial.months")}`} />
           </div>
         </SectionCard>
 
         {/* Customer Metrics */}
-        <SectionCard icon={Users} title="Customer Metrics">
+        <SectionCard icon={Users} title={t("financial.customer_metrics")}>
           <div className="divide-y divide-border/50">
-            <CountField label="New Customers (month)" value={newCustomers} onChange={setNewCustomers} hint="New customers acquired this month" />
-            <CountField label="Total Customers (start)" value={totalCustomersStart} onChange={setTotalCustomersStart} hint="Customer count at start of month" />
-            <CountField label="Lost Customers" value={lostCustomers} onChange={setLostCustomers} hint="Customers lost this month" />
-            <Field label="Avg Purchase Value" value={avgPurchaseValue} onChange={setAvgPurchaseValue} />
-            <Field label="Total Product Revenue" value={totalProductRevenue} onChange={setTotalProductRevenue} />
-            <Field label="Total Production Costs" value={totalProductionCosts} onChange={setTotalProductionCosts} />
-            <Field label="Cost of Investment" value={costOfInvestment} onChange={setCostOfInvestment} />
-            <Field label="Initial Value" value={initialValue} onChange={setInitialValue} />
-            <CountField label="Number of Periods" value={numberOfPeriods} onChange={setNumberOfPeriods} hint="Number of periods for CAGR calculation" />
+            <CountField label={t("financial.new_customers")} value={newCustomers} onChange={setNewCustomers} hint={t("financial.new_customers_hint")} />
+            <CountField label={t("financial.total_customers_start")} value={totalCustomersStart} onChange={setTotalCustomersStart} hint={t("financial.total_customers_hint")} />
+            <CountField label={t("financial.lost_customers")} value={lostCustomers} onChange={setLostCustomers} hint={t("financial.lost_customers_hint")} />
+            <Field label={t("financial.avg_purchase")} value={avgPurchaseValue} onChange={setAvgPurchaseValue} />
+            <Field label={t("financial.total_product_revenue")} value={totalProductRevenue} onChange={setTotalProductRevenue} />
+            <Field label={t("financial.total_production_costs")} value={totalProductionCosts} onChange={setTotalProductionCosts} />
           </div>
           <div className="mt-3 space-y-0 divide-y divide-border/50">
-            <ResultRow label="Active Users" value={calcs.activeUsers} prefix="" />
-            <ResultRow label="ARPU" value={calcs.arpu} />
-            <ResultRow label="Avg Revenue Per Customer Per Month" value={calcs.avgRevenuePerCustomerPerMonth} />
-            <ResultRow label="Churn Rate" value={calcs.churnRate * 100} prefix="" suffix="%" />
-            <ResultRow label="Customer Lifetime" value={calcs.customerLifetime} prefix="" suffix=" months" />
-            <ResultRow label="CAC" value={calcs.cac} />
-            <ResultRow label="Gross Profit" value={calcs.grossProfit} />
-            <ResultRow label="Gross Margin" value={calcs.grossMargin * 100} prefix="" suffix="%" />
-            <ResultRow label="Customer Lifetime Value (CLTV)" value={calcs.cltv} bold highlight />
-            <ResultRow label="ROI (Return on Investment)" value={calcs.roi} prefix="" suffix="%" bold highlight />
-            <ResultRow label="Growth Rate" value={calcs.growthRate} prefix="" suffix="%" bold highlight />
-            <ResultRow label="CAGR (Compound Annual Growth Rate)" value={calcs.cagr} prefix="" suffix="%" bold highlight />
-            <ResultRow label="Profit Margin" value={calcs.profitMargin} prefix="" suffix="%" bold highlight />
-            <ResultRow label="Profit Percentage" value={calcs.profitPercentage} prefix="" suffix="%" bold highlight />
+            <ResultRow label={t("financial.active_users")} value={calcs.activeUsers} prefix="" />
+            <ResultRow label={t("financial.churn_rate")} value={calcs.churnRate * 100} prefix="" suffix="%" />
+            <ResultRow label={t("financial.customer_lifetime")} value={calcs.customerLifetime} prefix="" suffix={` ${t("financial.months")}`} />
+            <ResultRow label={t("financial.arpu")} value={calcs.arpu} />
+            <ResultRow label={t("financial.avg_rev_customer")} value={calcs.avgRevenuePerCustomerPerMonth} />
+            <ResultRow label={t("financial.cac")} value={calcs.cac} />
+            <ResultRow label={t("financial.gross_profit")} value={calcs.grossProfit} />
+            <ResultRow label={t("financial.gross_margin")} value={calcs.grossMargin * 100} prefix="" suffix="%" />
+            <ResultRow label={t("financial.cltv")} value={calcs.cltv} bold highlight />
           </div>
         </SectionCard>
       </div>
+
+      {/* Profitability */}
+      <SectionCard icon={BarChart3} title={t("financial.profitability")}>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="divide-y divide-border/50">
+            <Field label={t("financial.cost_investment")} value={costOfInvestment} onChange={setCostOfInvestment} />
+            <Field label={t("financial.initial_value")} value={initialValue} onChange={setInitialValue} />
+            <CountField label={t("financial.num_periods")} value={numberOfPeriods} onChange={setNumberOfPeriods} />
+          </div>
+          <div className="divide-y divide-border/50">
+            <ResultRow label={t("financial.roi")} value={calcs.roi} prefix="" suffix="%" />
+            <ResultRow label={t("financial.growth_rate")} value={calcs.growthRate} prefix="" suffix="%" />
+            <ResultRow label={t("financial.cagr")} value={calcs.cagr} prefix="" suffix="%" />
+            <ResultRow label={t("financial.profit_margin")} value={calcs.profitMargin} prefix="" suffix="%" />
+            <ResultRow label={t("financial.profit_percentage")} value={calcs.profitPercentage} prefix="" suffix="%" />
+          </div>
+        </div>
+      </SectionCard>
     </div>
   );
 };

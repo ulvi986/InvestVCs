@@ -3,6 +3,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FinancialCalculator from "@/components/FinancialCalculator";
 import FinancialDashboard from "@/components/FinancialDashboard";
 import { useStartupContext } from "@/context/StartupContext";
+import { useLanguage } from "@/context/LanguageContext";
 
 export type FinancialSnapshot = {
   id: string;
@@ -63,16 +64,17 @@ export type FinancialSnapshot = {
 const PreparationPhase = () => {
   const { financial } = useStartupContext();
   const { snapshots, addSnapshot, removeSnapshot } = financial;
+  const { t } = useLanguage();
 
   return (
-    <DashboardLayout title="Financial Management" subtitle="Enter your startup's financial data by date and track your progress on the dashboard.">
+    <DashboardLayout title={t("financial.title")} subtitle={t("financial.subtitle")}>
         <Tabs defaultValue="entry" className="space-y-6">
           <TabsList className="bg-muted p-1 rounded-xl h-auto gap-1">
             <TabsTrigger value="entry" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
-              Data Entry
+              {t("financial.data_entry")}
             </TabsTrigger>
             <TabsTrigger value="dashboard" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
-              📊 Dashboard
+              {t("financial.dashboard")}
             </TabsTrigger>
           </TabsList>
           <TabsContent value="entry">
