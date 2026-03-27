@@ -202,12 +202,8 @@ const ProfilePage = () => {
 
   // ─── STARTUP PROFILE ───
   return (
-    <DashboardLayout>
-      <div className="container py-10 space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold text-foreground">Profile</h1>
-          <p className="mt-2 text-muted-foreground">Your personal and startup information</p>
-        </div>
+    <DashboardLayout title="Profile" subtitle="Your personal and startup information">
+      <div className="space-y-8">
 
         <div className="grid gap-6 lg:grid-cols-3">
           <Card className="lg:col-span-1 border-border shadow-card">
