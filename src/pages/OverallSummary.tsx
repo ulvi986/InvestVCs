@@ -434,8 +434,7 @@ const OverallSummary = () => {
             ))}
           </div>
         </div>
-      </div>
-    </Layout>
+    </DashboardLayout>
   );
 };
 

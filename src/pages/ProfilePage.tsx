@@ -3,7 +3,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useStartupContext } from "@/context/StartupContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
