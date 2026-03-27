@@ -36,6 +36,15 @@ interface FinancialDashboardProps {
 const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) => {
   const { t } = useLanguage();
 
+  // Cumulative totals across all snapshots
+  const cumulative = useMemo(() => {
+    const totalRevenue = snapshots.reduce((sum, s) => sum + s.revenue.total, 0);
+    const totalExpenses = snapshots.reduce((sum, s) => sum + s.expenses.total, 0);
+    const totalNewCustomers = snapshots.reduce((sum, s) => sum + s.customerMetrics.newCustomers, 0);
+    const totalLostCustomers = snapshots.reduce((sum, s) => sum + s.customerMetrics.lostCustomers, 0);
+    return { totalRevenue, totalExpenses, totalNewCustomers, totalLostCustomers };
+  }, [snapshots]);
+
   if (snapshots.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center">
