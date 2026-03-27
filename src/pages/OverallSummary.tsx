@@ -290,14 +290,7 @@ const OverallSummary = () => {
   };
 
   return (
-    <Layout>
-      <div className="container py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Overall Summary & Advice</h1>
-          <p className="mt-2 text-muted-foreground">
-            Comprehensive overview based on all available data.
-          </p>
-        </div>
+    <DashboardLayout title="Overall Summary & Advice" subtitle="Comprehensive overview based on all available data.">
 
         {/* Readiness Levels Summary */}
         {hasReadiness && (
