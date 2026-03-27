@@ -208,7 +208,7 @@ const AdminPanel = () => {
   const approvedVacancies = vacancies.filter((v) => v.approved);
 
   return (
-    <DashboardLayout>
+    <DashboardLayout title="Admin Panel" subtitle="Manage startups, investors, and vacancies.">
       <div className="space-y-6">
 
         <Tabs defaultValue="startups" className="space-y-6">
