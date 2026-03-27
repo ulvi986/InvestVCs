@@ -1,4 +1,4 @@
-import Layout from "@/components/Layout";
+import DashboardLayout from "@/components/DashboardLayout";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import FinancialCalculator from "@/components/FinancialCalculator";
 import FinancialDashboard from "@/components/FinancialDashboard";
