@@ -209,13 +209,7 @@ const AdminPanel = () => {
 
   return (
     <DashboardLayout>
-      <div className="container py-10">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground flex items-center gap-3">
-            <Shield className="h-8 w-8 text-primary" /> Admin Panel
-          </h1>
-          <p className="mt-2 text-muted-foreground">Manage startups, investors, and vacancies.</p>
-        </div>
+      <div className="space-y-6">
 
         <Tabs defaultValue="startups" className="space-y-6">
           <TabsList className="bg-muted p-1 rounded-xl h-auto gap-1 flex-wrap">
