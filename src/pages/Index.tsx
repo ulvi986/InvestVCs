@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Shield, DollarSign, ClipboardCheck, BrainCircuit } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -8,10 +8,6 @@ import AuroraBackground from "@/components/AuroraBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import hero3d from "@/assets/hero-3d.png";
-import featureValuation from "@/assets/feature-valuation.png";
-import featureFinancial from "@/assets/feature-financial.png";
-import featureReadiness from "@/assets/feature-readiness.png";
-import featureVenture from "@/assets/feature-venture.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
