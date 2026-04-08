@@ -234,6 +234,35 @@ const VentureAnalysis = () => {
     setVoucherDialogOpen(true);
   };
 
+  const extractPptxText = async (file: File): Promise<string> => {
+    const JSZip = (await import("jszip")).default;
+    const zip = await JSZip.loadAsync(file);
+    const slideFiles = Object.keys(zip.files)
+      .filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name))
+      .sort((a, b) => {
+        const numA = parseInt(a.match(/slide(\d+)/)?.[1] || "0");
+        const numB = parseInt(b.match(/slide(\d+)/)?.[1] || "0");
+        return numA - numB;
+      });
+
+    const slides: string[] = [];
+    for (const slidePath of slideFiles) {
+      const xml = await zip.files[slidePath].async("text");
+      // Extract text from XML tags
+      const texts: string[] = [];
+      const regex = /<a:t>(.*?)<\/a:t>/g;
+      let match;
+      while ((match = regex.exec(xml)) !== null) {
+        if (match[1].trim()) texts.push(match[1].trim());
+      }
+      if (texts.length > 0) {
+        const slideNum = slidePath.match(/slide(\d+)/)?.[1] || "?";
+        slides.push(`--- Slide ${slideNum} ---\n${texts.join("\n")}`);
+      }
+    }
+    return slides.length > 0 ? slides.join("\n\n") : "No text content found in the presentation.";
+  };
+
   const uploadAndAnalyzePD = async () => {
     if (!pdFile || !user) return;
     setPdUploading(true);
@@ -247,9 +276,8 @@ const VentureAnalysis = () => {
 
       if (uploadError) throw uploadError;
 
-      // For now, extract text by sending file name as context
-      // In production, you'd parse the PPT server-side
-      const textContent = `Pitch Deck File: ${pdFile.name}\nFile Size: ${(pdFile.size / 1024).toFixed(1)} KB\nPlease analyze based on common pitch deck best practices and provide general feedback for a startup pitch deck.`;
+      // Extract actual text content from PPTX
+      const textContent = await extractPptxText(pdFile);
 
       const { data, error } = await supabase.functions.invoke("analyze-venture", {
         body: { type: "pitch_deck", data: textContent },
