@@ -128,7 +128,7 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" className="rounded-lg text-white/70 hover:text-white">{t("nav.signin")}</Button>
               </Link>
               <Link to="/signup">
-                <Button size="sm" className="gradient-primary text-primary-foreground border-0 shadow-elevated rounded-lg">
+                <Button size="sm" className="bg-cyan-500 hover:bg-cyan-400 text-slate-900 border-0 rounded-lg font-semibold">
                   {t("nav.signup")}
                 </Button>
               </Link>
