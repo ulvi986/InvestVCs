@@ -6,7 +6,9 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle, KeyRound, Plus, Copy } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProfileRow { id: string; name: string; surname: string; email: string; startup_name: string; startup_description: string | null; country: string; industry: string; created_at: string; }
 interface FinancialSnapshotRow { user_id: string; date: string; data: any; }
@@ -14,6 +16,7 @@ interface EvalRow { user_id: string; berkus: number; scorecard: number; risk_fac
 interface ReadinessRow { user_id: string; trl_answers: Record<string, boolean>; crl_answers: Record<string, boolean>; frl_answers: Record<string, boolean>; }
 interface RoleRow { id: string; user_id: string; role: string; approved: boolean; created_at: string; }
 interface VacancyRow { id: string; user_id: string; startup_name: string; country: string; job_type: string; startup_description: string | null; job_description: string; specialization: string; contact_email: string; approved: boolean; created_at: string; }
+interface VoucherRow { id: string; code: string; type: string; max_uses: number; used_count: number; created_by: string; created_at: string; }
 
 const TRL_CRITERIA = [[1,2],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
 const CRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
