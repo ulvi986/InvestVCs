@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,15 +12,17 @@ const scoreKeys = ["very_weak", "weak", "average", "strong", "very_strong"];
 const scoreColors = ["text-destructive", "text-orange-500", "text-muted-foreground", "text-emerald-500", "text-primary"];
 
 interface ScorecardMethodProps {
+  scores: (number | null)[];
+  medianValuation: number;
+  onScoresChange: (scores: (number | null)[]) => void;
+  onMedianChange: (median: number) => void;
   onValuationChange?: (value: number) => void;
 }
 
-const ScorecardMethod = ({ onValuationChange }: ScorecardMethodProps) => {
+const ScorecardMethod = ({ scores, medianValuation, onScoresChange, onMedianChange, onValuationChange }: ScorecardMethodProps) => {
   const { t } = useLanguage();
-  const [scores, setScores] = useState<(number | null)[]>(Array(factorKeys.length).fill(null));
-  const [medianValuation, setMedianValuation] = useState<string>("");
 
-  const median = parseFloat(medianValuation) || 0;
+  const median = medianValuation || 0;
 
   const weightedScore = factorKeys.reduce((sum, _, i) => {
     const score = scores[i] !== null ? scores[i]! / 100 : 0;
@@ -34,11 +36,9 @@ const ScorecardMethod = ({ onValuationChange }: ScorecardMethodProps) => {
   }, [finalValuation, onValuationChange]);
 
   const updateScore = (idx: number, value: string) => {
-    setScores((prev) => {
-      const next = [...prev];
-      next[idx] = parseInt(value);
-      return next;
-    });
+    const next = [...scores];
+    next[idx] = parseInt(value);
+    onScoresChange(next);
   };
 
   return (
@@ -48,15 +48,15 @@ const ScorecardMethod = ({ onValuationChange }: ScorecardMethodProps) => {
           {t("scorecard.base_val")}
         </h3>
         <p className="text-sm text-muted-foreground mb-4">
-          {t(`scorecard.${factorKeys[0]}_q`).length > 0 ? t("scorecard.base_val_desc") : "What is the average market valuation of startups in your target market?"}
+          {t("scorecard.base_val_desc")}
         </p>
         <div className="flex items-center gap-2">
           <span className="text-lg font-semibold text-foreground">$</span>
           <Input
             type="number"
             placeholder="e.g. 3000000"
-            value={medianValuation}
-            onChange={(e) => setMedianValuation(e.target.value)}
+            value={medianValuation || ""}
+            onChange={(e) => onMedianChange(parseFloat(e.target.value) || 0)}
             className="max-w-xs text-lg"
           />
           <span className="text-sm text-muted-foreground">USD</span>

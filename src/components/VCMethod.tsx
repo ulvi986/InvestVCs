@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -8,21 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Info } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import type { VCAnswers } from "@/context/StartupContext";
 
 interface VCMethodProps {
+  answers: VCAnswers;
+  onAnswersChange: (answers: VCAnswers) => void;
   onValuationChange?: (value: number) => void;
 }
 
-const VCMethod = ({ onValuationChange }: VCMethodProps) => {
+const VCMethod = ({ answers, onAnswersChange, onValuationChange }: VCMethodProps) => {
   const { t } = useLanguage();
-  const [revenue, setRevenue] = useState<number>(0);
-  const [netIncomeMargin, setNetIncomeMargin] = useState<number>(20);
-  const [exitMultiple, setExitMultiple] = useState<number>(8);
-  const [customMultiple, setCustomMultiple] = useState<number>(20);
-  const [isOther, setIsOther] = useState(false);
-  const [exitYears, setExitYears] = useState<number>(5);
-  const [requiredIRR, setRequiredIRR] = useState<number>(30);
-  const [investmentAmount, setInvestmentAmount] = useState<number>(0);
+  const { revenue, netIncomeMargin, exitMultiple, customMultiple, isOther, exitYears, requiredIRR, investmentAmount } = answers;
+
+  const update = (patch: Partial<VCAnswers>) => onAnswersChange({ ...answers, ...patch });
 
   const netIncome = revenue * (netIncomeMargin / 100);
   const exitValue = revenue * exitMultiple;
@@ -43,7 +41,7 @@ const VCMethod = ({ onValuationChange }: VCMethodProps) => {
           <CardContent>
             <div className="space-y-2">
               <Label htmlFor="vc-revenue">{t("vc.revenue")} ($)</Label>
-              <Input id="vc-revenue" type="number" min={0} value={revenue || ""} onChange={e => setRevenue(Number(e.target.value) || 0)} placeholder="e.g. 20,000" />
+              <Input id="vc-revenue" type="number" min={0} value={revenue || ""} onChange={e => update({ revenue: Number(e.target.value) || 0 })} placeholder="e.g. 20,000" />
               <p className="text-xs text-muted-foreground">{t("vc.revenue_desc")}</p>
             </div>
           </CardContent>
@@ -54,7 +52,7 @@ const VCMethod = ({ onValuationChange }: VCMethodProps) => {
             <div className="space-y-2">
               <Label htmlFor="vc-margin">{t("vc.margin")} (%)</Label>
               <div className="flex items-center gap-2">
-                <Input id="vc-margin" type="number" min={0} max={100} value={netIncomeMargin} onChange={e => setNetIncomeMargin(Number(e.target.value) || 0)} className="w-24" />
+                <Input id="vc-margin" type="number" min={0} max={100} value={netIncomeMargin} onChange={e => update({ netIncomeMargin: Number(e.target.value) || 0 })} className="w-24" />
                 <span className="text-sm text-muted-foreground">%</span>
               </div>
               <p className="text-xs text-muted-foreground">
@@ -70,7 +68,7 @@ const VCMethod = ({ onValuationChange }: VCMethodProps) => {
         <CardContent>
           <RadioGroup
             value={isOther ? "other" : String(exitMultiple)}
-            onValueChange={v => { if (v === "other") { setIsOther(true); setExitMultiple(customMultiple); } else { setIsOther(false); setExitMultiple(Number(v)); } }}
+            onValueChange={v => { if (v === "other") { update({ isOther: true, exitMultiple: customMultiple }); } else { update({ isOther: false, exitMultiple: Number(v) }); } }}
             className="grid grid-cols-2 gap-3"
           >
             {[5, 8, 10, 15].map(m => (
@@ -84,7 +82,7 @@ const VCMethod = ({ onValuationChange }: VCMethodProps) => {
               <Label htmlFor="vc-mult-other" className="cursor-pointer font-medium">{t("vc.other")}</Label>
               {isOther && (
                 <div className="flex items-center gap-1 ml-2">
-                  <Input type="number" min={1} value={customMultiple} onChange={e => { const val = Number(e.target.value) || 1; setCustomMultiple(val); setExitMultiple(val); }} className="w-20 h-8" />
+                  <Input type="number" min={1} value={customMultiple} onChange={e => { const val = Number(e.target.value) || 1; update({ customMultiple: val, exitMultiple: val }); }} className="w-20 h-8" />
                   <span className="text-sm text-muted-foreground">x</span>
                 </div>
               )}
@@ -101,7 +99,7 @@ const VCMethod = ({ onValuationChange }: VCMethodProps) => {
           <CardHeader><CardTitle className="text-base">{t("vc.exit_timing")}</CardTitle></CardHeader>
           <CardContent>
             <div className="space-y-3">
-              <Slider value={[exitYears]} onValueChange={v => setExitYears(v[0])} min={1} max={10} step={1} />
+              <Slider value={[exitYears]} onValueChange={v => update({ exitYears: v[0] })} min={1} max={10} step={1} />
               <div className="flex justify-between text-sm">
                 <span className="text-muted-foreground">1 {t("vc.year")}</span>
                 <span className="font-semibold text-foreground">{exitYears} {t("vc.years")}</span>
@@ -115,7 +113,7 @@ const VCMethod = ({ onValuationChange }: VCMethodProps) => {
           <CardContent>
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Input type="number" min={1} max={200} value={requiredIRR} onChange={e => setRequiredIRR(Number(e.target.value) || 1)} className="w-24" />
+                <Input type="number" min={1} max={200} value={requiredIRR} onChange={e => update({ requiredIRR: Number(e.target.value) || 1 })} className="w-24" />
                 <span className="text-sm text-muted-foreground">%</span>
               </div>
               <p className="text-xs text-muted-foreground">{t("vc.irr_desc")}</p>
@@ -129,7 +127,7 @@ const VCMethod = ({ onValuationChange }: VCMethodProps) => {
         <CardContent>
           <div className="space-y-2">
             <Label htmlFor="vc-investment">{t("vc.amount")} ($)</Label>
-            <Input id="vc-investment" type="number" min={0} value={investmentAmount || ""} onChange={e => setInvestmentAmount(Number(e.target.value) || 0)} placeholder="e.g. 500,000" />
+            <Input id="vc-investment" type="number" min={0} value={investmentAmount || ""} onChange={e => update({ investmentAmount: Number(e.target.value) || 0 })} placeholder="e.g. 500,000" />
           </div>
         </CardContent>
       </Card>

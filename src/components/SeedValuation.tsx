@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -8,20 +8,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Info } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import type { ChicagoAnswers } from "@/context/StartupContext";
 
 interface SeedValuationProps {
+  answers: ChicagoAnswers;
+  onAnswersChange: (answers: ChicagoAnswers) => void;
   onValuationChange?: (value: number) => void;
 }
 
-const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
+const SeedValuation = ({ answers, onAnswersChange, onValuationChange }: SeedValuationProps) => {
   const { t } = useLanguage();
-  const [revenue, setRevenue] = useState<number>(0);
-  const [exitMultiple, setExitMultiple] = useState<number>(8);
-  const [customMultiple, setCustomMultiple] = useState<number>(20);
-  const [isOther, setIsOther] = useState(false);
-  const [yearsToExit, setYearsToExit] = useState<number>(5);
-  const [discountRates, setDiscountRates] = useState({ worst: 50, base: 30, best: 20 });
-  const [probabilities, setProbabilities] = useState({ worst: 20, base: 70, best: 10 });
+  const { revenue, exitMultiple, customMultiple, isOther, yearsToExit, discountRates, probabilities } = answers;
+
+  const update = (patch: Partial<ChicagoAnswers>) => onAnswersChange({ ...answers, ...patch });
 
   const exitValue = revenue * exitMultiple;
   const pvWorst = exitValue / Math.pow(1 + discountRates.worst / 100, yearsToExit);
@@ -37,17 +36,15 @@ const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
   }, [finalValuation, onValuationChange]);
 
   const handleProbabilityChange = (scenario: "worst" | "base" | "best", value: number) => {
-    setProbabilities(prev => {
-      const updated = { ...prev, [scenario]: value };
-      const total = updated.worst + updated.base + updated.best;
-      if (total > 100) {
-        const others = Object.keys(updated).filter(k => k !== scenario) as Array<"worst" | "base" | "best">;
-        const excess = total - 100;
-        const otherTotal = others.reduce((sum, k) => sum + updated[k], 0);
-        if (otherTotal > 0) others.forEach(k => { updated[k] = Math.max(0, Math.round(updated[k] - (updated[k] / otherTotal) * excess)); });
-      }
-      return updated;
-    });
+    const updated = { ...probabilities, [scenario]: value };
+    const total = updated.worst + updated.base + updated.best;
+    if (total > 100) {
+      const others = (Object.keys(updated) as Array<"worst" | "base" | "best">).filter(k => k !== scenario);
+      const excess = total - 100;
+      const otherTotal = others.reduce((sum, k) => sum + updated[k], 0);
+      if (otherTotal > 0) others.forEach(k => { updated[k] = Math.max(0, Math.round(updated[k] - (updated[k] / otherTotal) * excess)); });
+    }
+    update({ probabilities: updated });
   };
 
   const probTotal = probabilities.worst + probabilities.base + probabilities.best;
@@ -60,7 +57,7 @@ const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
           <CardContent>
             <div className="space-y-2">
               <Label htmlFor="revenue">{t("seed.revenue")} ($)</Label>
-              <Input id="revenue" type="number" min={0} value={revenue || ""} onChange={e => setRevenue(Number(e.target.value) || 0)} placeholder="e.g. 1,000,000" />
+              <Input id="revenue" type="number" min={0} value={revenue || ""} onChange={e => update({ revenue: Number(e.target.value) || 0 })} placeholder="e.g. 1,000,000" />
               <p className="text-xs text-muted-foreground">{t("seed.revenue_desc")}</p>
             </div>
           </CardContent>
@@ -70,7 +67,7 @@ const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
           <CardContent>
             <RadioGroup
               value={isOther ? "other" : String(exitMultiple)}
-              onValueChange={v => { if (v === "other") { setIsOther(true); setExitMultiple(customMultiple); } else { setIsOther(false); setExitMultiple(Number(v)); } }}
+              onValueChange={v => { if (v === "other") { update({ isOther: true, exitMultiple: customMultiple }); } else { update({ isOther: false, exitMultiple: Number(v) }); } }}
               className="grid grid-cols-2 gap-3"
             >
               {[5, 8, 10, 15].map(m => (
@@ -84,7 +81,7 @@ const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
                 <Label htmlFor="mult-other" className="cursor-pointer font-medium">{t("seed.other")}</Label>
                 {isOther && (
                   <div className="flex items-center gap-1 ml-2">
-                    <Input type="number" min={1} value={customMultiple} onChange={e => { const val = Number(e.target.value) || 1; setCustomMultiple(val); setExitMultiple(val); }} className="w-20 h-8" />
+                    <Input type="number" min={1} value={customMultiple} onChange={e => { const val = Number(e.target.value) || 1; update({ customMultiple: val, exitMultiple: val }); }} className="w-20 h-8" />
                     <span className="text-sm text-muted-foreground">x</span>
                   </div>
                 )}
@@ -101,7 +98,7 @@ const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
         <CardHeader><CardTitle className="text-base">{t("seed.years_to_exit")}</CardTitle></CardHeader>
         <CardContent>
           <div className="space-y-3">
-            <Slider value={[yearsToExit]} onValueChange={v => setYearsToExit(v[0])} min={1} max={10} step={1} />
+            <Slider value={[yearsToExit]} onValueChange={v => update({ yearsToExit: v[0] })} min={1} max={10} step={1} />
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">1 {t("seed.year")}</span>
               <span className="font-semibold text-foreground">{yearsToExit} {t("seed.years")}</span>
@@ -124,7 +121,7 @@ const SeedValuation = ({ onValuationChange }: SeedValuationProps) => {
               <div key={scenario} className="space-y-2">
                 <Label>{t(`seed.${scenario}_case`)}</Label>
                 <div className="flex items-center gap-2">
-                  <Input type="number" min={1} max={100} value={discountRates[scenario]} onChange={e => setDiscountRates(prev => ({ ...prev, [scenario]: Number(e.target.value) || 1 }))} className="w-20" />
+                  <Input type="number" min={1} max={100} value={discountRates[scenario]} onChange={e => update({ discountRates: { ...discountRates, [scenario]: Number(e.target.value) || 1 } })} className="w-20" />
                   <span className="text-sm text-muted-foreground">%</span>
                 </div>
               </div>

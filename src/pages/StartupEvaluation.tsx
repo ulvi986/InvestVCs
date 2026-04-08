@@ -43,7 +43,12 @@ const TabNav = ({
 
 const StartupEvaluation = () => {
   const { evaluation } = useStartupContext();
-  const { berkus, scorecard, riskFactor, setBerkus, setScorecard, setRiskFactor } = evaluation;
+  const {
+    berkus, scorecard, riskFactor,
+    berkusAnswers, scorecardAnswers, scorecardMedian, riskAnswers, vcAnswers, chicagoAnswers,
+    setBerkus, setScorecard, setRiskFactor,
+    setBerkusAnswers, setScorecardAnswers, setScorecardMedian, setRiskAnswers, setVcAnswers, setChicagoAnswers,
+  } = evaluation;
   const { t } = useLanguage();
   const [stage, setStage] = useState<"pre-seed" | "seed">("pre-seed");
   const [vcValue, setVcValue] = useState(0);
@@ -53,7 +58,6 @@ const StartupEvaluation = () => {
 
   return (
     <DashboardLayout title={t("eval.title")} subtitle={t("eval.subtitle")}>
-      {/* Stage Selector */}
       <div className="flex gap-3 mb-6">
         <button
           onClick={() => setStage("pre-seed")}
@@ -85,10 +89,22 @@ const StartupEvaluation = () => {
             <TabsTrigger value="risk" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">{t("eval.risk_tab")}</TabsTrigger>
             <TabsTrigger value="summary" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">{t("eval.summary_tab")}</TabsTrigger>
           </TabsList>
-          <TabsContent value="berkus"><BerkusMethod onValuationChange={setBerkus} /><TabNav tabs={PRE_SEED_TABS} current="berkus" onChange={setPreSeedTab} t={t} /></TabsContent>
-          <TabsContent value="scorecard"><ScorecardMethod onValuationChange={setScorecard} /><TabNav tabs={PRE_SEED_TABS} current="scorecard" onChange={setPreSeedTab} t={t} /></TabsContent>
-          <TabsContent value="risk"><RiskFactorMethod onValuationChange={setRiskFactor} /><TabNav tabs={PRE_SEED_TABS} current="risk" onChange={setPreSeedTab} t={t} /></TabsContent>
-          <TabsContent value="summary"><EvaluationSummary berkus={berkus} scorecard={scorecard} riskFactor={riskFactor} /><TabNav tabs={PRE_SEED_TABS} current="summary" onChange={setPreSeedTab} t={t} /></TabsContent>
+          <TabsContent value="berkus">
+            <BerkusMethod scores={berkusAnswers} onScoresChange={setBerkusAnswers} onValuationChange={setBerkus} />
+            <TabNav tabs={PRE_SEED_TABS} current="berkus" onChange={setPreSeedTab} t={t} />
+          </TabsContent>
+          <TabsContent value="scorecard">
+            <ScorecardMethod scores={scorecardAnswers} medianValuation={scorecardMedian} onScoresChange={setScorecardAnswers} onMedianChange={setScorecardMedian} onValuationChange={setScorecard} />
+            <TabNav tabs={PRE_SEED_TABS} current="scorecard" onChange={setPreSeedTab} t={t} />
+          </TabsContent>
+          <TabsContent value="risk">
+            <RiskFactorMethod scores={riskAnswers} onScoresChange={setRiskAnswers} onValuationChange={setRiskFactor} />
+            <TabNav tabs={PRE_SEED_TABS} current="risk" onChange={setPreSeedTab} t={t} />
+          </TabsContent>
+          <TabsContent value="summary">
+            <EvaluationSummary berkus={berkus} scorecard={scorecard} riskFactor={riskFactor} />
+            <TabNav tabs={PRE_SEED_TABS} current="summary" onChange={setPreSeedTab} t={t} />
+          </TabsContent>
         </Tabs>
       ) : (
         <Tabs value={seedTab} onValueChange={setSeedTab} className="space-y-6">
@@ -97,9 +113,18 @@ const StartupEvaluation = () => {
             <TabsTrigger value="chicago" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">{t("eval.chicago_tab")}</TabsTrigger>
             <TabsTrigger value="summary" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">{t("eval.summary_tab")}</TabsTrigger>
           </TabsList>
-          <TabsContent value="vc"><VCMethod onValuationChange={setVcValue} /><TabNav tabs={SEED_TABS} current="vc" onChange={setSeedTab} t={t} /></TabsContent>
-          <TabsContent value="chicago"><SeedValuation onValuationChange={setChicagoValue} /><TabNav tabs={SEED_TABS} current="chicago" onChange={setSeedTab} t={t} /></TabsContent>
-          <TabsContent value="summary"><SeedEvaluationSummary vcMethod={vcValue} chicagoMethod={chicagoValue} /><TabNav tabs={SEED_TABS} current="summary" onChange={setSeedTab} t={t} /></TabsContent>
+          <TabsContent value="vc">
+            <VCMethod answers={vcAnswers} onAnswersChange={setVcAnswers} onValuationChange={setVcValue} />
+            <TabNav tabs={SEED_TABS} current="vc" onChange={setSeedTab} t={t} />
+          </TabsContent>
+          <TabsContent value="chicago">
+            <SeedValuation answers={chicagoAnswers} onAnswersChange={setChicagoAnswers} onValuationChange={setChicagoValue} />
+            <TabNav tabs={SEED_TABS} current="chicago" onChange={setSeedTab} t={t} />
+          </TabsContent>
+          <TabsContent value="summary">
+            <SeedEvaluationSummary vcMethod={vcValue} chicagoMethod={chicagoValue} />
+            <TabNav tabs={SEED_TABS} current="summary" onChange={setSeedTab} t={t} />
+          </TabsContent>
         </Tabs>
       )}
     </DashboardLayout>
