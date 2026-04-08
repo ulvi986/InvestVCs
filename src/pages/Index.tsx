@@ -7,7 +7,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import AuroraBackground from "@/components/AuroraBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import hero3d from "@/assets/hero-3d.png";
+
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -82,9 +82,7 @@ const Index = () => {
         {/* ═══════ Hero — split layout ═══════ */}
         <section className="relative min-h-[88vh] flex items-center">
           <div className="container relative z-10 py-16 lg:py-24">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              {/* Left — text */}
-              <div>
+            <div className="max-w-3xl mx-auto text-center">
                 <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
                   <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 dark:border-white/10 dark:bg-white/5 backdrop-blur-md px-5 py-2 text-xs font-semibold text-primary dark:text-cyan-300 mb-6">
                     <Zap className="h-3.5 w-3.5" />
@@ -106,7 +104,7 @@ const Index = () => {
                 </motion.h1>
 
                 <motion.p
-                  className="mt-5 text-lg text-muted-foreground font-medium max-w-lg"
+                  className="mt-5 text-lg text-muted-foreground font-medium max-w-lg mx-auto"
                   initial="hidden"
                   animate="visible"
                   variants={fadeUp}
@@ -116,7 +114,7 @@ const Index = () => {
                 </motion.p>
 
                 <motion.p
-                  className="mt-4 text-sm text-muted-foreground/70 max-w-md leading-relaxed"
+                  className="mt-4 text-sm text-muted-foreground/70 max-w-md mx-auto leading-relaxed"
                   initial="hidden"
                   animate="visible"
                   variants={fadeUp}
@@ -126,7 +124,7 @@ const Index = () => {
                 </motion.p>
 
                 <motion.div
-                  className="mt-8 flex flex-col sm:flex-row gap-3"
+                  className="mt-8 flex flex-col sm:flex-row gap-3 justify-center"
                   initial="hidden"
                   animate="visible"
                   variants={fadeUp}
@@ -155,26 +153,6 @@ const Index = () => {
                     </>
                   )}
                 </motion.div>
-              </div>
-
-              {/* Right — 3D illustration */}
-              <motion.div
-                className="flex justify-center lg:justify-end"
-                initial={{ opacity: 0, scale: 0.9, x: 40 }}
-                animate={{ opacity: 1, scale: 1, x: 0 }}
-                transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
-              >
-                <div className="relative">
-                  <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/20 via-accent/10 to-purple-500/10 blur-3xl scale-110" />
-                  <img
-                    src={hero3d}
-                    alt="InvestVCs Platform"
-                    width={400}
-                    height={400}
-                    className="relative w-[260px] sm:w-[320px] lg:w-[380px] drop-shadow-2xl"
-                  />
-                </div>
-              </motion.div>
             </div>
           </div>
         </section>
