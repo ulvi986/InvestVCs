@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { StartupProvider } from "@/context/StartupContext";
 import { AuthProvider, useAuth } from "@/context/AuthContext";
 import { LanguageProvider } from "@/context/LanguageContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import Index from "./pages/Index";
 import StartupEvaluation from "./pages/StartupEvaluation";
 import ProfilePage from "./pages/ProfilePage";
@@ -41,6 +42,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <AuthProvider>
+        <ThemeProvider>
         <LanguageProvider>
           <StartupProvider>
             <Toaster />
@@ -65,6 +67,7 @@ const App = () => (
             </BrowserRouter>
           </StartupProvider>
         </LanguageProvider>
+        </ThemeProvider>
       </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
