@@ -66,9 +66,9 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 border-b border-white/5 bg-slate-900/60 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo - clicks to home */}
-        <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-foreground hover:opacity-80 transition-opacity">
-          <img src={logoImg} alt="InvestVCs" className="h-9 w-9 rounded-xl object-cover shadow-[0_0_15px_hsl(217_91%_60%/0.2)]" />
-          <span className="bg-gradient-to-r from-blue-500 via-cyan-400 to-violet-500 bg-clip-text text-transparent">InvestVCs</span>
+        <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-white hover:opacity-80 transition-opacity">
+          <img src={logoImg} alt="InvestVCs" className="h-9 w-9 rounded-xl object-cover" />
+          <span className="text-cyan-400">InvestVCs</span>
         </Link>
 
         {/* Desktop nav */}
@@ -79,13 +79,13 @@ const Navbar = () => {
               to={link.to}
               className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
                 location.pathname === link.to
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "text-cyan-400"
+                  : "text-white/60 hover:text-white"
               }`}
             >
               {link.label}
               {location.pathname === link.to && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 rounded-full gradient-primary" />
+                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 rounded-full bg-cyan-400" />
               )}
             </Link>
           ))}
@@ -94,7 +94,7 @@ const Navbar = () => {
         <div className="hidden lg:flex items-center gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1.5 text-muted-foreground h-9 rounded-lg">
+              <Button variant="ghost" size="sm" className="gap-1.5 text-white/60 hover:text-white h-9 rounded-lg">
                 <Globe className="h-4 w-4" />
                 {langLabels[language]}
                 <ChevronDown className="h-3 w-3" />
@@ -118,14 +118,14 @@ const Navbar = () => {
               <div className="h-8 w-8 rounded-full gradient-primary flex items-center justify-center text-primary-foreground text-xs font-bold shadow-sm">
                 {user.email?.[0]?.toUpperCase() || "U"}
               </div>
-              <Button variant="ghost" size="icon" onClick={signOut} title={t("nav.signout")} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive">
+              <Button variant="ghost" size="icon" onClick={signOut} title={t("nav.signout")} className="h-9 w-9 rounded-lg text-white/60 hover:text-red-400">
                 <LogOut className="h-4 w-4" />
               </Button>
             </div>
           ) : (
             <>
               <Link to="/signin">
-                <Button variant="ghost" size="sm" className="rounded-lg">{t("nav.signin")}</Button>
+                <Button variant="ghost" size="sm" className="rounded-lg text-white/70 hover:text-white">{t("nav.signin")}</Button>
               </Link>
               <Link to="/signup">
                 <Button size="sm" className="gradient-primary text-primary-foreground border-0 shadow-elevated rounded-lg">
@@ -136,13 +136,13 @@ const Navbar = () => {
           )}
         </div>
 
-        <button className="lg:hidden text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
+        <button className="lg:hidden text-white" onClick={() => setMobileOpen(!mobileOpen)}>
           {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
       </div>
 
       {mobileOpen && (
-        <div className="border-t border-border bg-card p-4 lg:hidden animate-in slide-in-from-top-2">
+        <div className="border-t border-white/5 bg-slate-900/95 backdrop-blur-xl p-4 lg:hidden animate-in slide-in-from-top-2">
           {links.map((link) => (
             <Link
               key={link.to}
