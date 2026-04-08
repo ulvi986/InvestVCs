@@ -150,8 +150,8 @@ const Navbar = () => {
               onClick={() => setMobileOpen(false)}
               className={`block rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
                 location.pathname === link.to
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground"
+                  ? "bg-cyan-400/10 text-cyan-400"
+                  : "text-white/60 hover:text-white"
               }`}
             >
               {link.label}
@@ -165,8 +165,8 @@ const Navbar = () => {
                 onClick={() => setLanguage(lang)}
                 className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
                   language === lang
-                    ? "bg-primary/10 border-primary text-primary"
-                    : "border-border text-muted-foreground"
+                    ? "bg-cyan-400/10 border-cyan-400 text-cyan-400"
+                    : "border-white/10 text-white/50"
                 }`}
               >
                 {langFull[lang]}
@@ -175,16 +175,16 @@ const Navbar = () => {
           </div>
 
           {user ? (
-            <Button variant="ghost" className="mt-3 w-full text-destructive" onClick={() => { signOut(); setMobileOpen(false); }}>
+            <Button variant="ghost" className="mt-3 w-full text-red-400" onClick={() => { signOut(); setMobileOpen(false); }}>
               {t("nav.signout")}
             </Button>
           ) : (
             <div className="mt-3 space-y-2">
               <Link to="/signin" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full">{t("nav.signin")}</Button>
+                <Button variant="outline" className="w-full border-white/10 text-white/70">{t("nav.signin")}</Button>
               </Link>
               <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full gradient-primary text-primary-foreground border-0">{t("nav.signup")}</Button>
+                <Button className="w-full bg-cyan-500 text-slate-900 border-0 hover:bg-cyan-400">{t("nav.signup")}</Button>
               </Link>
             </div>
           )}
