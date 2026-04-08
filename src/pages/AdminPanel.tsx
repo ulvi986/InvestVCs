@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
 import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle, KeyRound, Plus, Copy } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 interface ProfileRow { id: string; name: string; surname: string; email: string; startup_name: string; startup_description: string | null; country: string; industry: string; created_at: string; }
 interface FinancialSnapshotRow { user_id: string; date: string; data: any; }
