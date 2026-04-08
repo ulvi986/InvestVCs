@@ -33,28 +33,36 @@ const Index = () => {
 
   const features = [
     {
-      image: featureValuation,
+      icon: Shield,
       title: t("landing.feature1_title"),
       description: t("landing.feature1_desc"),
       link: "/evaluation",
+      gradient: "from-blue-500 to-cyan-400",
+      bg: "bg-blue-500/10 dark:bg-blue-400/10",
     },
     {
-      image: featureFinancial,
+      icon: DollarSign,
       title: t("landing.feature2_title"),
       description: t("landing.feature2_desc"),
       link: "/preparation",
+      gradient: "from-emerald-500 to-teal-400",
+      bg: "bg-emerald-500/10 dark:bg-emerald-400/10",
     },
     {
-      image: featureReadiness,
+      icon: ClipboardCheck,
       title: t("landing.feature3_title"),
       description: t("landing.feature3_desc"),
       link: "/readiness",
+      gradient: "from-violet-500 to-purple-400",
+      bg: "bg-violet-500/10 dark:bg-violet-400/10",
     },
     {
-      image: featureVenture,
+      icon: BrainCircuit,
       title: t("landing.feature4_title") || "Venture Analysis",
       description: t("landing.feature4_desc") || "Business Model Canvas and Pitch Deck analysis with AI-powered insights.",
       link: "/venture-analysis",
+      gradient: "from-amber-500 to-orange-400",
+      bg: "bg-amber-500/10 dark:bg-amber-400/10",
     },
   ];
 
