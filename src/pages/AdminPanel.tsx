@@ -40,6 +40,10 @@ const AdminPanel = () => {
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
   const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
+  const [vouchers, setVouchers] = useState<VoucherRow[]>([]);
+  const [newVoucherCode, setNewVoucherCode] = useState("");
+  const [newVoucherType, setNewVoucherType] = useState("both");
+  const [newVoucherMaxUses, setNewVoucherMaxUses] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
