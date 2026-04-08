@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/context/LanguageContext";
@@ -16,13 +16,14 @@ const scoreKeys = ["very_high", "high", "average", "low", "very_low"];
 const scoreColors = ["text-destructive", "text-orange-500", "text-muted-foreground", "text-emerald-500", "text-primary"];
 
 interface RiskFactorMethodProps {
+  scores: (number | null)[];
+  onScoresChange: (scores: (number | null)[]) => void;
   onValuationChange?: (value: number) => void;
 }
 
-const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
+const RiskFactorMethod = ({ scores, onScoresChange, onValuationChange }: RiskFactorMethodProps) => {
   const { t } = useLanguage();
   const baseValuation = 250000;
-  const [scores, setScores] = useState<(number | null)[]>(Array(riskKeys.length).fill(null));
 
   const totalAdjustment = scores.reduce((sum, s) => sum + (s !== null ? s * ADJUSTMENT_PER_POINT : 0), 0);
   const valuation = Math.max(0, baseValuation + totalAdjustment);
@@ -32,11 +33,9 @@ const RiskFactorMethod = ({ onValuationChange }: RiskFactorMethodProps) => {
   }, [valuation, onValuationChange]);
 
   const updateScore = (idx: number, value: string) => {
-    setScores((prev) => {
-      const next = [...prev];
-      next[idx] = parseInt(value);
-      return next;
-    });
+    const next = [...scores];
+    next[idx] = parseInt(value);
+    onScoresChange(next);
   };
 
   return (

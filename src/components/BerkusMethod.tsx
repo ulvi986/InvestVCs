@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useLanguage } from "@/context/LanguageContext";
@@ -10,12 +10,13 @@ const scoreToValue: Record<number, number> = {
 const componentKeys = ["sound_idea", "prototype", "team", "strategic", "traction"];
 
 interface BerkusMethodProps {
+  scores: (number | null)[];
+  onScoresChange: (scores: (number | null)[]) => void;
   onValuationChange?: (value: number) => void;
 }
 
-const BerkusMethod = ({ onValuationChange }: BerkusMethodProps) => {
+const BerkusMethod = ({ scores, onScoresChange, onValuationChange }: BerkusMethodProps) => {
   const { t } = useLanguage();
-  const [scores, setScores] = useState<(number | null)[]>([null, null, null, null, null]);
 
   const values = scores.map((s) => (s !== null ? scoreToValue[s] : 0));
   const total = values.reduce((a, b) => a + b, 0);
@@ -25,11 +26,9 @@ const BerkusMethod = ({ onValuationChange }: BerkusMethodProps) => {
   }, [total, onValuationChange]);
 
   const updateScore = (idx: number, score: string) => {
-    setScores((prev) => {
-      const next = [...prev];
-      next[idx] = parseInt(score);
-      return next;
-    });
+    const next = [...scores];
+    next[idx] = parseInt(score);
+    onScoresChange(next);
   };
 
   const components = componentKeys.map((key) => ({
