@@ -17,27 +17,45 @@ export type Database = {
       evaluations: {
         Row: {
           berkus: number
+          berkus_answers: Json
+          chicago_answers: Json
           id: string
+          risk_answers: Json
           risk_factor: number
           scorecard: number
+          scorecard_answers: Json
+          scorecard_median: number
           updated_at: string
           user_id: string
+          vc_answers: Json
         }
         Insert: {
           berkus?: number
+          berkus_answers?: Json
+          chicago_answers?: Json
           id?: string
+          risk_answers?: Json
           risk_factor?: number
           scorecard?: number
+          scorecard_answers?: Json
+          scorecard_median?: number
           updated_at?: string
           user_id: string
+          vc_answers?: Json
         }
         Update: {
           berkus?: number
+          berkus_answers?: Json
+          chicago_answers?: Json
           id?: string
+          risk_answers?: Json
           risk_factor?: number
           scorecard?: number
+          scorecard_answers?: Json
+          scorecard_median?: number
           updated_at?: string
           user_id?: string
+          vc_answers?: Json
         }
         Relationships: []
       }
