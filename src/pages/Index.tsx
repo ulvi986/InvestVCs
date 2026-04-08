@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap } from "lucide-react";
+import { ArrowRight, Zap, Shield, DollarSign, ClipboardCheck, BrainCircuit } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -8,10 +8,6 @@ import AuroraBackground from "@/components/AuroraBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import hero3d from "@/assets/hero-3d.png";
-import featureValuation from "@/assets/feature-valuation.png";
-import featureFinancial from "@/assets/feature-financial.png";
-import featureReadiness from "@/assets/feature-readiness.png";
-import featureVenture from "@/assets/feature-venture.png";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -37,28 +33,36 @@ const Index = () => {
 
   const features = [
     {
-      image: featureValuation,
+      icon: Shield,
       title: t("landing.feature1_title"),
       description: t("landing.feature1_desc"),
       link: "/evaluation",
+      gradient: "from-blue-500 to-cyan-400",
+      bg: "bg-blue-500/10 dark:bg-blue-400/10",
     },
     {
-      image: featureFinancial,
+      icon: DollarSign,
       title: t("landing.feature2_title"),
       description: t("landing.feature2_desc"),
       link: "/preparation",
+      gradient: "from-emerald-500 to-teal-400",
+      bg: "bg-emerald-500/10 dark:bg-emerald-400/10",
     },
     {
-      image: featureReadiness,
+      icon: ClipboardCheck,
       title: t("landing.feature3_title"),
       description: t("landing.feature3_desc"),
       link: "/readiness",
+      gradient: "from-violet-500 to-purple-400",
+      bg: "bg-violet-500/10 dark:bg-violet-400/10",
     },
     {
-      image: featureVenture,
+      icon: BrainCircuit,
       title: t("landing.feature4_title") || "Venture Analysis",
       description: t("landing.feature4_desc") || "Business Model Canvas and Pitch Deck analysis with AI-powered insights.",
       link: "/venture-analysis",
+      gradient: "from-amber-500 to-orange-400",
+      bg: "bg-amber-500/10 dark:bg-amber-400/10",
     },
   ];
 
@@ -161,14 +165,13 @@ const Index = () => {
                 transition={{ duration: 0.8, delay: 0.3, ease: "easeOut" }}
               >
                 <div className="relative">
-                  {/* Glow behind image */}
                   <div className="absolute inset-0 rounded-3xl bg-gradient-to-br from-primary/20 via-accent/10 to-purple-500/10 blur-3xl scale-110" />
                   <img
                     src={hero3d}
                     alt="InvestVCs Platform"
-                    width={500}
-                    height={500}
-                    className="relative w-[340px] sm:w-[420px] lg:w-[480px] drop-shadow-2xl"
+                    width={400}
+                    height={400}
+                    className="relative w-[260px] sm:w-[320px] lg:w-[380px] drop-shadow-2xl"
                   />
                 </div>
               </motion.div>
@@ -218,15 +221,8 @@ const Index = () => {
                   variants={fadeUp}
                   custom={i}
                 >
-                  <div className="mb-4 flex justify-center">
-                    <img
-                      src={f.image}
-                      alt={f.title}
-                      loading="lazy"
-                      width={180}
-                      height={180}
-                      className="w-[140px] h-[140px] object-contain drop-shadow-lg"
-                    />
+                  <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${f.gradient} shadow-lg`}>
+                    <f.icon className="h-7 w-7 text-white" strokeWidth={1.8} />
                   </div>
                   <h3 className="text-base font-bold text-foreground mb-2">{f.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed mb-4">
