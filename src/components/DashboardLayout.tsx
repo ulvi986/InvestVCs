@@ -14,7 +14,7 @@ const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) =>
       <Navbar />
       <main className="flex-1">
         {(title || subtitle) && (
-          <div className="border-b border-border/50 bg-card/30">
+          <div className="border-b border-border/30 bg-card/30 backdrop-blur-sm">
             <div className="container py-6">
               {title && <h1 className="text-2xl font-bold text-foreground">{title}</h1>}
               {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
