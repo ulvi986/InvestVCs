@@ -63,7 +63,7 @@ const Navbar = () => {
     : [];
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/10 bg-card/10 backdrop-blur-2xl shadow-[0_1px_20px_hsl(217_91%_60%/0.04)]">
+    <nav className="sticky top-0 z-50 border-b border-white/5 bg-slate-900/60 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo - clicks to home */}
         <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-bold text-foreground hover:opacity-80 transition-opacity">
