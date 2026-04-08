@@ -326,9 +326,7 @@ const VentureAnalysis = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="prose prose-sm max-w-none text-foreground/90 whitespace-pre-wrap">
-                  {bmcAnalysis}
-                </div>
+                <div className="prose prose-sm max-w-none text-foreground/90" dangerouslySetInnerHTML={{ __html: renderMarkdown(bmcAnalysis) }} />
               </CardContent>
             </Card>
           )}
