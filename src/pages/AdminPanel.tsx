@@ -100,6 +100,16 @@ const AdminPanel = () => {
       setVacancies((prev) => prev.filter((v) => v.user_id !== profileId));
     }
   };
+  const createVoucher = async () => {
+    if (!newVoucherCode.trim()) { toast.error("Enter a voucher code"); return; }
+    const { data, error } = await supabase.from("vouchers").insert({ code: newVoucherCode.trim(), type: newVoucherType, max_uses: newVoucherMaxUses, created_by: profiles[0]?.id || "" } as any).select().single();
+    if (error) toast.error(error.message); else { toast.success("Voucher created"); setVouchers(prev => [data as any, ...prev]); setNewVoucherCode(""); }
+  };
+  const deleteVoucher = async (id: string) => {
+    const { error } = await supabase.from("vouchers").delete().eq("id", id);
+    if (error) toast.error("Failed"); else { toast.success("Deleted"); setVouchers(prev => prev.filter(v => v.id !== id)); }
+  };
+
   const approveVacancy = async (id: string) => {
     const { error } = await supabase.from("startup_vacancies").update({ approved: true } as any).eq("id", id);
     if (error) toast.error("Failed"); else { toast.success(t("admin.approve") + " ✓"); setVacancies((prev) => prev.map((v) => (v.id === id ? { ...v, approved: true } : v))); }
@@ -133,6 +143,7 @@ const AdminPanel = () => {
             <TabsTrigger value="startups" className="rounded-lg gap-2"><Users className="h-4 w-4" /> {t("admin.startups")} ({profiles.length})</TabsTrigger>
             <TabsTrigger value="investors" className="rounded-lg gap-2"><DollarSign className="h-4 w-4" /> {t("admin.investors")} ({pendingInvestors.length} {t("admin.pending")})</TabsTrigger>
             <TabsTrigger value="vacancies" className="rounded-lg gap-2"><Briefcase className="h-4 w-4" /> {t("admin.vacancies")} ({pendingVacancies.length} {t("admin.pending")})</TabsTrigger>
+            <TabsTrigger value="vouchers" className="rounded-lg gap-2"><KeyRound className="h-4 w-4" /> Vouchers ({vouchers.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="startups">
