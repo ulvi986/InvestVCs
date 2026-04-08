@@ -12,11 +12,11 @@ import {
   LineChart,
   Code,
   Rocket,
+  BarChart3,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import heroBg from "@/assets/hero-bg.jpg";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -36,6 +36,97 @@ const scaleIn = {
   }),
 };
 
+/* Animated SVG Wave */
+const AnimatedWaves = () => (
+  <div className="absolute bottom-0 left-0 right-0 overflow-hidden pointer-events-none">
+    <svg
+      className="relative block w-full"
+      style={{ height: "180px" }}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 1440 320"
+      preserveAspectRatio="none"
+    >
+      <path
+        fill="hsl(217 91% 60% / 0.06)"
+        d="M0,96L48,112C96,128,192,160,288,176C384,192,480,192,576,170.7C672,149,768,107,864,101.3C960,96,1056,128,1152,149.3C1248,171,1344,181,1392,186.7L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"
+      >
+        <animate
+          attributeName="d"
+          dur="12s"
+          repeatCount="indefinite"
+          values="
+            M0,96L48,112C96,128,192,160,288,176C384,192,480,192,576,170.7C672,149,768,107,864,101.3C960,96,1056,128,1152,149.3C1248,171,1344,181,1392,186.7L1440,192L1440,320L0,320Z;
+            M0,128L48,138.7C96,149,192,171,288,165.3C384,160,480,128,576,128C672,128,768,160,864,170.7C960,181,1056,171,1152,154.7C1248,139,1344,117,1392,106.7L1440,96L1440,320L0,320Z;
+            M0,96L48,112C96,128,192,160,288,176C384,192,480,192,576,170.7C672,149,768,107,864,101.3C960,96,1056,128,1152,149.3C1248,171,1344,181,1392,186.7L1440,192L1440,320L0,320Z
+          "
+        />
+      </path>
+      <path
+        fill="hsl(172 66% 50% / 0.05)"
+        d="M0,160L48,154.7C96,149,192,139,288,149.3C384,160,480,192,576,197.3C672,203,768,181,864,165.3C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L0,320Z"
+      >
+        <animate
+          attributeName="d"
+          dur="15s"
+          repeatCount="indefinite"
+          values="
+            M0,160L48,154.7C96,149,192,139,288,149.3C384,160,480,192,576,197.3C672,203,768,181,864,165.3C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L0,320Z;
+            M0,192L48,186.7C96,181,192,171,288,181.3C384,192,480,224,576,218.7C672,213,768,171,864,160C960,149,1056,171,1152,186.7C1248,203,1344,213,1392,218.7L1440,224L1440,320L0,320Z;
+            M0,160L48,154.7C96,149,192,139,288,149.3C384,160,480,192,576,197.3C672,203,768,181,864,165.3C960,149,1056,139,1152,149.3C1248,160,1344,192,1392,208L1440,224L1440,320L0,320Z
+          "
+        />
+      </path>
+      <path
+        fill="hsl(217 91% 60% / 0.03)"
+        d="M0,224L48,218.7C96,213,192,203,288,208C384,213,480,235,576,229.3C672,224,768,192,864,186.7C960,181,1056,203,1152,213.3C1248,224,1344,224,1392,224L1440,224L1440,320L0,320Z"
+      >
+        <animate
+          attributeName="d"
+          dur="18s"
+          repeatCount="indefinite"
+          values="
+            M0,224L48,218.7C96,213,192,203,288,208C384,213,480,235,576,229.3C672,224,768,192,864,186.7C960,181,1056,203,1152,213.3C1248,224,1344,224,1392,224L1440,224L1440,320L0,320Z;
+            M0,256L48,245.3C96,235,192,213,288,213.3C384,213,480,235,576,240C672,245,768,235,864,218.7C960,203,1056,181,1152,181.3C1248,181,1344,203,1392,213.3L1440,224L1440,320L0,320Z;
+            M0,224L48,218.7C96,213,192,203,288,208C384,213,480,235,576,229.3C672,224,768,192,864,186.7C960,181,1056,203,1152,213.3C1248,224,1344,224,1392,224L1440,224L1440,320L0,320Z
+          "
+        />
+      </path>
+    </svg>
+  </div>
+);
+
+/* Floating particles */
+const FloatingParticles = () => (
+  <div className="absolute inset-0 overflow-hidden pointer-events-none">
+    {[...Array(6)].map((_, i) => (
+      <motion.div
+        key={i}
+        className="absolute rounded-full"
+        style={{
+          width: `${8 + i * 4}px`,
+          height: `${8 + i * 4}px`,
+          left: `${10 + i * 15}%`,
+          top: `${20 + (i % 3) * 25}%`,
+          background: i % 2 === 0
+            ? "hsl(217 91% 60% / 0.08)"
+            : "hsl(172 66% 50% / 0.06)",
+        }}
+        animate={{
+          y: [-20, 20, -20],
+          x: [-10, 10, -10],
+          scale: [1, 1.2, 1],
+        }}
+        transition={{
+          duration: 6 + i * 2,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: i * 0.5,
+        }}
+      />
+    ))}
+  </div>
+);
+
 const Index = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
@@ -46,18 +137,28 @@ const Index = () => {
       title: t("landing.feature1_title"),
       description: t("landing.feature1_desc"),
       link: "/evaluation",
+      gradient: "from-blue-500/10 to-cyan-500/10",
     },
     {
       icon: DollarSign,
       title: t("landing.feature2_title"),
       description: t("landing.feature2_desc"),
       link: "/preparation",
+      gradient: "from-emerald-500/10 to-teal-500/10",
     },
     {
       icon: ClipboardList,
       title: t("landing.feature3_title"),
       description: t("landing.feature3_desc"),
       link: "/readiness",
+      gradient: "from-violet-500/10 to-purple-500/10",
+    },
+    {
+      icon: BarChart3,
+      title: t("landing.feature4_title") || "Venture Analysis",
+      description: t("landing.feature4_desc") || "Business Model Canvas and Pitch Deck analysis with AI-powered insights.",
+      link: "/venture-analysis",
+      gradient: "from-orange-500/10 to-amber-500/10",
     },
   ];
 
@@ -77,26 +178,30 @@ const Index = () => {
 
   return (
     <Layout>
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img src={heroBg} alt="" className="h-full w-full object-cover" width={1920} height={1080} />
-          <div className="absolute inset-0 bg-background/80" />
-        </div>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217_91%_60%/0.08),transparent_60%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(172_66%_50%/0.06),transparent_60%)]" />
+      {/* Hero with animated waves */}
+      <section className="relative overflow-hidden min-h-[85vh] flex items-center">
+        {/* Background gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-background via-background to-primary/5" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,hsl(217_91%_60%/0.1),transparent_60%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,hsl(172_66%_50%/0.08),transparent_60%)]" />
 
-        <div className="container relative py-28 lg:py-40">
+        {/* Floating particles */}
+        <FloatingParticles />
+
+        {/* Animated waves at bottom */}
+        <AnimatedWaves />
+
+        <div className="container relative z-10 py-20 lg:py-32">
           <div className="mx-auto max-w-4xl text-center">
             <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-              <span className="inline-flex items-center gap-2 rounded-full border border-primary/15 bg-primary/5 px-5 py-2 text-xs font-medium text-primary mb-8">
+              <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-5 py-2 text-xs font-semibold text-primary mb-8 shadow-sm backdrop-blur-sm">
                 <Zap className="h-3.5 w-3.5" />
                 {t("landing.badge")}
               </span>
             </motion.div>
 
             <motion.h1
-              className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl leading-[1.15]"
+              className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-7xl leading-[1.1]"
               initial="hidden"
               animate="visible"
               variants={fadeUp}
@@ -104,14 +209,20 @@ const Index = () => {
             >
               {t("landing.hero_title")}{" "}
               <span className="text-gradient">{t("landing.hero_highlight")}</span>
-              <br />
-              <span className="text-muted-foreground text-2xl sm:text-3xl lg:text-4xl font-semibold">
-                {t("landing.hero_sub")}
-              </span>
             </motion.h1>
 
             <motion.p
-              className="mx-auto mt-8 max-w-2xl text-base text-muted-foreground leading-relaxed"
+              className="mt-4 text-xl sm:text-2xl text-muted-foreground font-medium"
+              initial="hidden"
+              animate="visible"
+              variants={fadeUp}
+              custom={1.5}
+            >
+              {t("landing.hero_sub")}
+            </motion.p>
+
+            <motion.p
+              className="mx-auto mt-6 max-w-2xl text-base text-muted-foreground/80 leading-relaxed"
               initial="hidden"
               animate="visible"
               variants={fadeUp}
@@ -128,10 +239,10 @@ const Index = () => {
               custom={3}
             >
               {user ? (
-                <Link to="/evaluation">
+                <Link to="/summary">
                   <Button
                     size="lg"
-                    className="gradient-primary text-primary-foreground border-0 shadow-elevated px-8 text-sm h-11 rounded-xl"
+                    className="gradient-primary text-primary-foreground border-0 shadow-elevated px-10 text-sm h-12 rounded-xl font-semibold"
                   >
                     {t("landing.go_dashboard")}
                     <ArrowRight className="ml-2 h-4 w-4" />
@@ -142,14 +253,14 @@ const Index = () => {
                   <Link to="/signup">
                     <Button
                       size="lg"
-                      className="gradient-primary text-primary-foreground border-0 shadow-elevated px-8 text-sm h-11 rounded-xl"
+                      className="gradient-primary text-primary-foreground border-0 shadow-elevated px-10 text-sm h-12 rounded-xl font-semibold"
                     >
                       {t("landing.get_started")}
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                   <Link to="/signin">
-                    <Button variant="outline" size="lg" className="px-8 text-sm h-11 rounded-xl">
+                    <Button variant="outline" size="lg" className="px-10 text-sm h-12 rounded-xl border-border/60 backdrop-blur-sm">
                       {t("landing.signin")}
                     </Button>
                   </Link>
@@ -161,8 +272,8 @@ const Index = () => {
       </section>
 
       {/* Stats */}
-      <section className="border-y border-border/50 bg-card/30">
-        <div className="container py-14">
+      <section className="relative border-y border-border/30 bg-card/50 backdrop-blur-sm">
+        <div className="container py-16">
           <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
             {stats.map((s, i) => (
               <motion.div
@@ -174,8 +285,8 @@ const Index = () => {
                 variants={scaleIn}
                 custom={i}
               >
-                <p className="text-3xl font-bold text-gradient">{s.value}</p>
-                <p className="mt-2 text-sm text-muted-foreground">{s.label}</p>
+                <p className="text-4xl font-extrabold text-gradient">{s.value}</p>
+                <p className="mt-2 text-sm text-muted-foreground font-medium">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -183,11 +294,11 @@ const Index = () => {
       </section>
 
       {/* Features */}
-      <section className="py-28">
+      <section className="py-28 relative">
         <div className="container">
           <div className="text-center mb-16">
             <motion.h2
-              className="text-3xl font-bold text-foreground"
+              className="text-3xl sm:text-4xl font-bold text-foreground"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -198,7 +309,7 @@ const Index = () => {
               <span className="text-gradient">{t("landing.features_highlight")}</span>
             </motion.h2>
             <motion.p
-              className="mt-4 text-muted-foreground max-w-xl mx-auto text-sm"
+              className="mt-4 text-muted-foreground max-w-xl mx-auto"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -209,27 +320,27 @@ const Index = () => {
             </motion.p>
           </div>
 
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
-                className="group relative rounded-2xl border border-border/60 bg-card p-8 shadow-card hover:shadow-elevated hover:border-primary/15 transition-all duration-500"
+                className={`group relative rounded-2xl border border-border/40 bg-gradient-to-br ${f.gradient} p-8 shadow-card hover:shadow-elevated hover:border-primary/20 hover:-translate-y-1 transition-all duration-500`}
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
               >
-                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary shadow-sm">
-                  <f.icon className="h-5 w-5 text-primary-foreground" />
+                <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-2xl gradient-primary shadow-elevated">
+                  <f.icon className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-3">{f.title}</h3>
+                <h3 className="text-lg font-bold text-foreground mb-3">{f.title}</h3>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-6">
                   {f.description}
                 </p>
                 <Link
                   to={user ? f.link : "/signup"}
-                  className="inline-flex items-center text-sm font-medium text-primary group-hover:gap-2 gap-1 transition-all"
+                  className="inline-flex items-center text-sm font-semibold text-primary group-hover:gap-2 gap-1 transition-all"
                 >
                   {t("landing.explore")}
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -241,11 +352,12 @@ const Index = () => {
       </section>
 
       {/* How it Works */}
-      <section className="py-28 bg-muted/20">
-        <div className="container">
+      <section className="py-28 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-muted/30 to-background" />
+        <div className="container relative">
           <div className="text-center mb-16">
             <motion.h2
-              className="text-3xl font-bold text-foreground"
+              className="text-3xl sm:text-4xl font-bold text-foreground"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -255,7 +367,7 @@ const Index = () => {
               {t("landing.how_title")}
             </motion.h2>
             <motion.p
-              className="mt-4 text-muted-foreground text-sm"
+              className="mt-4 text-muted-foreground"
               initial="hidden"
               whileInView="visible"
               viewport={{ once: true }}
@@ -270,21 +382,23 @@ const Index = () => {
             {steps.map((step, i) => (
               <motion.div
                 key={step.title}
-                className="relative rounded-2xl border border-border/60 bg-card p-6 text-center shadow-card"
+                className="relative rounded-2xl border border-border/40 bg-card/80 backdrop-blur-sm p-8 text-center shadow-card hover:shadow-elevated transition-all duration-300"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: true }}
                 variants={fadeUp}
                 custom={i}
               >
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 flex h-7 w-7 items-center justify-center rounded-full gradient-primary text-xs font-bold text-primary-foreground shadow-sm">
+                <div className="absolute -top-4 left-1/2 -translate-x-1/2 flex h-8 w-8 items-center justify-center rounded-full gradient-primary text-sm font-bold text-primary-foreground shadow-elevated">
                   {i + 1}
                 </div>
-                <div className="mt-4 mb-4 flex justify-center">
-                  <step.icon className="h-7 w-7 text-primary/80" />
+                <div className="mt-4 mb-5 flex justify-center">
+                  <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <step.icon className="h-6 w-6 text-primary" />
+                  </div>
                 </div>
-                <h4 className="font-semibold text-foreground mb-2 text-sm">{step.title}</h4>
-                <p className="text-xs text-muted-foreground leading-relaxed">{step.description}</p>
+                <h4 className="font-bold text-foreground mb-2">{step.title}</h4>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.description}</p>
               </motion.div>
             ))}
           </div>
@@ -295,26 +409,32 @@ const Index = () => {
       <section className="py-28">
         <div className="container">
           <motion.div
-            className="relative overflow-hidden rounded-3xl gradient-primary p-12 text-center shadow-elevated md:p-16"
+            className="relative overflow-hidden rounded-3xl gradient-primary p-12 text-center shadow-elevated md:p-20"
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true }}
             variants={scaleIn}
             custom={0}
           >
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(0_0%_100%/0.08),transparent_70%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(0_0%_100%/0.1),transparent_70%)]" />
+            {/* CTA wave decoration */}
+            <div className="absolute bottom-0 left-0 right-0">
+              <svg viewBox="0 0 1440 120" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-full opacity-10">
+                <path d="M0,64L60,69.3C120,75,240,85,360,80C480,75,600,53,720,48C840,43,960,53,1080,64C1200,75,1320,85,1380,90.7L1440,96L1440,120L0,120Z" fill="white"/>
+              </svg>
+            </div>
             <div className="relative">
-              <h2 className="text-3xl font-bold text-primary-foreground">
+              <h2 className="text-3xl sm:text-4xl font-extrabold text-primary-foreground">
                 {t("landing.cta_title")}
               </h2>
-              <p className="mt-4 text-primary-foreground/75 max-w-lg mx-auto text-sm">
+              <p className="mt-4 text-primary-foreground/80 max-w-lg mx-auto text-base">
                 {t("landing.cta_desc")}
               </p>
-              <div className="mt-8">
-                <Link to={user ? "/evaluation" : "/signup"}>
+              <div className="mt-10">
+                <Link to={user ? "/summary" : "/signup"}>
                   <Button
                     size="lg"
-                    className="bg-white text-primary hover:bg-white/90 border-0 px-8 text-sm h-11 font-semibold shadow-lg rounded-xl"
+                    className="bg-white text-primary hover:bg-white/90 border-0 px-10 text-sm h-12 font-bold shadow-lg rounded-xl"
                   >
                     {user ? t("landing.go_dashboard") : t("landing.cta_btn")}
                     <ArrowRight className="ml-2 h-4 w-4" />
