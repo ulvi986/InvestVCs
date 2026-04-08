@@ -297,6 +297,46 @@ const AdminPanel = () => {
               </div>
             )}
           </TabsContent>
+
+          <TabsContent value="vouchers">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-card mb-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Create Voucher</h3>
+              <div className="flex flex-wrap gap-3 items-end">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Code</label>
+                  <Input placeholder="VOUCHER-CODE" value={newVoucherCode} onChange={e => setNewVoucherCode(e.target.value)} className="w-48" />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Type</label>
+                  <select value={newVoucherType} onChange={e => setNewVoucherType(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    <option value="both">Both</option>
+                    <option value="bmc">BMC Only</option>
+                    <option value="pitch_deck">Pitch Deck Only</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Max Uses</label>
+                  <Input type="number" min={1} value={newVoucherMaxUses} onChange={e => setNewVoucherMaxUses(Number(e.target.value) || 1)} className="w-24" />
+                </div>
+                <Button onClick={createVoucher} className="gradient-primary text-primary-foreground border-0 gap-1"><Plus className="h-4 w-4" /> Create</Button>
+              </div>
+            </div>
+            {vouchers.length === 0 ? <p className="text-muted-foreground">No vouchers yet.</p> : (
+              <div className="space-y-3">
+                {vouchers.map(v => (
+                  <div key={v.id} className="rounded-xl border border-border bg-card p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <code className="text-sm font-mono font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">{v.code}</code>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{v.type}</span>
+                      <span className="text-sm text-muted-foreground">{v.used_count}/{v.max_uses} used</span>
+                      <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <Button size="sm" variant="destructive" onClick={() => deleteVoucher(v.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </TabsContent>
         </Tabs>
       </div>
     </DashboardLayout>
