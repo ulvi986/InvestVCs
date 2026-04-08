@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      business_model_canvas: {
+        Row: {
+          analysis_result: string | null
+          analyzed_at: string | null
+          canvas_data: Json
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_result?: string | null
+          analyzed_at?: string | null
+          canvas_data?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_result?: string | null
+          analyzed_at?: string | null
+          canvas_data?: Json
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       evaluations: {
         Row: {
           berkus: number
@@ -79,6 +109,39 @@ export type Database = {
           data?: Json
           date?: string
           id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      pitch_deck_analyses: {
+        Row: {
+          analysis_result: string | null
+          analyzed_at: string | null
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+          slide_count: number | null
+          user_id: string
+        }
+        Insert: {
+          analysis_result?: string | null
+          analyzed_at?: string | null
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+          slide_count?: number | null
+          user_id: string
+        }
+        Update: {
+          analysis_result?: string | null
+          analyzed_at?: string | null
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+          slide_count?: number | null
           user_id?: string
         }
         Relationships: []
@@ -215,6 +278,68 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      voucher_redemptions: {
+        Row: {
+          analysis_type: string
+          created_at: string
+          id: string
+          user_id: string
+          voucher_id: string
+        }
+        Insert: {
+          analysis_type: string
+          created_at?: string
+          id?: string
+          user_id: string
+          voucher_id: string
+        }
+        Update: {
+          analysis_type?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+          voucher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voucher_redemptions_voucher_id_fkey"
+            columns: ["voucher_id"]
+            isOneToOne: false
+            referencedRelation: "vouchers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vouchers: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string
+          id: string
+          max_uses: number
+          type: string
+          used_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by: string
+          id?: string
+          max_uses?: number
+          type: string
+          used_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          max_uses?: number
+          type?: string
+          used_count?: number
         }
         Relationships: []
       }

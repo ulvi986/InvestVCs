@@ -6,7 +6,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle } from "lucide-react";
+import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle, KeyRound, Plus, Copy } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 interface ProfileRow { id: string; name: string; surname: string; email: string; startup_name: string; startup_description: string | null; country: string; industry: string; created_at: string; }
 interface FinancialSnapshotRow { user_id: string; date: string; data: any; }
@@ -14,6 +15,7 @@ interface EvalRow { user_id: string; berkus: number; scorecard: number; risk_fac
 interface ReadinessRow { user_id: string; trl_answers: Record<string, boolean>; crl_answers: Record<string, boolean>; frl_answers: Record<string, boolean>; }
 interface RoleRow { id: string; user_id: string; role: string; approved: boolean; created_at: string; }
 interface VacancyRow { id: string; user_id: string; startup_name: string; country: string; job_type: string; startup_description: string | null; job_description: string; specialization: string; contact_email: string; approved: boolean; created_at: string; }
+interface VoucherRow { id: string; code: string; type: string; max_uses: number; used_count: number; created_by: string; created_at: string; }
 
 const TRL_CRITERIA = [[1,2],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
 const CRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
@@ -38,18 +40,23 @@ const AdminPanel = () => {
   const [roles, setRoles] = useState<RoleRow[]>([]);
   const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
   const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
+  const [vouchers, setVouchers] = useState<VoucherRow[]>([]);
+  const [newVoucherCode, setNewVoucherCode] = useState("");
+  const [newVoucherType, setNewVoucherType] = useState("both");
+  const [newVoucherMaxUses, setNewVoucherMaxUses] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (roleLoading || !isAdmin) return;
     const load = async () => {
-      const [pRes, eRes, rRes, rolesRes, vRes, fRes] = await Promise.all([
+      const [pRes, eRes, rRes, rolesRes, vRes, fRes, vouRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("readiness_answers").select("*"),
         supabase.from("user_roles").select("*"),
         supabase.from("startup_vacancies").select("*").order("created_at", { ascending: false }),
         supabase.from("financial_snapshots").select("*"),
+        supabase.from("vouchers").select("*").order("created_at", { ascending: false }),
       ]);
       setProfiles((pRes.data as any[]) ?? []);
       setEvaluations((eRes.data as any[]) ?? []);
@@ -57,6 +64,7 @@ const AdminPanel = () => {
       setRoles((rolesRes.data as any[]) ?? []);
       setVacancies((vRes.data as any[]) ?? []);
       setFinancials((fRes.data as any[]) ?? []);
+      setVouchers((vouRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
@@ -92,6 +100,16 @@ const AdminPanel = () => {
       setVacancies((prev) => prev.filter((v) => v.user_id !== profileId));
     }
   };
+  const createVoucher = async () => {
+    if (!newVoucherCode.trim()) { toast.error("Enter a voucher code"); return; }
+    const { data, error } = await supabase.from("vouchers").insert({ code: newVoucherCode.trim(), type: newVoucherType, max_uses: newVoucherMaxUses, created_by: profiles[0]?.id || "" } as any).select().single();
+    if (error) toast.error(error.message); else { toast.success("Voucher created"); setVouchers(prev => [data as any, ...prev]); setNewVoucherCode(""); }
+  };
+  const deleteVoucher = async (id: string) => {
+    const { error } = await supabase.from("vouchers").delete().eq("id", id);
+    if (error) toast.error("Failed"); else { toast.success("Deleted"); setVouchers(prev => prev.filter(v => v.id !== id)); }
+  };
+
   const approveVacancy = async (id: string) => {
     const { error } = await supabase.from("startup_vacancies").update({ approved: true } as any).eq("id", id);
     if (error) toast.error("Failed"); else { toast.success(t("admin.approve") + " ✓"); setVacancies((prev) => prev.map((v) => (v.id === id ? { ...v, approved: true } : v))); }
@@ -125,6 +143,7 @@ const AdminPanel = () => {
             <TabsTrigger value="startups" className="rounded-lg gap-2"><Users className="h-4 w-4" /> {t("admin.startups")} ({profiles.length})</TabsTrigger>
             <TabsTrigger value="investors" className="rounded-lg gap-2"><DollarSign className="h-4 w-4" /> {t("admin.investors")} ({pendingInvestors.length} {t("admin.pending")})</TabsTrigger>
             <TabsTrigger value="vacancies" className="rounded-lg gap-2"><Briefcase className="h-4 w-4" /> {t("admin.vacancies")} ({pendingVacancies.length} {t("admin.pending")})</TabsTrigger>
+            <TabsTrigger value="vouchers" className="rounded-lg gap-2"><KeyRound className="h-4 w-4" /> Vouchers ({vouchers.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="startups">
@@ -275,6 +294,46 @@ const AdminPanel = () => {
                     </div>
                   );
                 })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="vouchers">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-card mb-6">
+              <h3 className="text-lg font-semibold text-foreground mb-4">Create Voucher</h3>
+              <div className="flex flex-wrap gap-3 items-end">
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Code</label>
+                  <Input placeholder="VOUCHER-CODE" value={newVoucherCode} onChange={e => setNewVoucherCode(e.target.value)} className="w-48" />
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Type</label>
+                  <select value={newVoucherType} onChange={e => setNewVoucherType(e.target.value)} className="h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    <option value="both">Both</option>
+                    <option value="bmc">BMC Only</option>
+                    <option value="pitch_deck">Pitch Deck Only</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm text-muted-foreground mb-1 block">Max Uses</label>
+                  <Input type="number" min={1} value={newVoucherMaxUses} onChange={e => setNewVoucherMaxUses(Number(e.target.value) || 1)} className="w-24" />
+                </div>
+                <Button onClick={createVoucher} className="gradient-primary text-primary-foreground border-0 gap-1"><Plus className="h-4 w-4" /> Create</Button>
+              </div>
+            </div>
+            {vouchers.length === 0 ? <p className="text-muted-foreground">No vouchers yet.</p> : (
+              <div className="space-y-3">
+                {vouchers.map(v => (
+                  <div key={v.id} className="rounded-xl border border-border bg-card p-4 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <code className="text-sm font-mono font-bold text-primary bg-primary/10 px-3 py-1 rounded-lg">{v.code}</code>
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-muted text-muted-foreground">{v.type}</span>
+                      <span className="text-sm text-muted-foreground">{v.used_count}/{v.max_uses} used</span>
+                      <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <Button size="sm" variant="destructive" onClick={() => deleteVoucher(v.id)}><Trash2 className="h-4 w-4" /></Button>
+                  </div>
+                ))}
               </div>
             )}
           </TabsContent>

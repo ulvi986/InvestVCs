@@ -18,6 +18,7 @@ import InvestorSignUp from "./pages/InvestorSignUp";
 import AdminPanel from "./pages/AdminPanel";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import StartupVacancies from "./pages/StartupVacancies";
+import VentureAnalysis from "./pages/VentureAnalysis";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                 <Route path="/investor" element={<ProtectedRoute><InvestorDashboard /></ProtectedRoute>} />
                 <Route path="/vacancies" element={<ProtectedRoute><StartupVacancies /></ProtectedRoute>} />
+                <Route path="/venture-analysis" element={<ProtectedRoute><VentureAnalysis /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
