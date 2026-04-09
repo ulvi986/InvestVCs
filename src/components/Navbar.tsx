@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut, Globe, ChevronDown, Sun, Moon } from "lucide-react";
+import { Menu, LogOut, Globe, ChevronDown, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -12,6 +12,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import logoImg from "@/assets/logo.jpeg";
 
 const langLabels: Record<Language, string> = {
@@ -32,7 +37,7 @@ const Navbar = () => {
   const { t, language, setLanguage } = useLanguage();
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   const isInvestorUser = isInvestor || isInvestorPending;
 
@@ -73,27 +78,8 @@ const Navbar = () => {
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">InvestVCs</span>
         </Link>
 
-        {/* Desktop nav */}
-        <div className="hidden items-center gap-0.5 lg:flex">
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className={`relative rounded-lg px-3 py-2 text-sm font-medium transition-all duration-200 ${
-                location.pathname === link.to
-                  ? "text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {link.label}
-              {location.pathname === link.to && (
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-4/5 h-0.5 rounded-full bg-primary" />
-              )}
-            </Link>
-          ))}
-        </div>
-
-        <div className="hidden lg:flex items-center gap-1.5">
+        {/* Right side controls */}
+        <div className="flex items-center gap-1.5">
           {/* Theme toggle */}
           <Button
             variant="ghost"
@@ -126,17 +112,8 @@ const Navbar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
-          {user ? (
-            <div className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-xs font-bold shadow-sm">
-                {user.email?.[0]?.toUpperCase() || "U"}
-              </div>
-              <Button variant="ghost" size="icon" onClick={signOut} title={t("nav.signout")} className="h-9 w-9 rounded-lg text-muted-foreground hover:text-destructive">
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <>
+          {!user && (
+            <div className="hidden sm:flex items-center gap-1.5">
               <Link to="/signin">
                 <Button variant="ghost" size="sm" className="rounded-lg">{t("nav.signin")}</Button>
               </Link>
@@ -145,69 +122,117 @@ const Navbar = () => {
                   {t("nav.signup")}
                 </Button>
               </Link>
-            </>
-          )}
-        </div>
-
-        <div className="flex lg:hidden items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={toggleTheme} className="h-9 w-9 text-muted-foreground">
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-          <button className="text-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
-        </div>
-      </div>
-
-      {mobileOpen && (
-        <div className="border-t border-border/10 bg-card/90 dark:bg-slate-900/95 backdrop-blur-xl p-4 lg:hidden animate-in slide-in-from-top-2">
-          {links.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              onClick={() => setMobileOpen(false)}
-              className={`block rounded-lg px-4 py-3 text-sm font-medium transition-colors ${
-                location.pathname === link.to
-                  ? "bg-primary/10 text-primary"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {link.label}
-            </Link>
-          ))}
-
-          <div className="flex gap-2 mt-3 px-4">
-            {(Object.keys(langLabels) as Language[]).map((lang) => (
-              <button
-                key={lang}
-                onClick={() => setLanguage(lang)}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                  language === lang
-                    ? "bg-primary/10 border-primary text-primary"
-                    : "border-border text-muted-foreground"
-                }`}
-              >
-                {langFull[lang]}
-              </button>
-            ))}
-          </div>
-
-          {user ? (
-            <Button variant="ghost" className="mt-3 w-full text-destructive" onClick={() => { signOut(); setMobileOpen(false); }}>
-              {t("nav.signout")}
-            </Button>
-          ) : (
-            <div className="mt-3 space-y-2">
-              <Link to="/signin" onClick={() => setMobileOpen(false)}>
-                <Button variant="outline" className="w-full">{t("nav.signin")}</Button>
-              </Link>
-              <Link to="/signup" onClick={() => setMobileOpen(false)}>
-                <Button className="w-full bg-accent text-accent-foreground border-0">{t("nav.signup")}</Button>
-              </Link>
             </div>
           )}
+
+          {/* Hamburger menu */}
+          {(user || links.length > 0) && (
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72 bg-card/95 dark:bg-slate-900/95 backdrop-blur-xl border-border/20 p-0">
+                <div className="flex flex-col h-full">
+                  {/* Header */}
+                  <div className="p-6 border-b border-border/20">
+                    <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
+                      <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-xl object-cover" />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent font-display font-bold text-lg">InvestVCs</span>
+                    </Link>
+                  </div>
+
+                  {/* Navigation links */}
+                  <div className="flex-1 overflow-y-auto py-4 px-3">
+                    {user && (
+                      <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-xl bg-muted/50">
+                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-sm font-bold shadow-sm">
+                          {user.email?.[0]?.toUpperCase() || "U"}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-1">
+                      {links.map((link) => (
+                        <Link
+                          key={link.to}
+                          to={link.to}
+                          onClick={() => setOpen(false)}
+                          className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                            location.pathname === link.to
+                              ? "bg-primary/10 text-primary"
+                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                          }`}
+                        >
+                          {link.label}
+                        </Link>
+                      ))}
+                    </div>
+
+                    {!user && (
+                      <div className="mt-4 space-y-2 px-1 sm:hidden">
+                        <Link to="/signin" onClick={() => setOpen(false)}>
+                          <Button variant="outline" className="w-full rounded-xl">{t("nav.signin")}</Button>
+                        </Link>
+                        <Link to="/signup" onClick={() => setOpen(false)}>
+                          <Button className="w-full bg-accent text-accent-foreground border-0 rounded-xl">{t("nav.signup")}</Button>
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  {user && (
+                    <div className="p-4 border-t border-border/20">
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                        onClick={() => { signOut(); setOpen(false); }}
+                      >
+                        <LogOut className="h-4 w-4" />
+                        {t("nav.signout")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
+
+          {/* Show hamburger for non-logged in users on mobile for sign in/up */}
+          {!user && links.length === 0 && (
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground sm:hidden">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-72 bg-card/95 dark:bg-slate-900/95 backdrop-blur-xl border-border/20 p-0">
+                <div className="flex flex-col h-full">
+                  <div className="p-6 border-b border-border/20">
+                    <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
+                      <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-xl object-cover" />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent font-display font-bold text-lg">InvestVCs</span>
+                    </Link>
+                  </div>
+                  <div className="p-4 space-y-2">
+                    <Link to="/signin" onClick={() => setOpen(false)}>
+                      <Button variant="outline" className="w-full rounded-xl">{t("nav.signin")}</Button>
+                    </Link>
+                    <Link to="/signup" onClick={() => setOpen(false)}>
+                      <Button className="w-full bg-accent text-accent-foreground border-0 rounded-xl mt-2">{t("nav.signup")}</Button>
+                    </Link>
+                  </div>
+                </div>
+              </SheetContent>
+            </Sheet>
+          )}
         </div>
-      )}
+      </div>
     </nav>
   );
 };

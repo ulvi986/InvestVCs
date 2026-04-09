@@ -119,62 +119,37 @@ const VentureAnalysis = () => {
     setBmcSaving(false);
   };
 
-  // Validate voucher
+  // Validate voucher using server-side RPC
   const validateVoucher = async (type: "bmc" | "pitch_deck"): Promise<boolean> => {
     if (!voucherCode.trim()) {
       toast({ title: t("venture.enter_voucher"), variant: "destructive" });
       return false;
     }
 
-    const { data: voucher } = await supabase
-      .from("vouchers")
-      .select("*")
-      .eq("code", voucherCode.trim())
-      .maybeSingle();
-
-    if (!voucher) {
-      setVoucherValid(false);
-      toast({ title: t("venture.invalid_voucher"), variant: "destructive" });
-      return false;
-    }
-
-    if (voucher.type !== "both" && voucher.type !== type) {
-      setVoucherValid(false);
-      toast({ title: t("venture.wrong_voucher_type"), variant: "destructive" });
-      return false;
-    }
-
-    if (voucher.used_count >= voucher.max_uses) {
-      setVoucherValid(false);
-      toast({ title: t("venture.voucher_exhausted"), variant: "destructive" });
-      return false;
-    }
-
-    // Check if user already used this voucher for this type
-    const { data: existing } = await supabase
-      .from("voucher_redemptions")
-      .select("id")
-      .eq("voucher_id", voucher.id)
-      .eq("user_id", user!.id)
-      .eq("analysis_type", type)
-      .maybeSingle();
-
-    if (existing) {
-      setVoucherValid(false);
-      toast({ title: t("venture.voucher_already_used"), variant: "destructive" });
-      return false;
-    }
-
-    // Redeem
-    await supabase.from("voucher_redemptions").insert({
-      voucher_id: voucher.id,
-      user_id: user!.id,
-      analysis_type: type,
+    const { data, error } = await supabase.rpc("redeem_voucher", {
+      _voucher_code: voucherCode.trim(),
+      _user_id: user!.id,
+      _analysis_type: type,
     });
 
-    // Increment used_count - use RPC or direct update via admin
-    // Since users can't update vouchers, we'll handle this via the select policy
-    // Actually the admin policy allows all, let's just note it
+    if (error) {
+      setVoucherValid(false);
+      toast({ title: t("venture.analysis_error"), variant: "destructive" });
+      return false;
+    }
+
+    const result = data as { success: boolean; error?: string };
+    if (!result.success) {
+      setVoucherValid(false);
+      const errorKey = result.error === "invalid_voucher" ? "venture.invalid_voucher"
+        : result.error === "wrong_type" ? "venture.wrong_voucher_type"
+        : result.error === "exhausted" ? "venture.voucher_exhausted"
+        : result.error === "already_used" ? "venture.voucher_already_used"
+        : "venture.analysis_error";
+      toast({ title: t(errorKey), variant: "destructive" });
+      return false;
+    }
+
     setVoucherValid(true);
     return true;
   };
