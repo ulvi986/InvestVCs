@@ -132,39 +132,6 @@ const VCMethod = ({ answers, onAnswersChange, onValuationChange }: VCMethodProps
         </CardContent>
       </Card>
 
-      <Separator />
-
-      <Card className="border-primary/20 bg-primary/5">
-        <CardContent className="pt-6">
-          <div className="flex items-start gap-3">
-            <Info className="h-5 w-5 text-primary mt-0.5 shrink-0" />
-            <div className="space-y-2 text-sm">
-              <p className="font-semibold text-foreground">{t("vc.how_it_works")}:</p>
-              <ol className="list-decimal list-inside space-y-1 text-muted-foreground">
-                <li><strong>{t("vc.exit_value_label")}</strong> = Revenue × Multiple = ${exitValue.toLocaleString()}</li>
-                <li><strong>{t("vc.present_value")}</strong> = Exit Value / (1 + IRR)^Years = ${Math.round(presentValue).toLocaleString()}</li>
-                <li><strong>{t("vc.post_money")}</strong> = Present Value = ${Math.round(postMoneyValuation).toLocaleString()}</li>
-                <li><strong>{t("vc.pre_money")}</strong> = Post Money − Investment = ${Math.round(preMoneyValuation).toLocaleString()}</li>
-                <li><strong>{t("vc.investor_ownership")}</strong> = Investment / Post Money = {investorOwnership.toFixed(1)}%</li>
-              </ol>
-              <div className="mt-3 grid gap-2 md:grid-cols-3 text-xs">
-                <div className="rounded-lg border border-border bg-card p-3">
-                  <p className="text-muted-foreground">{t("vc.post_money")}</p>
-                  <p className="font-semibold text-foreground">${Math.round(postMoneyValuation).toLocaleString()}</p>
-                </div>
-                <div className="rounded-lg border border-border bg-card p-3">
-                  <p className="text-muted-foreground">{t("vc.pre_money")}</p>
-                  <p className="font-semibold text-foreground">${Math.round(preMoneyValuation).toLocaleString()}</p>
-                </div>
-                <div className="rounded-lg border border-border bg-card p-3">
-                  <p className="text-muted-foreground">{t("vc.investor_ownership")}</p>
-                  <p className="font-semibold text-foreground">{investorOwnership.toFixed(1)}%</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
       <ValuationGauge value={Math.round(preMoneyValuation)} max={10000000} label={t("vc.pre_money_label")} />
     </div>
