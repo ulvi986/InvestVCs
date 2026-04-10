@@ -5,6 +5,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+const DEFAULT_SENDER_NAME = 'InvestVCs'
+const DEFAULT_SENDER_EMAIL = 'noreply@investvcs.com'
+
+const escapeHtml = (value: string) => value
+  .replace(/&/g, '&amp;')
+  .replace(/</g, '&lt;')
+  .replace(/>/g, '&gt;')
+  .replace(/"/g, '&quot;')
+  .replace(/'/g, '&#39;')
+
+const isValidEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)
+
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -43,6 +55,13 @@ Deno.serve(async (req) => {
       })
     }
 
+    if (!isValidEmail(to)) {
+      return new Response(JSON.stringify({ error: 'Invalid recipient email address' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     const BREVO_API_KEY = Deno.env.get('BREVO_API_KEY')
     if (!BREVO_API_KEY) {
       return new Response(JSON.stringify({ error: 'BREVO_API_KEY not configured' }), {
@@ -50,6 +69,11 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
+
+    const safeSubject = escapeHtml(subject)
+    const safeMessage = escapeHtml(message)
+    const safeSenderName = senderName ? escapeHtml(senderName) : 'Platform user'
+    const safeSenderEmail = senderEmail && isValidEmail(senderEmail) ? senderEmail : null
 
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
       method: 'POST',
@@ -60,16 +84,31 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         sender: {
-          name: senderName || 'InvestVCs User',
-          email: senderEmail || 'noreply@investvcs.com',
+          name: DEFAULT_SENDER_NAME,
+          email: DEFAULT_SENDER_EMAIL,
         },
         to: [{ email: to }],
+        replyTo: safeSenderEmail
+          ? {
+              email: safeSenderEmail,
+              name: senderName || DEFAULT_SENDER_NAME,
+            }
+          : undefined,
         subject,
+        textContent: [
+          `Subject: ${subject}`,
+          `From: ${senderName || 'Platform user'}${safeSenderEmail ? ` <${safeSenderEmail}>` : ''}`,
+          '',
+          message,
+        ].join('\n'),
         htmlContent: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;">
-          <h2 style="color:#6366f1;">${subject}</h2>
-          <p style="white-space:pre-wrap;line-height:1.6;color:#333;">${message.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>
+          <h2 style="color:#6366f1;">${safeSubject}</h2>
+          <p style="margin:0 0 16px;color:#4b5563;font-size:14px;line-height:1.6;">
+            <strong>From:</strong> ${safeSenderName}${safeSenderEmail ? ` &lt;${safeSenderEmail}&gt;` : ''}
+          </p>
+          <p style="white-space:pre-wrap;line-height:1.6;color:#333;">${safeMessage}</p>
           <hr style="border:none;border-top:1px solid #eee;margin:20px 0;"/>
-          <p style="font-size:12px;color:#999;">Sent via InvestVCs Platform</p>
+          <p style="font-size:12px;color:#999;">Sent via InvestVCs Platform. Use reply in your email app to answer directly.</p>
         </div>`,
       }),
     })
