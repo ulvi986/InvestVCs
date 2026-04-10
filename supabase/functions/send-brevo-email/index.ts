@@ -6,7 +6,7 @@ const corsHeaders = {
 }
 
 const DEFAULT_SENDER_NAME = 'InvestVCs'
-const DEFAULT_SENDER_EMAIL = 'noreply@investvcs.com'
+const DEFAULT_SENDER_EMAIL = 'u.sharifzade2007@gmail.com'
 
 const escapeHtml = (value: string) => value
   .replace(/&/g, '&amp;')
