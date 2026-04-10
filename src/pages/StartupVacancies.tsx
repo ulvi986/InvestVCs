@@ -9,7 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { Briefcase, Plus, Trash2, X, Pencil, Mail, Clock } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Briefcase, Plus, Trash2, X, Pencil, Mail, Clock, Send } from "lucide-react";
 
 interface Vacancy {
   id: string; user_id: string; startup_name: string; country: string; job_type: string;
@@ -18,6 +19,7 @@ interface Vacancy {
 }
 
 const emptyForm = { startup_name: "", country: "", job_type: "", startup_description: "", job_description: "", specialization: "", contact_email: "" };
+const emptyContact = { senderName: "", senderEmail: "", subject: "", message: "" };
 
 const StartupVacancies = () => {
   const { user } = useAuth();
@@ -29,6 +31,13 @@ const StartupVacancies = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+
+  // Contact modal state
+  const [contactOpen, setContactOpen] = useState(false);
+  const [contactTo, setContactTo] = useState("");
+  const [contactStartup, setContactStartup] = useState("");
+  const [contactForm, setContactForm] = useState(emptyContact);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -93,6 +102,43 @@ const StartupVacancies = () => {
   };
 
   const cancelForm = () => { setShowForm(false); setEditingId(null); setForm(emptyForm); };
+
+  const openContactModal = (email: string, startupName: string) => {
+    setContactTo(email);
+    setContactStartup(startupName);
+    setContactForm({ ...emptyContact, subject: `Interest in vacancy at ${startupName}` });
+    setContactOpen(true);
+  };
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactForm.senderName || !contactForm.senderEmail || !contactForm.subject || !contactForm.message) {
+      toast.error(t("vacancies.fill_required"));
+      return;
+    }
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-brevo-email", {
+        body: {
+          to: contactTo,
+          subject: contactForm.subject,
+          message: contactForm.message,
+          senderName: contactForm.senderName,
+          senderEmail: contactForm.senderEmail,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success(t("vacancies.sent_success"));
+      setContactOpen(false);
+      setContactForm(emptyContact);
+    } catch (err: any) {
+      console.error(err);
+      toast.error(t("vacancies.sent_error"));
+    } finally {
+      setSending(false);
+    }
+  };
 
   const visibleVacancies = isAdmin ? vacancies : vacancies.filter((v) => v.approved || v.user_id === user?.id);
 
@@ -169,17 +215,81 @@ const StartupVacancies = () => {
                 </div>
                 {v.startup_description && <p className="text-sm text-muted-foreground mb-3">{v.startup_description}</p>}
                 <p className="text-sm text-foreground leading-relaxed mb-3">{v.job_description}</p>
-                {v.contact_email && (
-                  <div className="flex items-center gap-2 text-sm text-primary">
-                    <Mail className="h-4 w-4" />
-                    <a href={`mailto:${v.contact_email}`} className="hover:underline">{v.contact_email}</a>
-                  </div>
-                )}
+                <div className="flex items-center justify-between flex-wrap gap-3">
+                  {v.contact_email && (
+                    <div className="flex items-center gap-2 text-sm text-primary">
+                      <Mail className="h-4 w-4" />
+                      <a href={`mailto:${v.contact_email}`} className="hover:underline">{v.contact_email}</a>
+                    </div>
+                  )}
+                  {v.contact_email && user && user.id !== v.user_id && (
+                    <Button
+                      size="sm"
+                      onClick={() => openContactModal(v.contact_email, v.startup_name)}
+                      className="gap-2 gradient-primary text-primary-foreground border-0"
+                    >
+                      <Send className="h-3.5 w-3.5" />
+                      {t("vacancies.contact")}
+                    </Button>
+                  )}
+                </div>
               </div>
             ))}
           </div>
         )}
       </div>
+
+      {/* Contact Email Modal */}
+      <Dialog open={contactOpen} onOpenChange={setContactOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Send className="h-5 w-5 text-primary" />
+              {t("vacancies.send_message")} — {contactStartup}
+            </DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSendMessage} className="space-y-4 mt-2">
+            <div className="space-y-2">
+              <Label>{t("vacancies.your_name")} *</Label>
+              <Input
+                value={contactForm.senderName}
+                onChange={(e) => setContactForm(p => ({ ...p, senderName: e.target.value }))}
+                placeholder={t("vacancies.your_name")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("vacancies.your_email")} *</Label>
+              <Input
+                type="email"
+                value={contactForm.senderEmail}
+                onChange={(e) => setContactForm(p => ({ ...p, senderEmail: e.target.value }))}
+                placeholder={t("vacancies.your_email")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("vacancies.subject")} *</Label>
+              <Input
+                value={contactForm.subject}
+                onChange={(e) => setContactForm(p => ({ ...p, subject: e.target.value }))}
+                placeholder={t("vacancies.subject")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>{t("vacancies.message")} *</Label>
+              <Textarea
+                value={contactForm.message}
+                onChange={(e) => setContactForm(p => ({ ...p, message: e.target.value }))}
+                placeholder={t("vacancies.message")}
+                rows={5}
+              />
+            </div>
+            <Button type="submit" disabled={sending} className="w-full gradient-primary text-primary-foreground border-0 gap-2">
+              <Send className="h-4 w-4" />
+              {sending ? t("vacancies.sending") : t("vacancies.send_message")}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 };
