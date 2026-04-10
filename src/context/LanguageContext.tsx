@@ -1972,6 +1972,11 @@ const translations: Record<Language, Record<string, string>> = {
     "venture.validate_and_analyze": "Təsdiq Et və Təhlil Et",
     "landing.feature4_title": "Girişim Təhlili",
     "landing.feature4_desc": "Biznes Model Canvas və Pitch Deck təhlili AI dəstəkli anlayışlarla.",
+    "vacancies.contact": "Əlaqə", "vacancies.send_message": "Mesaj Göndər",
+    "vacancies.your_name": "Adınız", "vacancies.your_email": "E-poçtunuz",
+    "vacancies.message": "Mesaj", "vacancies.subject": "Mövzu",
+    "vacancies.sending": "Göndərilir...", "vacancies.sent_success": "Mesaj uğurla göndərildi!",
+    "vacancies.sent_error": "Mesaj göndərilə bilmədi",
     // Common
     "common.loading": "Yüklənir...",
     "common.language": "Dil",
