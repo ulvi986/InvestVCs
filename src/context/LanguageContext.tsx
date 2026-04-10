@@ -677,6 +677,15 @@ const translations: Record<Language, Record<string, string>> = {
     "vacancies.posted_success": "Vacancy posted! It will be visible after admin approval.",
     "vacancies.updated_success": "Vacancy updated!",
     "vacancies.deleted": "Vacancy deleted",
+    "vacancies.contact": "Contact",
+    "vacancies.send_message": "Send Message",
+    "vacancies.your_name": "Your Name",
+    "vacancies.your_email": "Your Email",
+    "vacancies.message": "Message",
+    "vacancies.subject": "Subject",
+    "vacancies.sending": "Sending...",
+    "vacancies.sent_success": "Message sent successfully!",
+    "vacancies.sent_error": "Failed to send message",
 
     // Profile page
     "profile.avg_valuation": "Average Valuation",
