@@ -87,7 +87,7 @@ const InvestorDashboard = () => {
   const [fundingData, setFundingData] = useState<FundingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [industryFilter, setIndustryFilter] = useState("");
+  const [industryFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ const InvestorDashboard = () => {
     );
   }
 
-  const allIndustries = [...new Set(profiles.filter(p => p.industry).map(p => p.industry!))].sort();
+  
 
   const filtered = profiles.filter((p) => {
     if (p.startup_name === "Investor") return false;

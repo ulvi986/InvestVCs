@@ -50,7 +50,7 @@ const FundingViewPage = () => {
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [industryFilter, setIndustryFilter] = useState("");
+  const [industryFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [interestOpen, setInterestOpen] = useState<string | null>(null);
   const [interestRole, setInterestRole] = useState("investor");
@@ -85,7 +85,7 @@ const FundingViewPage = () => {
     }
   };
 
-  const allIndustries = [...new Set(profiles.filter(p => p.industry).map(p => p.industry!))].sort();
+  
 
   const enriched = fundingList
     .filter(f => f.funding_goal > 0)
