@@ -1,18 +1,12 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { ArrowRight, Zap, Shield, DollarSign, ClipboardCheck, BrainCircuit, Send } from "lucide-react";
+import { ArrowRight, Zap, Shield, DollarSign, ClipboardCheck, BrainCircuit } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
 import AuroraBackground from "@/components/AuroraBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -35,32 +29,6 @@ const scaleIn = {
 const Index = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
-  const [contactForm, setContactForm] = useState({ name: "", surname: "", email: "", message: "" });
-  const [sending, setSending] = useState(false);
-
-  const handleContactSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contactForm.name || !contactForm.surname || !contactForm.email || !contactForm.message) return;
-    setSending(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-brevo-email", {
-        body: {
-          to: "u.sharifzade@gmail.com",
-          subject: `Contact Form: ${contactForm.name} ${contactForm.surname}`,
-          message: contactForm.message,
-          senderName: `${contactForm.name} ${contactForm.surname}`,
-          senderEmail: contactForm.email,
-        },
-      });
-      if (error) throw error;
-      toast.success(t("landing.contact_success"));
-      setContactForm({ name: "", surname: "", email: "", message: "" });
-    } catch (err) {
-      toast.error(t("landing.contact_error"));
-    } finally {
-      setSending(false);
-    }
-  };
 
   const features = [
     {
@@ -273,97 +241,7 @@ const Index = () => {
           </div>
         </section>
 
-        {/* ═══════ Contact Section ═══════ */}
-        <section className="relative py-20">
-          <div className="absolute inset-0 bg-card/40 dark:bg-card/20 backdrop-blur-sm border-y border-border/20" />
-          <div className="container relative">
-            <div className="text-center mb-10">
-              <motion.h2
-                className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={0}
-              >
-                {t("landing.contact_title")}
-              </motion.h2>
-              <motion.p
-                className="mt-4 text-muted-foreground max-w-xl mx-auto"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={1}
-              >
-                {t("landing.contact_desc")}
-              </motion.p>
-            </div>
 
-            <motion.div
-              className="max-w-lg mx-auto"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={fadeUp}
-              custom={2}
-            >
-              <form
-                onSubmit={handleContactSubmit}
-                className="rounded-2xl border border-border/30 dark:border-white/10 bg-card/60 dark:bg-white/5 backdrop-blur-xl p-8 space-y-5 shadow-sm"
-              >
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-name">{t("landing.contact_name")}</Label>
-                    <Input
-                      id="contact-name"
-                      value={contactForm.name}
-                      onChange={(e) => setContactForm((p) => ({ ...p, name: e.target.value }))}
-                      required
-                      maxLength={100}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="contact-surname">{t("landing.contact_surname")}</Label>
-                    <Input
-                      id="contact-surname"
-                      value={contactForm.surname}
-                      onChange={(e) => setContactForm((p) => ({ ...p, surname: e.target.value }))}
-                      required
-                      maxLength={100}
-                    />
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-email">{t("landing.contact_email")}</Label>
-                  <Input
-                    id="contact-email"
-                    type="email"
-                    value={contactForm.email}
-                    onChange={(e) => setContactForm((p) => ({ ...p, email: e.target.value }))}
-                    required
-                    maxLength={255}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="contact-message">{t("landing.contact_message")}</Label>
-                  <Textarea
-                    id="contact-message"
-                    value={contactForm.message}
-                    onChange={(e) => setContactForm((p) => ({ ...p, message: e.target.value }))}
-                    required
-                    maxLength={2000}
-                    rows={5}
-                  />
-                </div>
-                <Button type="submit" disabled={sending} className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold border-0 h-11 rounded-xl shadow-lg">
-                  {sending ? t("landing.contact_sending") : t("landing.contact_send")}
-                  <Send className="h-4 w-4" />
-                </Button>
-              </form>
-            </motion.div>
-          </div>
-        </section>
 
         {/* ═══════ CTA ═══════ */}
         <section className="py-20">
