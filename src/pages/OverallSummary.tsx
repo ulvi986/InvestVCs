@@ -318,8 +318,32 @@ const OverallSummary = () => {
             ))}
           </div>
           <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")}</p>
+            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")} (Pre-Seed)</p>
             <p className="text-2xl font-bold text-primary">${avgValuation.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
+
+      {hasSeedEvaluation && (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t("summary.seed_valuation_results")}</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {vcValuation > 0 && (
+              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.vc_method")}</p>
+                <p className="text-xl font-bold text-primary">${vcValuation.toLocaleString()}</p>
+              </div>
+            )}
+            {chicagoValuation > 0 && (
+              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.chicago_method")}</p>
+                <p className="text-xl font-bold text-accent">${chicagoValuation.toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+          <div className="mt-4 rounded-lg border border-accent/20 bg-accent/5 p-4 text-center">
+            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")} (Seed)</p>
+            <p className="text-2xl font-bold text-accent">${seedAvg.toLocaleString()}</p>
           </div>
         </div>
       )}
