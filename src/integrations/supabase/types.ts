@@ -116,27 +116,66 @@ export type Database = {
       funding_interests: {
         Row: {
           amount: number | null
+          approved: boolean
           created_at: string
           id: string
           investor_user_id: string
+          message: string | null
           role: string
           startup_user_id: string
         }
         Insert: {
           amount?: number | null
+          approved?: boolean
           created_at?: string
           id?: string
           investor_user_id: string
+          message?: string | null
           role?: string
           startup_user_id: string
         }
         Update: {
           amount?: number | null
+          approved?: boolean
           created_at?: string
           id?: string
           investor_user_id?: string
+          message?: string | null
           role?: string
           startup_user_id?: string
+        }
+        Relationships: []
+      }
+      funding_rounds: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string | null
+          id: string
+          investor_name: string | null
+          round_name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          date?: string | null
+          id?: string
+          investor_name?: string | null
+          round_name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string | null
+          id?: string
+          investor_name?: string | null
+          round_name?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

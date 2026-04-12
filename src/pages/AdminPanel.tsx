@@ -6,7 +6,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/sonner";
-import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle, KeyRound, Plus, Copy } from "lucide-react";
+import { CheckCircle, XCircle, Users, DollarSign, Briefcase, Shield, Clock, Trash2, Mail, TrendingUp, TrendingDown, Wallet, Target, AlertTriangle, KeyRound, Plus, Copy, HandCoins } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ProfileRow { id: string; name: string; surname: string; email: string; startup_name: string; startup_description: string | null; country: string; industry: string; created_at: string; }
@@ -16,6 +16,7 @@ interface ReadinessRow { user_id: string; trl_answers: Record<string, boolean>; 
 interface RoleRow { id: string; user_id: string; role: string; approved: boolean; created_at: string; }
 interface VacancyRow { id: string; user_id: string; startup_name: string; country: string; job_type: string; startup_description: string | null; job_description: string; specialization: string; contact_email: string; approved: boolean; created_at: string; }
 interface VoucherRow { id: string; code: string; type: string; max_uses: number; used_count: number; created_by: string; created_at: string; }
+interface FundingInterestRow { id: string; startup_user_id: string; investor_user_id: string; role: string; amount: number | null; message: string | null; approved: boolean; created_at: string; }
 
 const TRL_CRITERIA = [[1,2],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
 const CRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
@@ -41,6 +42,7 @@ const AdminPanel = () => {
   const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
   const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
   const [vouchers, setVouchers] = useState<VoucherRow[]>([]);
+  const [fundingInterests, setFundingInterests] = useState<FundingInterestRow[]>([]);
   const [newVoucherCode, setNewVoucherCode] = useState("");
   const [newVoucherType, setNewVoucherType] = useState("both");
   const [newVoucherMaxUses, setNewVoucherMaxUses] = useState(1);
@@ -49,7 +51,7 @@ const AdminPanel = () => {
   useEffect(() => {
     if (roleLoading || !isAdmin) return;
     const load = async () => {
-      const [pRes, eRes, rRes, rolesRes, vRes, fRes, vouRes] = await Promise.all([
+      const [pRes, eRes, rRes, rolesRes, vRes, fRes, vouRes, fiRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("readiness_answers").select("*"),
@@ -57,6 +59,7 @@ const AdminPanel = () => {
         supabase.from("startup_vacancies").select("*").order("created_at", { ascending: false }),
         supabase.from("financial_snapshots").select("*"),
         supabase.from("vouchers").select("*").order("created_at", { ascending: false }),
+        supabase.from("funding_interests").select("*").order("created_at", { ascending: false }),
       ]);
       setProfiles((pRes.data as any[]) ?? []);
       setEvaluations((eRes.data as any[]) ?? []);
@@ -65,6 +68,7 @@ const AdminPanel = () => {
       setVacancies((vRes.data as any[]) ?? []);
       setFinancials((fRes.data as any[]) ?? []);
       setVouchers((vouRes.data as any[]) ?? []);
+      setFundingInterests((fiRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
@@ -130,10 +134,21 @@ const AdminPanel = () => {
     return userF[0]?.data;
   };
 
+  const approveFundingInterest = async (id: string) => {
+    const { error } = await supabase.from("funding_interests").update({ approved: true } as any).eq("id", id);
+    if (error) toast.error("Failed"); else { toast.success(t("admin.approve") + " ✓"); setFundingInterests(prev => prev.map(fi => fi.id === id ? { ...fi, approved: true } : fi)); }
+  };
+  const rejectFundingInterest = async (id: string) => {
+    const { error } = await supabase.from("funding_interests").delete().eq("id", id);
+    if (error) toast.error("Failed"); else { toast.success(t("admin.delete") + " ✓"); setFundingInterests(prev => prev.filter(fi => fi.id !== id)); }
+  };
+
   const pendingInvestors = roles.filter((r) => r.role === "investor" && !r.approved);
   const approvedInvestors = roles.filter((r) => r.role === "investor" && r.approved);
   const pendingVacancies = vacancies.filter((v) => !v.approved);
   const approvedVacancies = vacancies.filter((v) => v.approved);
+  const pendingInterests = fundingInterests.filter(fi => !fi.approved);
+  const approvedInterests = fundingInterests.filter(fi => fi.approved);
 
   return (
     <DashboardLayout title={t("admin.title")} subtitle={t("admin.subtitle")}>
@@ -143,6 +158,7 @@ const AdminPanel = () => {
             <TabsTrigger value="startups" className="rounded-lg gap-2"><Users className="h-4 w-4" /> {t("admin.startups")} ({profiles.length})</TabsTrigger>
             <TabsTrigger value="investors" className="rounded-lg gap-2"><DollarSign className="h-4 w-4" /> {t("admin.investors")} ({pendingInvestors.length} {t("admin.pending")})</TabsTrigger>
             <TabsTrigger value="vacancies" className="rounded-lg gap-2"><Briefcase className="h-4 w-4" /> {t("admin.vacancies")} ({pendingVacancies.length} {t("admin.pending")})</TabsTrigger>
+            <TabsTrigger value="interests" className="rounded-lg gap-2"><HandCoins className="h-4 w-4" /> {t("admin.funding_interests")} ({pendingInterests.length} {t("admin.pending")})</TabsTrigger>
             <TabsTrigger value="vouchers" className="rounded-lg gap-2"><KeyRound className="h-4 w-4" /> Vouchers ({vouchers.length})</TabsTrigger>
           </TabsList>
 
@@ -291,6 +307,61 @@ const AdminPanel = () => {
                       </div>
                       {v.startup_description && <p className="text-sm text-muted-foreground mb-2">{v.startup_description}</p>}
                       <p className="text-sm text-foreground">{v.job_description}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          <TabsContent value="interests">
+            {pendingInterests.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2"><Clock className="h-5 w-5 text-amber-500" /> {t("admin.pending_approval")} ({pendingInterests.length})</h3>
+                <div className="space-y-3">
+                  {pendingInterests.map(fi => {
+                    const investor = getProfile(fi.investor_user_id);
+                    const startup = getProfile(fi.startup_user_id);
+                    return (
+                      <div key={fi.id} className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-foreground">{investor ? `${investor.name} ${investor.surname}` : fi.investor_user_id}</p>
+                            <p className="text-sm text-muted-foreground">→ {startup?.startup_name || fi.startup_user_id}</p>
+                            <div className="flex gap-2 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{fi.role}</span>
+                              {fi.amount && <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-bold">₼{fi.amount.toLocaleString()}</span>}
+                            </div>
+                            {fi.message && <p className="text-sm text-muted-foreground mt-2 italic">"{fi.message}"</p>}
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(fi.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => approveFundingInterest(fi.id)} className="gap-1 bg-accent text-accent-foreground hover:bg-accent/90"><CheckCircle className="h-4 w-4" /> {t("admin.approve")}</Button>
+                            <Button size="sm" variant="destructive" onClick={() => rejectFundingInterest(fi.id)} className="gap-1"><XCircle className="h-4 w-4" /> {t("admin.reject")}</Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <h3 className="text-lg font-semibold text-foreground mb-4">{t("admin.approved_interests")} ({approvedInterests.length})</h3>
+            {approvedInterests.length === 0 ? (<p className="text-muted-foreground">{t("admin.no_interests")}</p>) : (
+              <div className="space-y-3">
+                {approvedInterests.map(fi => {
+                  const investor = getProfile(fi.investor_user_id);
+                  const startup = getProfile(fi.startup_user_id);
+                  return (
+                    <div key={fi.id} className="rounded-xl border border-accent/30 bg-accent/5 p-5 flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground">{investor ? `${investor.name} ${investor.surname}` : fi.investor_user_id} → {startup?.startup_name || fi.startup_user_id}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{fi.role}</span>
+                          {fi.amount && <span className="text-xs font-bold text-foreground">₼{fi.amount.toLocaleString()}</span>}
+                        </div>
+                      </div>
+                      <CheckCircle className="h-5 w-5 text-accent" />
                     </div>
                   );
                 })}

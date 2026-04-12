@@ -6,14 +6,14 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
 import {
-  Search, DollarSign, TrendingUp, Users, Clock, Rocket
+  Search, DollarSign, TrendingUp, Users, Rocket, Send, UserPlus
 } from "lucide-react";
 
 interface FundingProfile {
@@ -21,15 +21,18 @@ interface FundingProfile {
   funding_raised: number;
   funding_goal: number;
   funding_stage: string;
-  last_round_amount: number;
-  last_round_date: string | null;
-  last_round_investor_type: string;
-  use_product_pct: number;
-  use_marketing_pct: number;
-  use_team_pct: number;
   valuation: number;
   timeline: string;
   interest_count: number;
+}
+
+interface FundingRound {
+  id: string;
+  user_id: string;
+  round_name: string;
+  amount: number;
+  investor_name: string | null;
+  date: string | null;
 }
 
 interface ProfileRow {
@@ -59,6 +62,10 @@ const INDUSTRY_ICONS: Record<string, string> = {
   agritech: "🌾", saas: "☁️", ecommerce: "🛒", ai: "🤖", default: "🚀",
 };
 
+const ROUND_COLORS = [
+  "bg-primary", "bg-accent", "bg-emerald-500", "bg-violet-500", "bg-orange-500", "bg-rose-500"
+];
+
 const getGradient = (industry: string | null) => {
   if (!industry) return INDUSTRY_COLORS.default;
   const key = industry.toLowerCase().replace(/[^a-z]/g, "");
@@ -76,21 +83,25 @@ const FundingViewPage = () => {
   const { t } = useLanguage();
   const { isInvestor } = useUserRole();
   const [fundingList, setFundingList] = useState<FundingProfile[]>([]);
+  const [allRounds, setAllRounds] = useState<FundingRound[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [interestOpen, setInterestOpen] = useState<string | null>(null);
   const [interestRole, setInterestRole] = useState("investor");
   const [interestAmount, setInterestAmount] = useState("");
+  const [interestMessage, setInterestMessage] = useState("");
 
   useEffect(() => {
     const load = async () => {
-      const [fRes, pRes] = await Promise.all([
+      const [fRes, pRes, rRes] = await Promise.all([
         supabase.from("startup_funding").select("*"),
         supabase.from("profiles").select("*"),
+        supabase.from("funding_rounds" as any).select("*"),
       ]);
       setFundingList((fRes.data as any[]) ?? []);
       setProfiles((pRes.data as any[]) ?? []);
+      setAllRounds((rRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
@@ -108,6 +119,7 @@ const FundingViewPage = () => {
       investor_user_id: user.id,
       role: interestRole,
       amount: Number(interestAmount),
+      message: interestMessage || null,
     } as any);
     if (error) {
       console.error("Interest error:", error);
@@ -116,15 +128,16 @@ const FundingViewPage = () => {
       toast.success(t("funding.interest_sent"));
       setInterestOpen(null);
       setInterestAmount("");
+      setInterestMessage("");
       setInterestRole("investor");
     }
   };
 
-  // Show ALL startups, even with $0 funding
   const enriched = fundingList
     .map(f => {
       const profile = profiles.find(p => p.id === f.user_id);
-      return { ...f, profile };
+      const rounds = allRounds.filter(r => r.user_id === f.user_id);
+      return { ...f, profile, rounds };
     })
     .filter(f => {
       if (!f.profile) return false;
@@ -137,15 +150,6 @@ const FundingViewPage = () => {
         (f.profile.industry ?? "").toLowerCase().includes(s)
       );
     });
-
-  const getPct = (raised: number, goal: number) =>
-    goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
-
-  const getDaysLeft = (timeline: string) => {
-    if (!timeline) return null;
-    const match = timeline.match(/(\d+)/);
-    return match ? `${match[1]} ${t("funding.days_left")}` : timeline;
-  };
 
   return (
     <DashboardLayout title={t("crowdfunding.title")} subtitle={t("crowdfunding.subtitle")}>
@@ -168,33 +172,42 @@ const FundingViewPage = () => {
             <p className="text-lg text-muted-foreground">{t("crowdfunding.no_startups")}</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {enriched.map(item => {
-              const { profile } = item;
+              const { profile, rounds } = item;
               if (!profile) return null;
-              const pct = getPct(item.funding_raised, item.funding_goal);
               const gradient = getGradient(profile.industry);
               const icon = getIcon(profile.industry);
+              const totalRaised = rounds.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+              const maxRound = Math.max(...rounds.map(r => Number(r.amount) || 0), 1);
 
               return (
                 <div
                   key={item.user_id}
                   className="rounded-xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow"
                 >
-                  {/* Header with gradient */}
-                  <div className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
-                    <span className="text-5xl">{icon}</span>
-                    <div className="absolute top-3 left-3 flex gap-1.5">
-                      {profile.industry && (
-                        <Badge className="bg-background/90 text-foreground text-[10px] font-semibold backdrop-blur-sm border-0">
-                          {profile.industry}
-                        </Badge>
-                      )}
-                      {pct >= 70 && (
-                        <Badge className="bg-accent text-accent-foreground text-[10px] font-semibold border-0 gap-0.5">
-                          <TrendingUp className="h-3 w-3" /> Trend
-                        </Badge>
-                      )}
+                  {/* Header */}
+                  <div className={`relative h-28 bg-gradient-to-br ${gradient} flex items-center gap-4 px-5`}>
+                    <div className="h-16 w-16 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center text-3xl shadow-lg shrink-0">
+                      {icon}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-white text-lg leading-tight truncate drop-shadow-sm">
+                        {profile.startup_name}
+                      </h3>
+                      <p className="text-white/80 text-sm truncate">{profile.name} {profile.surname}</p>
+                      <div className="flex gap-1.5 mt-1">
+                        {profile.industry && (
+                          <Badge className="bg-white/20 text-white text-[10px] font-semibold backdrop-blur-sm border-0">
+                            {profile.industry}
+                          </Badge>
+                        )}
+                        {profile.country && (
+                          <Badge className="bg-white/20 text-white text-[10px] backdrop-blur-sm border-0">
+                            {profile.country}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                     {item.funding_stage && (
                       <Badge className="absolute top-3 right-3 bg-background/90 text-foreground text-[10px] backdrop-blur-sm border-0">
@@ -204,62 +217,88 @@ const FundingViewPage = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="p-4 space-y-3">
-                    <div>
-                      <h3 className="font-bold text-foreground text-base leading-tight line-clamp-1">
-                        {profile.startup_name}
-                      </h3>
-                      {profile.startup_description && (
-                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                          {profile.startup_description}
-                        </p>
+                  <div className="p-5 space-y-4">
+                    {profile.startup_description && (
+                      <p className="text-xs text-muted-foreground line-clamp-2">
+                        {profile.startup_description}
+                      </p>
+                    )}
+
+                    {/* Funding Summary */}
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-xs text-muted-foreground">{t("funding.raised")}</p>
+                        <p className="text-xl font-bold text-primary">₼{totalRaised.toLocaleString()}</p>
+                      </div>
+                      {item.funding_goal > 0 && (
+                        <div className="text-right">
+                          <p className="text-xs text-muted-foreground">{t("funding.goal")}</p>
+                          <p className="text-lg font-bold text-foreground">₼{item.funding_goal.toLocaleString()}</p>
+                        </div>
                       )}
                     </div>
 
-                    {/* Funding amounts */}
-                    <div className="flex items-baseline justify-between">
-                      <span className="text-lg font-bold text-primary">
-                        ₼{item.funding_raised.toLocaleString()}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        ₼{item.funding_goal.toLocaleString()} {t("crowdfunding.target")}
-                      </span>
-                    </div>
+                    {/* Rounds Bar Chart */}
+                    {rounds.length > 0 ? (
+                      <div className="space-y-1.5">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                          {t("funding.rounds_title")}
+                        </p>
+                        {rounds.map((round, i) => (
+                          <div key={round.id} className="flex items-center gap-2">
+                            <span className="text-[10px] text-muted-foreground w-16 shrink-0 truncate">{round.round_name}</span>
+                            <div className="flex-1 h-5 bg-muted rounded overflow-hidden">
+                              <div
+                                className={`h-full rounded ${ROUND_COLORS[i % ROUND_COLORS.length]} transition-all`}
+                                style={{ width: `${Math.max(4, (Number(round.amount) / maxRound) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-[10px] font-bold text-foreground w-20 text-right">₼{Number(round.amount).toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-muted-foreground italic">{t("funding.no_rounds")}</p>
+                    )}
 
-                    {/* Progress bar */}
-                    {item.funding_goal > 0 && <Progress value={pct} className="h-2" />}
-
-                    {/* Stats row */}
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    {/* Stats */}
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      {item.valuation > 0 && (
+                        <span className="flex items-center gap-1">
+                          <TrendingUp className="h-3.5 w-3.5" />
+                          ₼{item.valuation.toLocaleString()} val.
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <Users className="h-3.5 w-3.5" />
                         {item.interest_count} {t("funding.investor_count")}
                       </span>
-                      {item.timeline && (
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {getDaysLeft(item.timeline)}
-                        </span>
-                      )}
                     </div>
 
-                    {/* Interest button - only for investors */}
+                    {/* Action Buttons */}
                     {isInvestor && user?.id !== item.user_id && (
                       <Dialog
                         open={interestOpen === item.user_id}
                         onOpenChange={open => setInterestOpen(open ? item.user_id : null)}
                       >
                         <DialogTrigger asChild>
-                          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
-                            <Rocket className="h-4 w-4 mr-1.5" />
-                            {t("funding.invest_btn")}
-                          </Button>
+                          <div className="flex gap-2">
+                            <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="sm">
+                              <Rocket className="h-4 w-4 mr-1.5" />
+                              {t("funding.invest_btn")}
+                            </Button>
+                            <Button variant="outline" size="sm" className="flex-1" onClick={e => { e.stopPropagation(); setInterestOpen(item.user_id); }}>
+                              <UserPlus className="h-4 w-4 mr-1.5" />
+                              {t("funding.request_intro")}
+                            </Button>
+                          </div>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
                             <DialogTitle>{t("funding.show_interest")} — {profile.startup_name}</DialogTitle>
                           </DialogHeader>
                           <div className="space-y-4">
+                            <p className="text-xs text-muted-foreground">{t("funding.interest_admin_note")}</p>
                             <div className="space-y-2">
                               <Label>{t("funding.interest_amount")} *</Label>
                               <Input
@@ -287,7 +326,17 @@ const FundingViewPage = () => {
                                 </div>
                               </RadioGroup>
                             </div>
-                            <Button className="w-full" onClick={() => handleInterest(item.user_id)}>
+                            <div className="space-y-2">
+                              <Label>{t("funding.interest_message")}</Label>
+                              <Textarea
+                                value={interestMessage}
+                                onChange={e => setInterestMessage(e.target.value)}
+                                placeholder={t("funding.interest_message_placeholder")}
+                                rows={3}
+                              />
+                            </div>
+                            <Button className="w-full gap-2" onClick={() => handleInterest(item.user_id)}>
+                              <Send className="h-4 w-4" />
                               {t("funding.submit_interest")}
                             </Button>
                           </div>
