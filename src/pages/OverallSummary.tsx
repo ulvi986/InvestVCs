@@ -2,6 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useStartupContext } from "@/context/StartupContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useMemo } from "react";
+import { computeVCValuation, computeChicagoValuation } from "@/lib/valuationUtils";
 import {
   TrendingUp, TrendingDown, Cpu, ShoppingCart, Landmark, Lightbulb,
   AlertTriangle, CheckCircle, DollarSign, Users, Wallet, Target, Gauge
@@ -94,7 +95,7 @@ const GlobalGauge = ({ score, label }: { score: number; label: string }) => {
 
 const OverallSummary = () => {
   const { evaluation, financial, readiness } = useStartupContext();
-  const { berkus, scorecard, riskFactor } = evaluation;
+  const { berkus, scorecard, riskFactor, vcAnswers, chicagoAnswers } = evaluation;
   const { snapshots } = financial;
   const { trlAnswers, crlAnswers, frlAnswers } = readiness;
   const { t } = useLanguage();
@@ -104,6 +105,14 @@ const OverallSummary = () => {
   const frlLevel = useMemo(() => getFinalLevelFromAnswers(frlAnswers, "FRL", FRL_COUNT, FRL_CRITERIA), [frlAnswers]);
 
   const latestSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
+
+  const vcValuation = useMemo(() => computeVCValuation(vcAnswers), [vcAnswers]);
+  const chicagoValuation = useMemo(() => computeChicagoValuation(chicagoAnswers), [chicagoAnswers]);
+  const hasSeedEvaluation = vcValuation > 0 || chicagoValuation > 0;
+  const seedAvg = useMemo(() => {
+    const vals = [vcValuation, chicagoValuation].filter(v => v > 0);
+    return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+  }, [vcValuation, chicagoValuation]);
 
   const avgValuation = useMemo(() => {
     const vals = [berkus, scorecard, riskFactor].filter(v => v > 0);
