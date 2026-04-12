@@ -42,6 +42,7 @@ const AdminPanel = () => {
   const [vacancies, setVacancies] = useState<VacancyRow[]>([]);
   const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
   const [vouchers, setVouchers] = useState<VoucherRow[]>([]);
+  const [fundingInterests, setFundingInterests] = useState<FundingInterestRow[]>([]);
   const [newVoucherCode, setNewVoucherCode] = useState("");
   const [newVoucherType, setNewVoucherType] = useState("both");
   const [newVoucherMaxUses, setNewVoucherMaxUses] = useState(1);
