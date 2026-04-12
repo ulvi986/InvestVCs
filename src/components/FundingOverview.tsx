@@ -10,11 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
-  DollarSign, TrendingUp, Save, Loader2, Lightbulb, Heart, Handshake, Bookmark,
-  Gauge, Users
+  DollarSign, Save, Loader2, Lightbulb, Gauge
 } from "lucide-react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 interface FundingData {
   funding_raised: number;
@@ -45,9 +42,6 @@ const FundingOverview = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [interestOpen, setInterestOpen] = useState(false);
-  const [interestRole, setInterestRole] = useState("investor");
-  const [interestAmount, setInterestAmount] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -81,8 +75,13 @@ const FundingOverview = () => {
     const payload = { user_id: user.id, ...funding } as any;
     const { error } = await supabase.from("startup_funding" as any).upsert(payload, { onConflict: "user_id" });
     setSaving(false);
-    if (error) toast.error(t("common.loading"));
-    else { toast.success(t("profile.save") + " ✓"); setEditing(false); }
+    if (error) {
+      console.error("Funding save error:", error);
+      toast.error(t("common.loading"));
+    } else {
+      toast.success(t("profile.save") + " ✓");
+      setEditing(false);
+    }
   };
 
   const pct = funding.funding_goal > 0 ? Math.min(100, Math.round((funding.funding_raised / funding.funding_goal) * 100)) : 0;
@@ -231,7 +230,7 @@ const FundingOverview = () => {
                 <div className="flex gap-2">
                   {funding.use_product_pct > 0 && <FundBar label={t("funding.use_product")} pct={funding.use_product_pct} color="bg-primary" />}
                   {funding.use_marketing_pct > 0 && <FundBar label={t("funding.use_marketing")} pct={funding.use_marketing_pct} color="bg-accent" />}
-                  {funding.use_team_pct > 0 && <FundBar label={t("funding.use_team")} pct={funding.use_team_pct} color="bg-purple-500" />}
+                  {funding.use_team_pct > 0 && <FundBar label={t("funding.use_team")} pct={funding.use_team_pct} color="bg-muted-foreground" />}
                 </div>
               </div>
             )}
@@ -240,45 +239,6 @@ const FundingOverview = () => {
             <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
               <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <p className="text-xs text-muted-foreground">{getInsight()}</p>
-            </div>
-
-            {/* Social Proof */}
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {funding.interest_count} {t("funding.interested")}</span>
-              {pct >= 70 && <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent font-semibold text-[10px]">🔥 {t("funding.trending")}</span>}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex gap-2">
-              <Dialog open={interestOpen} onOpenChange={setInterestOpen}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="gradient-primary text-primary-foreground border-0 gap-1.5">
-                    <Heart className="h-3.5 w-3.5" /> {t("funding.show_interest")}
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader><DialogTitle>{t("funding.show_interest")}</DialogTitle></DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label>{t("funding.interest_amount")} ({t("funding.optional")})</Label>
-                      <Input type="number" value={interestAmount} onChange={e => setInterestAmount(e.target.value)} placeholder="$0" />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>{t("funding.interest_role")}</Label>
-                      <RadioGroup value={interestRole} onValueChange={setInterestRole}>
-                        <div className="flex items-center gap-2"><RadioGroupItem value="investor" id="r-inv" /><Label htmlFor="r-inv">{t("funding.role_investor")}</Label></div>
-                        <div className="flex items-center gap-2"><RadioGroupItem value="mentor" id="r-men" /><Label htmlFor="r-men">{t("funding.role_mentor")}</Label></div>
-                        <div className="flex items-center gap-2"><RadioGroupItem value="partner" id="r-par" /><Label htmlFor="r-par">{t("funding.role_partner")}</Label></div>
-                      </RadioGroup>
-                    </div>
-                    <Button className="w-full" onClick={() => { toast.success(t("funding.interest_sent")); setInterestOpen(false); }}>
-                      {t("funding.submit_interest")}
-                    </Button>
-                  </div>
-                </DialogContent>
-              </Dialog>
-              <Button variant="outline" size="sm" className="gap-1.5"><Handshake className="h-3.5 w-3.5" /> {t("funding.request_intro")}</Button>
-              <Button variant="ghost" size="sm" className="gap-1.5"><Bookmark className="h-3.5 w-3.5" /> {t("funding.save_btn")}</Button>
             </div>
           </>
         )}
