@@ -314,7 +314,61 @@ const AdminPanel = () => {
             )}
           </TabsContent>
 
-          <TabsContent value="vouchers">
+          <TabsContent value="interests">
+            {pendingInterests.length > 0 && (
+              <div className="mb-8">
+                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2"><Clock className="h-5 w-5 text-amber-500" /> {t("admin.pending_approval")} ({pendingInterests.length})</h3>
+                <div className="space-y-3">
+                  {pendingInterests.map(fi => {
+                    const investor = getProfile(fi.investor_user_id);
+                    const startup = getProfile(fi.startup_user_id);
+                    return (
+                      <div key={fi.id} className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                          <div>
+                            <p className="font-semibold text-foreground">{investor ? `${investor.name} ${investor.surname}` : fi.investor_user_id}</p>
+                            <p className="text-sm text-muted-foreground">→ {startup?.startup_name || fi.startup_user_id}</p>
+                            <div className="flex gap-2 mt-1">
+                              <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{fi.role}</span>
+                              {fi.amount && <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent font-bold">₼{fi.amount.toLocaleString()}</span>}
+                            </div>
+                            {fi.message && <p className="text-sm text-muted-foreground mt-2 italic">"{fi.message}"</p>}
+                            <p className="text-xs text-muted-foreground mt-1">{new Date(fi.created_at).toLocaleDateString()}</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button size="sm" onClick={() => approveFundingInterest(fi.id)} className="gap-1 bg-accent text-accent-foreground hover:bg-accent/90"><CheckCircle className="h-4 w-4" /> {t("admin.approve")}</Button>
+                            <Button size="sm" variant="destructive" onClick={() => rejectFundingInterest(fi.id)} className="gap-1"><XCircle className="h-4 w-4" /> {t("admin.reject")}</Button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            <h3 className="text-lg font-semibold text-foreground mb-4">{t("admin.approved_interests")} ({approvedInterests.length})</h3>
+            {approvedInterests.length === 0 ? (<p className="text-muted-foreground">{t("admin.no_interests")}</p>) : (
+              <div className="space-y-3">
+                {approvedInterests.map(fi => {
+                  const investor = getProfile(fi.investor_user_id);
+                  const startup = getProfile(fi.startup_user_id);
+                  return (
+                    <div key={fi.id} className="rounded-xl border border-accent/30 bg-accent/5 p-5 flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground">{investor ? `${investor.name} ${investor.surname}` : fi.investor_user_id} → {startup?.startup_name || fi.startup_user_id}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{fi.role}</span>
+                          {fi.amount && <span className="text-xs font-bold text-foreground">₼{fi.amount.toLocaleString()}</span>}
+                        </div>
+                      </div>
+                      <CheckCircle className="h-5 w-5 text-accent" />
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
             <div className="rounded-xl border border-border bg-card p-6 shadow-card mb-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Create Voucher</h3>
               <div className="flex flex-wrap gap-3 items-end">
