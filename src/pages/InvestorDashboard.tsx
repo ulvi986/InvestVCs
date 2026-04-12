@@ -131,8 +131,11 @@ const InvestorDashboard = () => {
     );
   }
 
+  const allIndustries = [...new Set(profiles.filter(p => p.industry).map(p => p.industry!))].sort();
+
   const filtered = profiles.filter((p) => {
     if (p.startup_name === "Investor") return false;
+    if (industryFilter && p.industry !== industryFilter) return false;
     if (!search) return true;
     const s = search.toLowerCase();
     return (
