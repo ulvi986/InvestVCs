@@ -134,10 +134,21 @@ const AdminPanel = () => {
     return userF[0]?.data;
   };
 
+  const approveFundingInterest = async (id: string) => {
+    const { error } = await supabase.from("funding_interests").update({ approved: true } as any).eq("id", id);
+    if (error) toast.error("Failed"); else { toast.success(t("admin.approve") + " ✓"); setFundingInterests(prev => prev.map(fi => fi.id === id ? { ...fi, approved: true } : fi)); }
+  };
+  const rejectFundingInterest = async (id: string) => {
+    const { error } = await supabase.from("funding_interests").delete().eq("id", id);
+    if (error) toast.error("Failed"); else { toast.success(t("admin.delete") + " ✓"); setFundingInterests(prev => prev.filter(fi => fi.id !== id)); }
+  };
+
   const pendingInvestors = roles.filter((r) => r.role === "investor" && !r.approved);
   const approvedInvestors = roles.filter((r) => r.role === "investor" && r.approved);
   const pendingVacancies = vacancies.filter((v) => !v.approved);
   const approvedVacancies = vacancies.filter((v) => v.approved);
+  const pendingInterests = fundingInterests.filter(fi => !fi.approved);
+  const approvedInterests = fundingInterests.filter(fi => fi.approved);
 
   return (
     <DashboardLayout title={t("admin.title")} subtitle={t("admin.subtitle")}>
@@ -147,6 +158,7 @@ const AdminPanel = () => {
             <TabsTrigger value="startups" className="rounded-lg gap-2"><Users className="h-4 w-4" /> {t("admin.startups")} ({profiles.length})</TabsTrigger>
             <TabsTrigger value="investors" className="rounded-lg gap-2"><DollarSign className="h-4 w-4" /> {t("admin.investors")} ({pendingInvestors.length} {t("admin.pending")})</TabsTrigger>
             <TabsTrigger value="vacancies" className="rounded-lg gap-2"><Briefcase className="h-4 w-4" /> {t("admin.vacancies")} ({pendingVacancies.length} {t("admin.pending")})</TabsTrigger>
+            <TabsTrigger value="interests" className="rounded-lg gap-2"><HandCoins className="h-4 w-4" /> {t("admin.funding_interests")} ({pendingInterests.length} {t("admin.pending")})</TabsTrigger>
             <TabsTrigger value="vouchers" className="rounded-lg gap-2"><KeyRound className="h-4 w-4" /> Vouchers ({vouchers.length})</TabsTrigger>
           </TabsList>
 
