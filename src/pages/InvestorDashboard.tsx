@@ -204,7 +204,7 @@ const InvestorDashboard = () => {
 
               const vcVal = evalData?.vc_answers ? computeVCValuation(evalData.vc_answers) : 0;
               const chicagoVal = evalData?.chicago_answers ? computeChicagoValuation(evalData.chicago_answers) : 0;
-              const hasSeed = vcVal > 0 || chicagoVal > 0;
+              const _hasSeed = vcVal > 0 || chicagoVal > 0;
               const seedVals = [vcVal, chicagoVal].filter(v => v > 0);
               const seedAvg = seedVals.length > 0 ? Math.round(seedVals.reduce((a, b) => a + b, 0) / seedVals.length) : null;
 

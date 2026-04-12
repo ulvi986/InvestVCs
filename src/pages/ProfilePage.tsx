@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import FundingOverview from "@/components/FundingOverview";
 import { useAuth } from "@/context/AuthContext";
 import { useStartupContext } from "@/context/StartupContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -153,6 +154,8 @@ const ProfilePage = () => {
             </CardContent>
           </Card>
         </div>
+
+        <FundingOverview />
 
         <div>
           <h2 className="text-xl font-bold text-foreground mb-4 flex items-center gap-2"><BarChart3 className="h-5 w-5 text-primary" />{t("profile.financial_overview")}</h2>
