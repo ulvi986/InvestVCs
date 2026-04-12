@@ -194,7 +194,7 @@ const FundingViewPage = () => {
                         </Badge>
                       )}
                       {pct >= 70 && (
-                        <Badge className="bg-orange-500 text-white text-[10px] font-semibold border-0 gap-0.5">
+                        <Badge className="bg-accent text-accent-foreground text-[10px] font-semibold border-0 gap-0.5">
                           <TrendingUp className="h-3 w-3" /> Trend
                         </Badge>
                       )}
