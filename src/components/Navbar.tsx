@@ -1,16 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Menu, LogOut, Globe, ChevronDown, Sun, Moon, Send, Mail } from "lucide-react";
+import { Menu, LogOut, Globe, ChevronDown, Sun, Moon, Mail } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage, Language } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,34 +38,6 @@ const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [open, setOpen] = useState(false);
-  const [showContact, setShowContact] = useState(false);
-  const [contactForm, setContactForm] = useState({ name: "", surname: "", email: "", message: "" });
-  const [sending, setSending] = useState(false);
-
-  const handleContactSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!contactForm.name || !contactForm.surname || !contactForm.email || !contactForm.message) return;
-    setSending(true);
-    try {
-      const { error } = await supabase.functions.invoke("send-brevo-email", {
-        body: {
-          to: "u.sharifzade@gmail.com",
-          subject: `Contact Form: ${contactForm.name} ${contactForm.surname}`,
-          message: contactForm.message,
-          senderName: `${contactForm.name} ${contactForm.surname}`,
-          senderEmail: contactForm.email,
-        },
-      });
-      if (error) throw error;
-      toast.success(t("landing.contact_success"));
-      setContactForm({ name: "", surname: "", email: "", message: "" });
-      setShowContact(false);
-    } catch {
-      toast.error(t("landing.contact_error"));
-    } finally {
-      setSending(false);
-    }
-  };
 
   const isInvestorUser = isInvestor || isInvestorPending;
 
