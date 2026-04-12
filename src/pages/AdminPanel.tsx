@@ -369,6 +369,7 @@ const AdminPanel = () => {
             )}
           </TabsContent>
 
+          <TabsContent value="vouchers">
             <div className="rounded-xl border border-border bg-card p-6 shadow-card mb-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Create Voucher</h3>
               <div className="flex flex-wrap gap-3 items-end">
