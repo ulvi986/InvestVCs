@@ -2,6 +2,7 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useStartupContext } from "@/context/StartupContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useMemo } from "react";
+import { computeVCValuation, computeChicagoValuation } from "@/lib/valuationUtils";
 import {
   TrendingUp, TrendingDown, Cpu, ShoppingCart, Landmark, Lightbulb,
   AlertTriangle, CheckCircle, DollarSign, Users, Wallet, Target, Gauge
@@ -94,7 +95,7 @@ const GlobalGauge = ({ score, label }: { score: number; label: string }) => {
 
 const OverallSummary = () => {
   const { evaluation, financial, readiness } = useStartupContext();
-  const { berkus, scorecard, riskFactor } = evaluation;
+  const { berkus, scorecard, riskFactor, vcAnswers, chicagoAnswers } = evaluation;
   const { snapshots } = financial;
   const { trlAnswers, crlAnswers, frlAnswers } = readiness;
   const { t } = useLanguage();
@@ -104,6 +105,14 @@ const OverallSummary = () => {
   const frlLevel = useMemo(() => getFinalLevelFromAnswers(frlAnswers, "FRL", FRL_COUNT, FRL_CRITERIA), [frlAnswers]);
 
   const latestSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
+
+  const vcValuation = useMemo(() => computeVCValuation(vcAnswers), [vcAnswers]);
+  const chicagoValuation = useMemo(() => computeChicagoValuation(chicagoAnswers), [chicagoAnswers]);
+  const hasSeedEvaluation = vcValuation > 0 || chicagoValuation > 0;
+  const seedAvg = useMemo(() => {
+    const vals = [vcValuation, chicagoValuation].filter(v => v > 0);
+    return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
+  }, [vcValuation, chicagoValuation]);
 
   const avgValuation = useMemo(() => {
     const vals = [berkus, scorecard, riskFactor].filter(v => v > 0);
@@ -309,8 +318,32 @@ const OverallSummary = () => {
             ))}
           </div>
           <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")}</p>
+            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")} (Pre-Seed)</p>
             <p className="text-2xl font-bold text-primary">${avgValuation.toLocaleString()}</p>
+          </div>
+        </div>
+      )}
+
+      {hasSeedEvaluation && (
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
+          <h3 className="text-lg font-semibold text-foreground mb-4">{t("summary.seed_valuation_results")}</h3>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {vcValuation > 0 && (
+              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.vc_method")}</p>
+                <p className="text-xl font-bold text-primary">${vcValuation.toLocaleString()}</p>
+              </div>
+            )}
+            {chicagoValuation > 0 && (
+              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.chicago_method")}</p>
+                <p className="text-xl font-bold text-accent">${chicagoValuation.toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+          <div className="mt-4 rounded-lg border border-accent/20 bg-accent/5 p-4 text-center">
+            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")} (Seed)</p>
+            <p className="text-2xl font-bold text-accent">${seedAvg.toLocaleString()}</p>
           </div>
         </div>
       )}

@@ -5,6 +5,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/context/LanguageContext";
 import { Shield, TrendingUp, TrendingDown, Search, Globe, Layers, ChevronDown, ChevronUp, DollarSign, Wallet, Target, AlertTriangle, Users as UsersIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { computeVCValuation, computeChicagoValuation } from "@/lib/valuationUtils";
+import type { VCAnswers, ChicagoAnswers } from "@/context/StartupContext";
 
 interface ProfileRow {
   id: string;
@@ -22,6 +24,8 @@ interface EvalRow {
   berkus: number;
   scorecard: number;
   risk_factor: number;
+  vc_answers: VCAnswers;
+  chicago_answers: ChicagoAnswers;
 }
 
 interface ReadinessRow {
@@ -66,6 +70,7 @@ const InvestorDashboard = () => {
   const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [industryFilter, setIndustryFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -126,8 +131,11 @@ const InvestorDashboard = () => {
     );
   }
 
+  const allIndustries = [...new Set(profiles.filter(p => p.industry).map(p => p.industry!))].sort();
+
   const filtered = profiles.filter((p) => {
     if (p.startup_name === "Investor") return false;
+    if (industryFilter && p.industry !== industryFilter) return false;
     if (!search) return true;
     const s = search.toLowerCase();
     return (
@@ -143,14 +151,33 @@ const InvestorDashboard = () => {
     <DashboardLayout title={t("investor.title")} subtitle={t("investor.desc")}>
       <div className="space-y-6">
 
-        <div className="mb-6 max-w-md relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder={t("investor.search")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-10"
-          />
+        <div className="mb-6 flex flex-wrap gap-3">
+          <div className="relative flex-1 min-w-[200px] max-w-md">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder={t("investor.search")}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => setIndustryFilter("")}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${!industryFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
+            >
+              {t("investor.all_industries")}
+            </button>
+            {allIndustries.slice(0, 8).map(ind => (
+              <button
+                key={ind}
+                onClick={() => setIndustryFilter(industryFilter === ind ? "" : ind)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${industryFilter === ind ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
+              >
+                {ind}
+              </button>
+            ))}
+          </div>
         </div>
 
         {loading ? (
@@ -174,6 +201,12 @@ const InvestorDashboard = () => {
               const berkus = evalData?.berkus ?? null;
               const scorecard = evalData?.scorecard ?? null;
               const riskFactor = evalData?.risk_factor ?? null;
+
+              const vcVal = evalData?.vc_answers ? computeVCValuation(evalData.vc_answers) : 0;
+              const chicagoVal = evalData?.chicago_answers ? computeChicagoValuation(evalData.chicago_answers) : 0;
+              
+              const seedVals = [vcVal, chicagoVal].filter(v => v > 0);
+              const seedAvg = seedVals.length > 0 ? Math.round(seedVals.reduce((a, b) => a + b, 0) / seedVals.length) : null;
 
               const vals = [berkus, scorecard, riskFactor].filter((v): v is number => v != null && v > 0);
               const weightedAvg = vals.length > 0 ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
@@ -244,10 +277,36 @@ const InvestorDashboard = () => {
                       </div>
 
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")}</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")} (Pre-Seed)</p>
                         <p className="text-3xl font-bold text-primary">{numFmt(weightedAvg)}</p>
                         <p className="text-xs text-muted-foreground mt-1">{t("investor.based_on")} {vals.length} {t("investor.methods")}</p>
                       </div>
+
+                      {(vcVal > 0 || chicagoVal > 0) && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.seed_methods")}</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {vcVal > 0 && (
+                              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.vc_method")}</p>
+                                <p className="text-2xl font-bold text-primary">{numFmt(vcVal)}</p>
+                              </div>
+                            )}
+                            {chicagoVal > 0 && (
+                              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.chicago_method")}</p>
+                                <p className="text-2xl font-bold text-accent">{numFmt(chicagoVal)}</p>
+                              </div>
+                            )}
+                          </div>
+                          {seedAvg && (
+                            <div className="mt-3 rounded-lg border border-accent/20 bg-accent/5 p-4 text-center">
+                              <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")} (Seed)</p>
+                              <p className="text-2xl font-bold text-accent">{numFmt(seedAvg)}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Financial Overview */}
                       <div>
