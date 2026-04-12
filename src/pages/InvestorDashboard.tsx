@@ -277,10 +277,36 @@ const InvestorDashboard = () => {
                       </div>
 
                       <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-                        <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")}</p>
+                        <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")} (Pre-Seed)</p>
                         <p className="text-3xl font-bold text-primary">{numFmt(weightedAvg)}</p>
                         <p className="text-xs text-muted-foreground mt-1">{t("investor.based_on")} {vals.length} {t("investor.methods")}</p>
                       </div>
+
+                      {(vcVal > 0 || chicagoVal > 0) && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.seed_methods")}</h4>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            {vcVal > 0 && (
+                              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.vc_method")}</p>
+                                <p className="text-2xl font-bold text-primary">{numFmt(vcVal)}</p>
+                              </div>
+                            )}
+                            {chicagoVal > 0 && (
+                              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
+                                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.chicago_method")}</p>
+                                <p className="text-2xl font-bold text-accent">{numFmt(chicagoVal)}</p>
+                              </div>
+                            )}
+                          </div>
+                          {seedAvg && (
+                            <div className="mt-3 rounded-lg border border-accent/20 bg-accent/5 p-4 text-center">
+                              <p className="text-xs text-muted-foreground mb-1">{t("investor.weighted_avg_val")} (Seed)</p>
+                              <p className="text-2xl font-bold text-accent">{numFmt(seedAvg)}</p>
+                            </div>
+                          )}
+                        </div>
+                      )}
 
                       {/* Financial Overview */}
                       <div>
