@@ -3,7 +3,6 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,9 +11,9 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { useUserRole } from "@/hooks/useUserRole";
 import {
-  Search, DollarSign, TrendingUp, Gauge, Heart, Handshake, Bookmark,
-  Lightbulb, Users, Globe, Layers, ChevronDown, ChevronUp
+  Search, DollarSign, TrendingUp, Users, Clock, Rocket
 } from "lucide-react";
 
 interface FundingProfile {
@@ -43,15 +42,50 @@ interface ProfileRow {
   industry: string | null;
 }
 
+const INDUSTRY_COLORS: Record<string, string> = {
+  fintech: "from-emerald-500 to-teal-600",
+  edtech: "from-blue-500 to-indigo-600",
+  healthtech: "from-rose-500 to-pink-600",
+  medtech: "from-rose-500 to-pink-600",
+  agritech: "from-green-500 to-lime-600",
+  saas: "from-violet-500 to-purple-600",
+  ecommerce: "from-orange-500 to-amber-600",
+  ai: "from-cyan-500 to-blue-600",
+  default: "from-primary to-accent",
+};
+
+const INDUSTRY_ICONS: Record<string, string> = {
+  fintech: "💳",
+  edtech: "📚",
+  healthtech: "🏥",
+  medtech: "🏥",
+  agritech: "🌾",
+  saas: "☁️",
+  ecommerce: "🛒",
+  ai: "🤖",
+  default: "🚀",
+};
+
+const getGradient = (industry: string | null) => {
+  if (!industry) return INDUSTRY_COLORS.default;
+  const key = industry.toLowerCase().replace(/[^a-z]/g, "");
+  return INDUSTRY_COLORS[key] || INDUSTRY_COLORS.default;
+};
+
+const getIcon = (industry: string | null) => {
+  if (!industry) return INDUSTRY_ICONS.default;
+  const key = industry.toLowerCase().replace(/[^a-z]/g, "");
+  return INDUSTRY_ICONS[key] || INDUSTRY_ICONS.default;
+};
+
 const FundingViewPage = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
+  const { isInvestor } = useUserRole();
   const [fundingList, setFundingList] = useState<FundingProfile[]>([]);
   const [profiles, setProfiles] = useState<ProfileRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [industryFilter] = useState("");
-  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [interestOpen, setInterestOpen] = useState<string | null>(null);
   const [interestRole, setInterestRole] = useState("investor");
   const [interestAmount, setInterestAmount] = useState("");
@@ -71,6 +105,7 @@ const FundingViewPage = () => {
 
   const handleInterest = async (startupUserId: string) => {
     if (!user) { toast.error("Please sign in"); return; }
+    if (!isInvestor) { toast.error("Only investors can show interest"); return; }
     const { error } = await supabase.from("funding_interests").insert({
       startup_user_id: startupUserId,
       investor_user_id: user.id,
@@ -85,8 +120,6 @@ const FundingViewPage = () => {
     }
   };
 
-  
-
   const enriched = fundingList
     .filter(f => f.funding_goal > 0)
     .map(f => {
@@ -95,7 +128,6 @@ const FundingViewPage = () => {
     })
     .filter(f => {
       if (!f.profile) return false;
-      if (industryFilter && f.profile.industry !== industryFilter) return false;
       if (!search) return true;
       const s = search.toLowerCase();
       return (
@@ -109,31 +141,23 @@ const FundingViewPage = () => {
   const getPct = (raised: number, goal: number) =>
     goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
 
-  const getInsight = (f: FundingProfile): string => {
-    const pct = getPct(f.funding_raised, f.funding_goal);
-    if (f.funding_raised === 0 && f.funding_goal > 0) return t("funding.insight_no_funding");
-    if (pct >= 80) return t("funding.insight_almost_funded");
-    if (pct >= 50) return t("funding.insight_half_funded");
-    if (f.last_round_amount > 0) return t("funding.insight_recent_round");
-    return t("funding.insight_early_stage");
+  const getDaysLeft = (timeline: string) => {
+    if (!timeline) return null;
+    const match = timeline.match(/(\d+)/);
+    return match ? `${match[1]} ${t("funding.days_left")}` : timeline;
   };
-
-  const getReadinessScore = (f: FundingProfile) => Math.min(100, Math.round(
-    (f.funding_raised > 0 ? 20 : 0) + (f.funding_goal > 0 ? 10 : 0) +
-    (f.last_round_amount > 0 ? 15 : 0) + (f.valuation > 0 ? 20 : 0) +
-    ((f.use_product_pct + f.use_marketing_pct + f.use_team_pct) > 0 ? 15 : 0) +
-    (f.funding_stage !== "pre-seed" ? 10 : 5) + (f.timeline ? 10 : 0)
-  ));
 
   return (
     <DashboardLayout title={t("crowdfunding.title")} subtitle={t("crowdfunding.subtitle")}>
       <div className="space-y-6">
-        {/* Search and filter */}
-        <div className="flex flex-wrap gap-3">
-          <div className="relative flex-1 min-w-[200px] max-w-md">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input placeholder={t("investor.search")} value={search} onChange={e => setSearch(e.target.value)} className="pl-10" />
-          </div>
+        <div className="relative max-w-md">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder={t("investor.search")}
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="pl-10"
+          />
         </div>
 
         {loading ? (
@@ -144,137 +168,136 @@ const FundingViewPage = () => {
             <p className="text-lg text-muted-foreground">{t("crowdfunding.no_startups")}</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {enriched.map(item => {
               const { profile } = item;
               if (!profile) return null;
               const pct = getPct(item.funding_raised, item.funding_goal);
-              const readiness = getReadinessScore(item);
-              const isExpanded = expandedId === item.user_id;
+              const gradient = getGradient(profile.industry);
+              const icon = getIcon(profile.industry);
+              const isOwn = user?.id === item.user_id;
+              const canInteract = isInvestor && !isOwn;
 
               return (
-                <Card key={item.user_id} className="border-border shadow-card overflow-hidden">
-                  <button
-                    onClick={() => setExpandedId(isExpanded ? null : item.user_id)}
-                    className="w-full p-6 text-left hover:bg-muted/20 transition-colors"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3">
-                          <h3 className="text-lg font-bold text-foreground">{profile.startup_name}</h3>
-                          <Badge variant="outline" className="text-[10px]">{item.funding_stage.toUpperCase()}</Badge>
-                          {pct >= 70 && <Badge className="bg-accent/10 text-accent border-accent/20 text-[10px]">🔥 {t("funding.trending")}</Badge>}
-                          {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                        </div>
-                        <p className="text-sm text-muted-foreground">{profile.name} {profile.surname}</p>
-                        <div className="flex flex-wrap gap-2 mt-1">
-                          {profile.country && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary flex items-center gap-1">
-                              <Globe className="h-3 w-3" /> {profile.country}
-                            </span>
-                          )}
-                          {profile.industry && (
-                            <span className="text-xs px-2 py-0.5 rounded-full bg-accent/10 text-accent flex items-center gap-1">
-                              <Layers className="h-3 w-3" /> {profile.industry}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold text-primary">${item.funding_raised.toLocaleString()}</p>
-                        <p className="text-xs text-muted-foreground">{t("crowdfunding.of")} ${item.funding_goal.toLocaleString()}</p>
-                        <div className="flex items-center gap-1.5 mt-1 justify-end">
-                          <Gauge className="h-3.5 w-3.5 text-primary" />
-                          <span className="text-xs font-bold text-primary">{readiness}/100</span>
-                        </div>
-                      </div>
+                <div
+                  key={item.user_id}
+                  className="rounded-xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow"
+                >
+                  {/* Header with gradient */}
+                  <div className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
+                    <span className="text-5xl">{icon}</span>
+                    {/* Badges */}
+                    <div className="absolute top-3 left-3 flex gap-1.5">
+                      {profile.industry && (
+                        <Badge className="bg-background/90 text-foreground text-[10px] font-semibold backdrop-blur-sm border-0">
+                          {profile.industry}
+                        </Badge>
+                      )}
+                      {pct >= 70 && (
+                        <Badge className="bg-accent text-accent-foreground text-[10px] font-semibold border-0 gap-0.5">
+                          <TrendingUp className="h-3 w-3" /> Trend
+                        </Badge>
+                      )}
                     </div>
-                    {/* Progress bar */}
-                    <div className="mt-4">
-                      <Progress value={pct} className="h-3" />
-                      <p className="text-xs text-muted-foreground mt-1 text-right">{pct}% {t("funding.funded")}</p>
-                    </div>
-                  </button>
+                    {item.funding_stage && (
+                      <Badge className="absolute top-3 right-3 bg-background/90 text-foreground text-[10px] backdrop-blur-sm border-0">
+                        {item.funding_stage.toUpperCase()}
+                      </Badge>
+                    )}
+                  </div>
 
-                  {isExpanded && (
-                    <div className="border-t border-border p-6 space-y-5">
+                  {/* Content */}
+                  <div className="p-4 space-y-3">
+                    <div>
+                      <h3 className="font-bold text-foreground text-base leading-tight line-clamp-1">
+                        {profile.startup_name}
+                      </h3>
                       {profile.startup_description && (
-                        <p className="text-sm text-muted-foreground">{profile.startup_description}</p>
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {profile.startup_description}
+                        </p>
                       )}
-
-                      {/* Details Grid */}
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                        <DetailItem label={t("funding.stage")} value={item.funding_stage.toUpperCase()} />
-                        {item.last_round_amount > 0 && <DetailItem label={t("funding.last_round")} value={`$${item.last_round_amount.toLocaleString()}`} />}
-                        {item.last_round_date && <DetailItem label={t("funding.date")} value={new Date(item.last_round_date).toLocaleDateString()} />}
-                        {item.last_round_investor_type && <DetailItem label={t("funding.investor_type")} value={item.last_round_investor_type} />}
-                        {item.valuation > 0 && <DetailItem label={t("funding.valuation")} value={`$${item.valuation.toLocaleString()}`} />}
-                        {item.timeline && <DetailItem label={t("funding.timeline")} value={item.timeline} />}
-                      </div>
-
-                      {/* Use of Funds */}
-                      {(item.use_product_pct > 0 || item.use_marketing_pct > 0 || item.use_team_pct > 0) && (
-                        <div>
-                          <p className="text-xs text-muted-foreground mb-2">{t("funding.use_of_funds")}</p>
-                          <div className="flex gap-2">
-                            {item.use_product_pct > 0 && <FundBar label={t("funding.use_product")} pct={item.use_product_pct} color="bg-primary" />}
-                            {item.use_marketing_pct > 0 && <FundBar label={t("funding.use_marketing")} pct={item.use_marketing_pct} color="bg-accent" />}
-                            {item.use_team_pct > 0 && <FundBar label={t("funding.use_team")} pct={item.use_team_pct} color="bg-purple-500" />}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Smart Insight */}
-                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 flex items-start gap-2">
-                        <Lightbulb className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                        <p className="text-xs text-muted-foreground">{getInsight(item)}</p>
-                      </div>
-
-                      {/* Social Proof */}
-                      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {item.interest_count} {t("funding.interested")}</span>
-                      </div>
-
-                      {/* Actions */}
-                      {user && user.id !== item.user_id && (
-                        <div className="flex gap-2">
-                          <Dialog open={interestOpen === item.user_id} onOpenChange={open => setInterestOpen(open ? item.user_id : null)}>
-                            <DialogTrigger asChild>
-                              <Button size="sm" className="gradient-primary text-primary-foreground border-0 gap-1.5">
-                                <Heart className="h-3.5 w-3.5" /> {t("funding.show_interest")}
-                              </Button>
-                            </DialogTrigger>
-                            <DialogContent>
-                              <DialogHeader><DialogTitle>{t("funding.show_interest")}</DialogTitle></DialogHeader>
-                              <div className="space-y-4">
-                                <div className="space-y-2">
-                                  <Label>{t("funding.interest_amount")} ({t("funding.optional")})</Label>
-                                  <Input type="number" value={interestAmount} onChange={e => setInterestAmount(e.target.value)} placeholder="$0" />
-                                </div>
-                                <div className="space-y-2">
-                                  <Label>{t("funding.interest_role")}</Label>
-                                  <RadioGroup value={interestRole} onValueChange={setInterestRole}>
-                                    <div className="flex items-center gap-2"><RadioGroupItem value="investor" id="cf-inv" /><Label htmlFor="cf-inv">{t("funding.role_investor")}</Label></div>
-                                    <div className="flex items-center gap-2"><RadioGroupItem value="mentor" id="cf-men" /><Label htmlFor="cf-men">{t("funding.role_mentor")}</Label></div>
-                                    <div className="flex items-center gap-2"><RadioGroupItem value="partner" id="cf-par" /><Label htmlFor="cf-par">{t("funding.role_partner")}</Label></div>
-                                  </RadioGroup>
-                                </div>
-                                <Button className="w-full" onClick={() => handleInterest(item.user_id)}>
-                                  {t("funding.submit_interest")}
-                                </Button>
-                              </div>
-                            </DialogContent>
-                          </Dialog>
-                          <Button variant="outline" size="sm" className="gap-1.5"><Handshake className="h-3.5 w-3.5" /> {t("funding.request_intro")}</Button>
-                          <Button variant="ghost" size="sm" className="gap-1.5"><Bookmark className="h-3.5 w-3.5" /> {t("funding.save_btn")}</Button>
-                        </div>
-                      )}
-
-                      {/* Disclaimer */}
-                      <p className="text-[10px] text-muted-foreground/60 leading-tight">{t("funding.disclaimer")}</p>
                     </div>
-                  )}
-                </Card>
+
+                    {/* Funding amounts */}
+                    <div className="flex items-baseline justify-between">
+                      <span className="text-lg font-bold text-primary">
+                        ₼{item.funding_raised.toLocaleString()}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        ₼{item.funding_goal.toLocaleString()} {t("crowdfunding.target")}
+                      </span>
+                    </div>
+
+                    {/* Progress bar */}
+                    <Progress value={pct} className="h-2" />
+
+                    {/* Stats row */}
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Users className="h-3.5 w-3.5" />
+                        {item.interest_count} {t("funding.investor_count")}
+                      </span>
+                      {item.timeline && (
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3.5 w-3.5" />
+                          {getDaysLeft(item.timeline)}
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Action button - only for investors, not own startup */}
+                    {canInteract && (
+                      <Dialog
+                        open={interestOpen === item.user_id}
+                        onOpenChange={open => setInterestOpen(open ? item.user_id : null)}
+                      >
+                        <DialogTrigger asChild>
+                          <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold">
+                            <Rocket className="h-4 w-4 mr-1.5" />
+                            {t("funding.invest_btn")}
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>{t("funding.show_interest")} — {profile.startup_name}</DialogTitle>
+                          </DialogHeader>
+                          <div className="space-y-4">
+                            <div className="space-y-2">
+                              <Label>{t("funding.interest_amount")} ({t("funding.optional")})</Label>
+                              <Input
+                                type="number"
+                                value={interestAmount}
+                                onChange={e => setInterestAmount(e.target.value)}
+                                placeholder="₼0"
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label>{t("funding.interest_role")}</Label>
+                              <RadioGroup value={interestRole} onValueChange={setInterestRole}>
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value="investor" id="cf-inv" />
+                                  <Label htmlFor="cf-inv">{t("funding.role_investor")}</Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value="mentor" id="cf-men" />
+                                  <Label htmlFor="cf-men">{t("funding.role_mentor")}</Label>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <RadioGroupItem value="partner" id="cf-par" />
+                                  <Label htmlFor="cf-par">{t("funding.role_partner")}</Label>
+                                </div>
+                              </RadioGroup>
+                            </div>
+                            <Button className="w-full" onClick={() => handleInterest(item.user_id)}>
+                              {t("funding.submit_interest")}
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
@@ -283,23 +306,5 @@ const FundingViewPage = () => {
     </DashboardLayout>
   );
 };
-
-const DetailItem = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-lg border border-border p-2.5 bg-muted/30">
-    <p className="text-[10px] text-muted-foreground">{label}</p>
-    <p className="text-sm font-semibold text-foreground capitalize">{value}</p>
-  </div>
-);
-
-const FundBar = ({ label, pct, color }: { label: string; pct: number; color: string }) => (
-  <div className="flex-1">
-    <div className="flex justify-between text-[10px] text-muted-foreground mb-1">
-      <span>{label}</span><span>{pct}%</span>
-    </div>
-    <div className="h-2 rounded-full bg-muted overflow-hidden">
-      <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
-    </div>
-  </div>
-);
 
 export default FundingViewPage;
