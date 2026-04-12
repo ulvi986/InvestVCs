@@ -21,7 +21,7 @@ import InvestorDashboard from "./pages/InvestorDashboard";
 import StartupVacancies from "./pages/StartupVacancies";
 import VentureAnalysis from "./pages/VentureAnalysis";
 import ContactPage from "./pages/ContactPage";
-import CrowdfundingPage from "./pages/CrowdfundingPage";
+import FundingViewPage from "./pages/FundingViewPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,7 +64,7 @@ const App = () => (
                 <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                 <Route path="/investor" element={<ProtectedRoute><InvestorDashboard /></ProtectedRoute>} />
                 <Route path="/vacancies" element={<ProtectedRoute><StartupVacancies /></ProtectedRoute>} />
-                <Route path="/crowdfunding" element={<ProtectedRoute><CrowdfundingPage /></ProtectedRoute>} />
+                <Route path="/funding-view" element={<ProtectedRoute><FundingViewPage /></ProtectedRoute>} />
                 <Route path="/venture-analysis" element={<ProtectedRoute><VentureAnalysis /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

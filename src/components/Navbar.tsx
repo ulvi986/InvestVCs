@@ -49,7 +49,7 @@ const Navbar = () => {
               ...(isInvestor
                 ? [
                     { to: "/investor", label: t("nav.investor_dashboard") },
-                    { to: "/crowdfunding", label: t("nav.crowdfunding") },
+                    { to: "/funding-view", label: t("nav.funding_view") },
                     { to: "/vacancies", label: t("nav.vacancies") },
                   ]
                 : []),
@@ -63,7 +63,7 @@ const Navbar = () => {
               { to: "/preparation", label: t("nav.financial") },
               { to: "/readiness", label: t("nav.readiness") },
               { to: "/venture-analysis", label: t("nav.venture_analysis") },
-              { to: "/crowdfunding", label: t("nav.crowdfunding") },
+              { to: "/funding-view", label: t("nav.funding_view") },
               { to: "/vacancies", label: t("nav.vacancies") },
               { to: "/profile", label: t("nav.profile") },
             ]
