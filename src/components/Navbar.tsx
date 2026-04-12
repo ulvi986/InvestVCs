@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Globe, ChevronDown, Sun, Moon, Mail } from "lucide-react";
+import { Menu, LogOut, Globe, ChevronDown, Sun, Moon } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -69,50 +69,6 @@ const Navbar = () => {
       ]
     : [];
 
-  const contactSection = (
-    <>
-      {!showContact ? (
-        <button
-          onClick={() => setShowContact(true)}
-          className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 w-full"
-        >
-          <Mail className="h-4 w-4" />
-          {t("landing.contact_title")}
-        </button>
-      ) : (
-        <div className="px-2 py-3">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-foreground">{t("landing.contact_title")}</h3>
-            <button onClick={() => setShowContact(false)} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
-          </div>
-          <form onSubmit={handleContactSubmit} className="space-y-3">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="nav-contact-name" className="text-xs">{t("landing.contact_name")}</Label>
-                <Input id="nav-contact-name" value={contactForm.name} onChange={(e) => setContactForm(p => ({ ...p, name: e.target.value }))} required maxLength={100} className="h-8 text-xs" />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="nav-contact-surname" className="text-xs">{t("landing.contact_surname")}</Label>
-                <Input id="nav-contact-surname" value={contactForm.surname} onChange={(e) => setContactForm(p => ({ ...p, surname: e.target.value }))} required maxLength={100} className="h-8 text-xs" />
-              </div>
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="nav-contact-email" className="text-xs">{t("landing.contact_email")}</Label>
-              <Input id="nav-contact-email" type="email" value={contactForm.email} onChange={(e) => setContactForm(p => ({ ...p, email: e.target.value }))} required maxLength={255} className="h-8 text-xs" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="nav-contact-msg" className="text-xs">{t("landing.contact_message")}</Label>
-              <Textarea id="nav-contact-msg" value={contactForm.message} onChange={(e) => setContactForm(p => ({ ...p, message: e.target.value }))} required maxLength={2000} rows={3} className="text-xs" />
-            </div>
-            <Button type="submit" disabled={sending} size="sm" className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold border-0 rounded-lg">
-              {sending ? t("landing.contact_sending") : t("landing.contact_send")}
-              <Send className="h-3.5 w-3.5" />
-            </Button>
-          </form>
-        </div>
-      )}
-    </>
-  );
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border/10 dark:border-white/5 bg-card/60 dark:bg-slate-900/60 backdrop-blur-xl">
@@ -171,7 +127,7 @@ const Navbar = () => {
           )}
 
           {/* Hamburger menu */}
-          <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowContact(false); }}>
+          <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground">
                 <Menu className="h-5 w-5" />
@@ -217,9 +173,19 @@ const Navbar = () => {
                     ))}
                   </div>
 
-                  {/* Contact section */}
+                  {/* Contact link */}
                   <div className="mt-2 border-t border-border/20 pt-2">
-                    {contactSection}
+                    <Link
+                      to="/contact"
+                      onClick={() => setOpen(false)}
+                      className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                        location.pathname === "/contact"
+                          ? "bg-primary/10 text-primary"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                      }`}
+                    >
+                      📩 {t("landing.contact_title")}
+                    </Link>
                   </div>
 
                   {!user && (

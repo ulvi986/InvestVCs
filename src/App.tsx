@@ -20,6 +20,7 @@ import AdminPanel from "./pages/AdminPanel";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import StartupVacancies from "./pages/StartupVacancies";
 import VentureAnalysis from "./pages/VentureAnalysis";
+import ContactPage from "./pages/ContactPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ const App = () => (
                 <Route path="/signin" element={<AuthRoute><SignIn /></AuthRoute>} />
                 <Route path="/investor-signup" element={<AuthRoute><InvestorSignUp /></AuthRoute>} />
                 <Route path="/" element={<Index />} />
+                <Route path="/contact" element={<ContactPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
                 <Route path="/preparation" element={<ProtectedRoute><PreparationPhase /></ProtectedRoute>} />
