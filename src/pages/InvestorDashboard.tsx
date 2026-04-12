@@ -410,6 +410,31 @@ const InvestorDashboard = () => {
                           <ReadinessCard label={t("investor.frl")} level={frl} status={getStatus(frl)} />
                         </div>
                       </div>
+
+                      {/* Crowdfunding / Funding Overview */}
+                      {userFunding && userFunding.funding_goal > 0 && (
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
+                            <DollarSign className="h-4 w-4 text-primary" />
+                            {t("funding.title")}
+                          </h4>
+                          <div className="rounded-lg border border-border p-4 bg-muted/30 space-y-3">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-muted-foreground">{t("funding.raised")}</span>
+                              <span className="font-bold text-foreground">${userFunding.funding_raised.toLocaleString()} / ${userFunding.funding_goal.toLocaleString()}</span>
+                            </div>
+                            <div className="h-3 rounded-full bg-muted overflow-hidden">
+                              <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${Math.min(100, Math.round((userFunding.funding_raised / userFunding.funding_goal) * 100))}%` }} />
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                              <div><p className="text-[10px] text-muted-foreground">{t("funding.stage")}</p><p className="text-sm font-semibold text-foreground">{userFunding.funding_stage.toUpperCase()}</p></div>
+                              {userFunding.valuation > 0 && <div><p className="text-[10px] text-muted-foreground">{t("funding.valuation")}</p><p className="text-sm font-semibold text-foreground">${userFunding.valuation.toLocaleString()}</p></div>}
+                              {userFunding.last_round_amount > 0 && <div><p className="text-[10px] text-muted-foreground">{t("funding.last_round")}</p><p className="text-sm font-semibold text-foreground">${userFunding.last_round_amount.toLocaleString()}</p></div>}
+                              <div><p className="text-[10px] text-muted-foreground">{t("funding.interested")}</p><p className="text-sm font-semibold text-foreground">{userFunding.interest_count}</p></div>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
