@@ -55,15 +55,8 @@ const INDUSTRY_COLORS: Record<string, string> = {
 };
 
 const INDUSTRY_ICONS: Record<string, string> = {
-  fintech: "💳",
-  edtech: "📚",
-  healthtech: "🏥",
-  medtech: "🏥",
-  agritech: "🌾",
-  saas: "☁️",
-  ecommerce: "🛒",
-  ai: "🤖",
-  default: "🚀",
+  fintech: "💳", edtech: "📚", healthtech: "🏥", medtech: "🏥",
+  agritech: "🌾", saas: "☁️", ecommerce: "🛒", ai: "🤖", default: "🚀",
 };
 
 const getGradient = (industry: string | null) => {
@@ -106,22 +99,29 @@ const FundingViewPage = () => {
   const handleInterest = async (startupUserId: string) => {
     if (!user) { toast.error("Please sign in"); return; }
     if (!isInvestor) { toast.error("Only investors can show interest"); return; }
+    if (!interestAmount || Number(interestAmount) <= 0) {
+      toast.error(t("funding.amount_required"));
+      return;
+    }
     const { error } = await supabase.from("funding_interests").insert({
       startup_user_id: startupUserId,
       investor_user_id: user.id,
       role: interestRole,
-      amount: interestAmount ? Number(interestAmount) : null,
+      amount: Number(interestAmount),
     } as any);
-    if (error) toast.error("Error");
-    else {
+    if (error) {
+      console.error("Interest error:", error);
+      toast.error("Error");
+    } else {
       toast.success(t("funding.interest_sent"));
       setInterestOpen(null);
       setInterestAmount("");
+      setInterestRole("investor");
     }
   };
 
+  // Show ALL startups, even with $0 funding
   const enriched = fundingList
-    .filter(f => f.funding_goal > 0)
     .map(f => {
       const profile = profiles.find(p => p.id === f.user_id);
       return { ...f, profile };
@@ -175,8 +175,6 @@ const FundingViewPage = () => {
               const pct = getPct(item.funding_raised, item.funding_goal);
               const gradient = getGradient(profile.industry);
               const icon = getIcon(profile.industry);
-              const isOwn = user?.id === item.user_id;
-              const canInteract = isInvestor && !isOwn;
 
               return (
                 <div
@@ -186,7 +184,6 @@ const FundingViewPage = () => {
                   {/* Header with gradient */}
                   <div className={`relative h-36 bg-gradient-to-br ${gradient} flex items-center justify-center`}>
                     <span className="text-5xl">{icon}</span>
-                    {/* Badges */}
                     <div className="absolute top-3 left-3 flex gap-1.5">
                       {profile.industry && (
                         <Badge className="bg-background/90 text-foreground text-[10px] font-semibold backdrop-blur-sm border-0">
@@ -230,7 +227,7 @@ const FundingViewPage = () => {
                     </div>
 
                     {/* Progress bar */}
-                    <Progress value={pct} className="h-2" />
+                    {item.funding_goal > 0 && <Progress value={pct} className="h-2" />}
 
                     {/* Stats row */}
                     <div className="flex items-center justify-between text-xs text-muted-foreground">
@@ -246,8 +243,8 @@ const FundingViewPage = () => {
                       )}
                     </div>
 
-                    {/* Action button - only for investors, not own startup */}
-                    {canInteract && (
+                    {/* Interest button - only for investors */}
+                    {isInvestor && user?.id !== item.user_id && (
                       <Dialog
                         open={interestOpen === item.user_id}
                         onOpenChange={open => setInterestOpen(open ? item.user_id : null)}
@@ -264,12 +261,13 @@ const FundingViewPage = () => {
                           </DialogHeader>
                           <div className="space-y-4">
                             <div className="space-y-2">
-                              <Label>{t("funding.interest_amount")} ({t("funding.optional")})</Label>
+                              <Label>{t("funding.interest_amount")} *</Label>
                               <Input
                                 type="number"
                                 value={interestAmount}
                                 onChange={e => setInterestAmount(e.target.value)}
-                                placeholder="₼0"
+                                placeholder="₼1000"
+                                min={1}
                               />
                             </div>
                             <div className="space-y-2">
