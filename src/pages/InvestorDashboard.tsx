@@ -41,6 +41,22 @@ interface FinancialSnapshotRow {
   data: any;
 }
 
+interface FundingRow {
+  user_id: string;
+  funding_raised: number;
+  funding_goal: number;
+  funding_stage: string;
+  last_round_amount: number;
+  last_round_date: string | null;
+  last_round_investor_type: string;
+  use_product_pct: number;
+  use_marketing_pct: number;
+  use_team_pct: number;
+  valuation: number;
+  timeline: string;
+  interest_count: number;
+}
+
 const TRL_CRITERIA = [[1,2],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
 const CRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
 const FRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
@@ -68,6 +84,7 @@ const InvestorDashboard = () => {
   const [evaluations, setEvaluations] = useState<EvalRow[]>([]);
   const [readiness, setReadiness] = useState<ReadinessRow[]>([]);
   const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
+  const [fundingData, setFundingData] = useState<FundingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [industryFilter, setIndustryFilter] = useState("");
@@ -80,16 +97,18 @@ const InvestorDashboard = () => {
     }
 
     const load = async () => {
-      const [pRes, eRes, rRes, fRes] = await Promise.all([
+      const [pRes, eRes, rRes, fRes, fundRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("readiness_answers").select("*"),
         supabase.from("financial_snapshots").select("*"),
+        supabase.from("startup_funding").select("*"),
       ]);
       setProfiles((pRes.data as any[]) ?? []);
       setEvaluations((eRes.data as any[]) ?? []);
       setReadiness((rRes.data as any[]) ?? []);
       setFinancials((fRes.data as any[]) ?? []);
+      setFundingData((fundRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
