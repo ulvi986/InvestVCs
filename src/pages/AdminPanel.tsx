@@ -51,7 +51,7 @@ const AdminPanel = () => {
   useEffect(() => {
     if (roleLoading || !isAdmin) return;
     const load = async () => {
-      const [pRes, eRes, rRes, rolesRes, vRes, fRes, vouRes] = await Promise.all([
+      const [pRes, eRes, rRes, rolesRes, vRes, fRes, vouRes, fiRes] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("evaluations").select("*"),
         supabase.from("readiness_answers").select("*"),
@@ -59,6 +59,7 @@ const AdminPanel = () => {
         supabase.from("startup_vacancies").select("*").order("created_at", { ascending: false }),
         supabase.from("financial_snapshots").select("*"),
         supabase.from("vouchers").select("*").order("created_at", { ascending: false }),
+        supabase.from("funding_interests").select("*").order("created_at", { ascending: false }),
       ]);
       setProfiles((pRes.data as any[]) ?? []);
       setEvaluations((eRes.data as any[]) ?? []);
@@ -67,6 +68,7 @@ const AdminPanel = () => {
       setVacancies((vRes.data as any[]) ?? []);
       setFinancials((fRes.data as any[]) ?? []);
       setVouchers((vouRes.data as any[]) ?? []);
+      setFundingInterests((fiRes.data as any[]) ?? []);
       setLoading(false);
     };
     load();
