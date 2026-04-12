@@ -208,6 +208,7 @@ const InvestorDashboard = () => {
             {filtered.map((profile) => {
               const evalData = evaluations.find((e) => e.user_id === profile.id);
               const readData = readiness.find((r) => r.user_id === profile.id);
+              const userFunding = fundingData.find((f) => f.user_id === profile.id);
               const userFinancials = financials
                 .filter((f) => f.user_id === profile.id)
                 .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
