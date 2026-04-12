@@ -87,7 +87,7 @@ const InvestorDashboard = () => {
   const [fundingData, setFundingData] = useState<FundingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [industryFilter, setIndustryFilter] = useState("");
+  const [industryFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -150,7 +150,7 @@ const InvestorDashboard = () => {
     );
   }
 
-  const allIndustries = [...new Set(profiles.filter(p => p.industry).map(p => p.industry!))].sort();
+  
 
   const filtered = profiles.filter((p) => {
     if (p.startup_name === "Investor") return false;
@@ -179,23 +179,6 @@ const InvestorDashboard = () => {
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
             />
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <button
-              onClick={() => setIndustryFilter("")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${!industryFilter ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
-            >
-              {t("investor.all_industries")}
-            </button>
-            {allIndustries.slice(0, 8).map(ind => (
-              <button
-                key={ind}
-                onClick={() => setIndustryFilter(industryFilter === ind ? "" : ind)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${industryFilter === ind ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-accent"}`}
-              >
-                {ind}
-              </button>
-            ))}
           </div>
         </div>
 
