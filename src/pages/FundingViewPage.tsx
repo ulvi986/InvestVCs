@@ -13,8 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
 import {
-  Search, DollarSign, TrendingUp, Users, Clock, Rocket,
-  Heart, Building2
+  Search, DollarSign, TrendingUp, Users, Clock, Rocket
 } from "lucide-react";
 
 interface FundingProfile {
