@@ -70,6 +70,7 @@ const InvestorDashboard = () => {
   const [financials, setFinancials] = useState<FinancialSnapshotRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [industryFilter, setIndustryFilter] = useState("");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
