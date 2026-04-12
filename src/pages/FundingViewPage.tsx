@@ -43,7 +43,7 @@ interface ProfileRow {
   industry: string | null;
 }
 
-const CrowdfundingPage = () => {
+const FundingViewPage = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
   const [fundingList, setFundingList] = useState<FundingProfile[]>([]);
@@ -319,4 +319,4 @@ const FundBar = ({ label, pct, color }: { label: string; pct: number; color: str
   </div>
 );
 
-export default CrowdfundingPage;
+export default FundingViewPage;
