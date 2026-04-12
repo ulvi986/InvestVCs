@@ -1,11 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Globe, ChevronDown, Sun, Moon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Menu, LogOut, Globe, ChevronDown, Sun, Moon, Send, Mail } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage, Language } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +43,34 @@ const Navbar = () => {
   const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [showContact, setShowContact] = useState(false);
+  const [contactForm, setContactForm] = useState({ name: "", surname: "", email: "", message: "" });
+  const [sending, setSending] = useState(false);
+
+  const handleContactSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!contactForm.name || !contactForm.surname || !contactForm.email || !contactForm.message) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-brevo-email", {
+        body: {
+          to: "u.sharifzade@gmail.com",
+          subject: `Contact Form: ${contactForm.name} ${contactForm.surname}`,
+          message: contactForm.message,
+          senderName: `${contactForm.name} ${contactForm.surname}`,
+          senderEmail: contactForm.email,
+        },
+      });
+      if (error) throw error;
+      toast.success(t("landing.contact_success"));
+      setContactForm({ name: "", surname: "", email: "", message: "" });
+      setShowContact(false);
+    } catch {
+      toast.error(t("landing.contact_error"));
+    } finally {
+      setSending(false);
+    }
+  };
 
   const isInvestorUser = isInvestor || isInvestorPending;
 
@@ -68,6 +101,51 @@ const Navbar = () => {
           : []),
       ]
     : [];
+
+  const contactSection = (
+    <>
+      {!showContact ? (
+        <button
+          onClick={() => setShowContact(true)}
+          className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 w-full"
+        >
+          <Mail className="h-4 w-4" />
+          {t("landing.contact_title")}
+        </button>
+      ) : (
+        <div className="px-2 py-3">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-foreground">{t("landing.contact_title")}</h3>
+            <button onClick={() => setShowContact(false)} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+          </div>
+          <form onSubmit={handleContactSubmit} className="space-y-3">
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="nav-contact-name" className="text-xs">{t("landing.contact_name")}</Label>
+                <Input id="nav-contact-name" value={contactForm.name} onChange={(e) => setContactForm(p => ({ ...p, name: e.target.value }))} required maxLength={100} className="h-8 text-xs" />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="nav-contact-surname" className="text-xs">{t("landing.contact_surname")}</Label>
+                <Input id="nav-contact-surname" value={contactForm.surname} onChange={(e) => setContactForm(p => ({ ...p, surname: e.target.value }))} required maxLength={100} className="h-8 text-xs" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="nav-contact-email" className="text-xs">{t("landing.contact_email")}</Label>
+              <Input id="nav-contact-email" type="email" value={contactForm.email} onChange={(e) => setContactForm(p => ({ ...p, email: e.target.value }))} required maxLength={255} className="h-8 text-xs" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="nav-contact-msg" className="text-xs">{t("landing.contact_message")}</Label>
+              <Textarea id="nav-contact-msg" value={contactForm.message} onChange={(e) => setContactForm(p => ({ ...p, message: e.target.value }))} required maxLength={2000} rows={3} className="text-xs" />
+            </div>
+            <Button type="submit" disabled={sending} size="sm" className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold border-0 rounded-lg">
+              {sending ? t("landing.contact_sending") : t("landing.contact_send")}
+              <Send className="h-3.5 w-3.5" />
+            </Button>
+          </form>
+        </div>
+      )}
+    </>
+  );
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border/10 dark:border-white/5 bg-card/60 dark:bg-slate-900/60 backdrop-blur-xl">
@@ -126,111 +204,85 @@ const Navbar = () => {
           )}
 
           {/* Hamburger menu */}
-          {(user || links.length > 0) && (
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-72 bg-card/95 dark:bg-slate-900/95 backdrop-blur-xl border-border/20 p-0">
-                <div className="flex flex-col h-full">
-                  {/* Header */}
-                  <div className="p-6 border-b border-border/20">
-                    <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
-                      <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-xl object-cover" />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent font-display font-bold text-lg">InvestVCs</span>
-                    </Link>
-                  </div>
+          <Sheet open={open} onOpenChange={(v) => { setOpen(v); if (!v) setShowContact(false); }}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-72 bg-card/95 dark:bg-slate-900/95 backdrop-blur-xl border-border/20 p-0">
+              <div className="flex flex-col h-full">
+                {/* Header */}
+                <div className="p-6 border-b border-border/20">
+                  <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
+                    <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-xl object-cover" />
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent font-display font-bold text-lg">InvestVCs</span>
+                  </Link>
+                </div>
 
-                  {/* Navigation links */}
-                  <div className="flex-1 overflow-y-auto py-4 px-3">
-                    {user && (
-                      <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-xl bg-muted/50">
-                        <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-sm font-bold shadow-sm">
-                          {user.email?.[0]?.toUpperCase() || "U"}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className="space-y-1">
-                      {links.map((link) => (
-                        <Link
-                          key={link.to}
-                          to={link.to}
-                          onClick={() => setOpen(false)}
-                          className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                            location.pathname === link.to
-                              ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                          }`}
-                        >
-                          {link.label}
-                        </Link>
-                      ))}
-                    </div>
-
-                    {!user && (
-                      <div className="mt-4 space-y-2 px-1 sm:hidden">
-                        <Link to="/signin" onClick={() => setOpen(false)}>
-                          <Button variant="outline" className="w-full rounded-xl">{t("nav.signin")}</Button>
-                        </Link>
-                        <Link to="/signup" onClick={() => setOpen(false)}>
-                          <Button className="w-full bg-accent text-accent-foreground border-0 rounded-xl">{t("nav.signup")}</Button>
-                        </Link>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Footer */}
+                {/* Navigation links */}
+                <div className="flex-1 overflow-y-auto py-4 px-3">
                   {user && (
-                    <div className="p-4 border-t border-border/20">
-                      <Button
-                        variant="ghost"
-                        className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
-                        onClick={() => { signOut(); setOpen(false); }}
+                    <div className="flex items-center gap-3 px-3 py-3 mb-4 rounded-xl bg-muted/50">
+                      <div className="h-9 w-9 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-primary-foreground text-sm font-bold shadow-sm">
+                        {user.email?.[0]?.toUpperCase() || "U"}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{user.email}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="space-y-1">
+                    {links.map((link) => (
+                      <Link
+                        key={link.to}
+                        to={link.to}
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                          location.pathname === link.to
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
                       >
-                        <LogOut className="h-4 w-4" />
-                        {t("nav.signout")}
-                      </Button>
+                        {link.label}
+                      </Link>
+                    ))}
+                  </div>
+
+                  {/* Contact section */}
+                  <div className="mt-2 border-t border-border/20 pt-2">
+                    {contactSection}
+                  </div>
+
+                  {!user && (
+                    <div className="mt-4 space-y-2 px-1 sm:hidden">
+                      <Link to="/signin" onClick={() => setOpen(false)}>
+                        <Button variant="outline" className="w-full rounded-xl">{t("nav.signin")}</Button>
+                      </Link>
+                      <Link to="/signup" onClick={() => setOpen(false)}>
+                        <Button className="w-full bg-accent text-accent-foreground border-0 rounded-xl mt-2">{t("nav.signup")}</Button>
+                      </Link>
                     </div>
                   )}
                 </div>
-              </SheetContent>
-            </Sheet>
-          )}
 
-          {/* Show hamburger for non-logged in users on mobile for sign in/up */}
-          {!user && links.length === 0 && (
-            <Sheet open={open} onOpenChange={setOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground sm:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="w-72 bg-card/95 dark:bg-slate-900/95 backdrop-blur-xl border-border/20 p-0">
-                <div className="flex flex-col h-full">
-                  <div className="p-6 border-b border-border/20">
-                    <Link to="/" onClick={() => setOpen(false)} className="flex items-center gap-2.5">
-                      <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-xl object-cover" />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent font-display font-bold text-lg">InvestVCs</span>
-                    </Link>
+                {/* Footer */}
+                {user && (
+                  <div className="p-4 border-t border-border/20">
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start gap-3 text-destructive hover:text-destructive hover:bg-destructive/10 rounded-xl"
+                      onClick={() => { signOut(); setOpen(false); }}
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {t("nav.signout")}
+                    </Button>
                   </div>
-                  <div className="p-4 space-y-2">
-                    <Link to="/signin" onClick={() => setOpen(false)}>
-                      <Button variant="outline" className="w-full rounded-xl">{t("nav.signin")}</Button>
-                    </Link>
-                    <Link to="/signup" onClick={() => setOpen(false)}>
-                      <Button className="w-full bg-accent text-accent-foreground border-0 rounded-xl mt-2">{t("nav.signup")}</Button>
-                    </Link>
-                  </div>
-                </div>
-              </SheetContent>
-            </Sheet>
-          )}
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>
