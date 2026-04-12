@@ -3,8 +3,10 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/context/LanguageContext";
-import { Shield, TrendingUp, TrendingDown, Search, Globe, Layers, ChevronDown, ChevronUp, DollarSign, Wallet, Target, AlertTriangle, Users as UsersIcon } from "lucide-react";
+import { Shield, TrendingUp, TrendingDown, Search, Globe, Layers, ChevronDown, ChevronUp, DollarSign, Wallet, Target, AlertTriangle, Users as UsersIcon, Filter } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { computeVCValuation, computeChicagoValuation } from "@/lib/valuationUtils";
 
 interface ProfileRow {
   id: string;
