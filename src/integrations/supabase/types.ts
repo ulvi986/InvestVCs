@@ -113,6 +113,33 @@ export type Database = {
         }
         Relationships: []
       }
+      funding_interests: {
+        Row: {
+          amount: number | null
+          created_at: string
+          id: string
+          investor_user_id: string
+          role: string
+          startup_user_id: string
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          investor_user_id: string
+          role?: string
+          startup_user_id: string
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string
+          id?: string
+          investor_user_id?: string
+          role?: string
+          startup_user_id?: string
+        }
+        Relationships: []
+      }
       pitch_deck_analyses: {
         Row: {
           analysis_result: string | null
@@ -209,6 +236,63 @@ export type Database = {
           trl_answers?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      startup_funding: {
+        Row: {
+          created_at: string
+          funding_goal: number | null
+          funding_raised: number | null
+          funding_stage: string | null
+          id: string
+          interest_count: number | null
+          last_round_amount: number | null
+          last_round_date: string | null
+          last_round_investor_type: string | null
+          timeline: string | null
+          updated_at: string
+          use_marketing_pct: number | null
+          use_product_pct: number | null
+          use_team_pct: number | null
+          user_id: string
+          valuation: number | null
+        }
+        Insert: {
+          created_at?: string
+          funding_goal?: number | null
+          funding_raised?: number | null
+          funding_stage?: string | null
+          id?: string
+          interest_count?: number | null
+          last_round_amount?: number | null
+          last_round_date?: string | null
+          last_round_investor_type?: string | null
+          timeline?: string | null
+          updated_at?: string
+          use_marketing_pct?: number | null
+          use_product_pct?: number | null
+          use_team_pct?: number | null
+          user_id: string
+          valuation?: number | null
+        }
+        Update: {
+          created_at?: string
+          funding_goal?: number | null
+          funding_raised?: number | null
+          funding_stage?: string | null
+          id?: string
+          interest_count?: number | null
+          last_round_amount?: number | null
+          last_round_date?: string | null
+          last_round_investor_type?: string | null
+          timeline?: string | null
+          updated_at?: string
+          use_marketing_pct?: number | null
+          use_product_pct?: number | null
+          use_team_pct?: number | null
+          user_id?: string
+          valuation?: number | null
         }
         Relationships: []
       }
