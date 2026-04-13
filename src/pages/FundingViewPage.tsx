@@ -133,14 +133,26 @@ const FundingViewPage = () => {
     }
   };
 
-  const enriched = fundingList
-    .map(f => {
-      const profile = profiles.find(p => p.id === f.user_id);
-      const rounds = allRounds.filter(r => r.user_id === f.user_id);
-      return { ...f, profile, rounds };
+  // Build from profiles so startups without funding data still appear
+  const enriched = profiles
+    .map(profile => {
+      const fundingData = fundingList.find(f => f.user_id === profile.id);
+      const rounds = allRounds.filter(r => r.user_id === profile.id);
+      return {
+        user_id: profile.id,
+        funding_raised: fundingData?.funding_raised ?? 0,
+        funding_goal: fundingData?.funding_goal ?? 0,
+        funding_stage: fundingData?.funding_stage ?? "pre-seed",
+        valuation: fundingData?.valuation ?? 0,
+        timeline: fundingData?.timeline ?? "",
+        interest_count: fundingData?.interest_count ?? 0,
+        profile,
+        rounds,
+      };
     })
     .filter(f => {
-      if (!f.profile) return false;
+      // Exclude current user's own profile
+      if (user && f.user_id === user.id) return false;
       if (!search) return true;
       const s = search.toLowerCase();
       return (

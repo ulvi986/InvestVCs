@@ -138,7 +138,7 @@ const FundingOverview = () => {
     setSaving(false);
     if (fErr) {
       console.error("Funding save error:", fErr);
-      toast.error(t("common.loading"));
+      toast.error("Save failed");
     } else {
       setFunding(updatedFunding);
       toast.success(t("profile.save") + " ✓");
