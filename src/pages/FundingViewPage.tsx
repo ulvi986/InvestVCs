@@ -116,13 +116,14 @@ const FundingViewPage = () => {
 
     try {
       // 1. Insert interest record
-      const { error } = await supabase.from("funding_interests").insert({
+      // 1. Upsert interest record (allows re-sending with updated message)
+      const { error } = await supabase.from("funding_interests").upsert({
         startup_user_id: startupUserId,
         investor_user_id: user.id,
         role: interestRole,
         amount: null,
         message: interestMessage || null,
-      } as any);
+      } as any, { onConflict: "startup_user_id,investor_user_id" } as any);
       if (error) throw error;
 
       // 2. Increment interest_count on startup_funding
