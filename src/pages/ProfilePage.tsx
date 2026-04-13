@@ -66,7 +66,7 @@ const ProfilePage = () => {
   const handleSave = async () => {
     if (!user || !profile) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({ name: profile.name, surname: profile.surname, startup_name: profile.startup_name, startup_description: profile.startup_description, country: profile.country, industry: profile.industry } as any).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update({ name: profile.name, surname: profile.surname, startup_name: profile.startup_name, startup_description: profile.startup_description, country: profile.country, industry: profile.industry, current_company: profile.current_company, linkedin_url: profile.linkedin_url } as any).eq("id", user.id);
     setSaving(false);
     if (error) toast.error(t("common.loading"));
     else toast.success(t("profile.save") + " ✓");
