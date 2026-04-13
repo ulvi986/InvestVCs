@@ -56,6 +56,8 @@ const InvestorSignUp = () => {
           startup_name: "Investor",
           startup_description: "",
           is_investor: "true",
+          current_company: form.current_company,
+          linkedin_url: form.linkedin_url,
         },
         emailRedirectTo: window.location.origin,
       },
