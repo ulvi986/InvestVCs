@@ -187,8 +187,8 @@ const FundingViewPage = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {enriched.map(item => {
               const { profile, rounds } = item;
-              if (!profile) return null;
               const gradient = getGradient(profile.industry);
+              const icon = getIcon(profile.industry);
               const icon = getIcon(profile.industry);
               const totalRaised = rounds.reduce((s, r) => s + (Number(r.amount) || 0), 0);
               const maxRound = Math.max(...rounds.map(r => Number(r.amount) || 0), 1);
