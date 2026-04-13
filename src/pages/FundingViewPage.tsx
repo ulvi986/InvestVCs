@@ -189,7 +189,6 @@ const FundingViewPage = () => {
               const { profile, rounds } = item;
               const gradient = getGradient(profile.industry);
               const icon = getIcon(profile.industry);
-              const icon = getIcon(profile.industry);
               const totalRaised = rounds.reduce((s, r) => s + (Number(r.amount) || 0), 0);
               const maxRound = Math.max(...rounds.map(r => Number(r.amount) || 0), 1);
 
