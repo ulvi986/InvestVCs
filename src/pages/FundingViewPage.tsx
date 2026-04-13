@@ -89,7 +89,6 @@ const FundingViewPage = () => {
   const [search, setSearch] = useState("");
   const [interestOpen, setInterestOpen] = useState<string | null>(null);
   const [interestRole, setInterestRole] = useState("investor");
-  const [interestAmount, setInterestAmount] = useState("");
   const [interestMessage, setInterestMessage] = useState("");
 
   useEffect(() => {
@@ -325,23 +324,17 @@ const FundingViewPage = () => {
                       </span>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Button */}
                     {isInvestor && user?.id !== item.user_id && (
                       <Dialog
                         open={interestOpen === item.user_id}
                         onOpenChange={open => setInterestOpen(open ? item.user_id : null)}
                       >
                         <DialogTrigger asChild>
-                          <div className="flex gap-2">
-                            <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="sm">
-                              <Rocket className="h-4 w-4 mr-1.5" />
-                              {t("funding.invest_btn")}
-                            </Button>
-                            <Button variant="outline" size="sm" className="flex-1" onClick={e => { e.stopPropagation(); setInterestOpen(item.user_id); }}>
-                              <UserPlus className="h-4 w-4 mr-1.5" />
-                              {t("funding.request_intro")}
-                            </Button>
-                          </div>
+                          <Button variant="outline" size="sm" className="w-full">
+                            <UserPlus className="h-4 w-4 mr-1.5" />
+                            {t("funding.request_intro")}
+                          </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
@@ -349,16 +342,6 @@ const FundingViewPage = () => {
                           </DialogHeader>
                           <div className="space-y-4">
                             <p className="text-xs text-muted-foreground">{t("funding.interest_admin_note")}</p>
-                            <div className="space-y-2">
-                              <Label>{t("funding.interest_amount")} *</Label>
-                              <Input
-                                type="number"
-                                value={interestAmount}
-                                onChange={e => setInterestAmount(e.target.value)}
-                                placeholder="₼1000"
-                                min={1}
-                              />
-                            </div>
                             <div className="space-y-2">
                               <Label>{t("funding.interest_role")}</Label>
                               <RadioGroup value={interestRole} onValueChange={setInterestRole}>
@@ -377,7 +360,7 @@ const FundingViewPage = () => {
                               </RadioGroup>
                             </div>
                             <div className="space-y-2">
-                              <Label>{t("funding.interest_message")}</Label>
+                              <Label>{t("funding.interest_message")} *</Label>
                               <Textarea
                                 value={interestMessage}
                                 onChange={e => setInterestMessage(e.target.value)}
@@ -385,7 +368,7 @@ const FundingViewPage = () => {
                                 rows={3}
                               />
                             </div>
-                            <Button className="w-full gap-2" onClick={() => handleInterest(item.user_id)}>
+                            <Button className="w-full gap-2" onClick={() => handleRequestInfo(item.user_id, profile.startup_name)}>
                               <Send className="h-4 w-4" />
                               {t("funding.submit_interest")}
                             </Button>
