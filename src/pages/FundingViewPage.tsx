@@ -13,7 +13,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { useUserRole } from "@/hooks/useUserRole";
 import {
-  Search, DollarSign, TrendingUp, Users, Rocket, Send, UserPlus
+  Search, DollarSign, TrendingUp, Users, Send, UserPlus
 } from "lucide-react";
 
 interface FundingProfile {
@@ -89,7 +89,6 @@ const FundingViewPage = () => {
   const [search, setSearch] = useState("");
   const [interestOpen, setInterestOpen] = useState<string | null>(null);
   const [interestRole, setInterestRole] = useState("investor");
-  const [interestAmount, setInterestAmount] = useState("");
   const [interestMessage, setInterestMessage] = useState("");
 
   useEffect(() => {
@@ -107,29 +106,68 @@ const FundingViewPage = () => {
     load();
   }, []);
 
-  const handleInterest = async (startupUserId: string) => {
+  const handleRequestInfo = async (startupUserId: string, startupName: string) => {
     if (!user) { toast.error("Please sign in"); return; }
     if (!isInvestor) { toast.error("Only investors can show interest"); return; }
-    if (!interestAmount || Number(interestAmount) <= 0) {
-      toast.error(t("funding.amount_required"));
+    if (!interestMessage) {
+      toast.error(t("funding.message_required") || "Please write a message");
       return;
     }
-    const { error } = await supabase.from("funding_interests").insert({
-      startup_user_id: startupUserId,
-      investor_user_id: user.id,
-      role: interestRole,
-      amount: Number(interestAmount),
-      message: interestMessage || null,
-    } as any);
-    if (error) {
-      console.error("Interest error:", error);
-      toast.error("Error");
-    } else {
+
+    try {
+      // 1. Insert interest record
+      const { error } = await supabase.from("funding_interests").insert({
+        startup_user_id: startupUserId,
+        investor_user_id: user.id,
+        role: interestRole,
+        amount: null,
+        message: interestMessage || null,
+      } as any);
+      if (error) throw error;
+
+      // 2. Increment interest_count on startup_funding
+      const existing = fundingList.find(f => f.user_id === startupUserId);
+      if (existing) {
+        await supabase.from("startup_funding").update({
+          interest_count: (existing.interest_count ?? 0) + 1,
+        }).eq("user_id", startupUserId);
+      } else {
+        await supabase.from("startup_funding").insert({
+          user_id: startupUserId,
+          interest_count: 1,
+        } as any);
+      }
+
+      // 3. Send email notification via Brevo
+      const investorProfile = profiles.find(p => p.id === user.id);
+      const investorName = investorProfile
+        ? `${investorProfile.name} ${investorProfile.surname}`
+        : user.email || "An investor";
+
+      await supabase.functions.invoke("send-brevo-email", {
+        body: {
+          to: "u.sharifzade2007@gmail.com",
+          subject: `New Investor Interest: ${startupName}`,
+          message: `Investor: ${investorName}\nRole: ${interestRole}\n\nMessage:\n${interestMessage}\n\nStartup: ${startupName}\nTotal investors interested: ${(existing?.interest_count ?? 0) + 1}`,
+          senderName: investorName,
+          senderEmail: user.email,
+        },
+      });
+
+      // Update local state
+      setFundingList(prev => prev.map(f =>
+        f.user_id === startupUserId
+          ? { ...f, interest_count: (f.interest_count ?? 0) + 1 }
+          : f
+      ));
+
       toast.success(t("funding.interest_sent"));
       setInterestOpen(null);
-      setInterestAmount("");
       setInterestMessage("");
       setInterestRole("investor");
+    } catch (err) {
+      console.error("Request info error:", err);
+      toast.error("Error sending request");
     }
   };
 
@@ -286,23 +324,17 @@ const FundingViewPage = () => {
                       </span>
                     </div>
 
-                    {/* Action Buttons */}
+                    {/* Action Button */}
                     {isInvestor && user?.id !== item.user_id && (
                       <Dialog
                         open={interestOpen === item.user_id}
                         onOpenChange={open => setInterestOpen(open ? item.user_id : null)}
                       >
                         <DialogTrigger asChild>
-                          <div className="flex gap-2">
-                            <Button className="flex-1 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold" size="sm">
-                              <Rocket className="h-4 w-4 mr-1.5" />
-                              {t("funding.invest_btn")}
-                            </Button>
-                            <Button variant="outline" size="sm" className="flex-1" onClick={e => { e.stopPropagation(); setInterestOpen(item.user_id); }}>
-                              <UserPlus className="h-4 w-4 mr-1.5" />
-                              {t("funding.request_intro")}
-                            </Button>
-                          </div>
+                          <Button variant="outline" size="sm" className="w-full">
+                            <UserPlus className="h-4 w-4 mr-1.5" />
+                            {t("funding.request_intro")}
+                          </Button>
                         </DialogTrigger>
                         <DialogContent>
                           <DialogHeader>
@@ -310,16 +342,6 @@ const FundingViewPage = () => {
                           </DialogHeader>
                           <div className="space-y-4">
                             <p className="text-xs text-muted-foreground">{t("funding.interest_admin_note")}</p>
-                            <div className="space-y-2">
-                              <Label>{t("funding.interest_amount")} *</Label>
-                              <Input
-                                type="number"
-                                value={interestAmount}
-                                onChange={e => setInterestAmount(e.target.value)}
-                                placeholder="₼1000"
-                                min={1}
-                              />
-                            </div>
                             <div className="space-y-2">
                               <Label>{t("funding.interest_role")}</Label>
                               <RadioGroup value={interestRole} onValueChange={setInterestRole}>
@@ -338,7 +360,7 @@ const FundingViewPage = () => {
                               </RadioGroup>
                             </div>
                             <div className="space-y-2">
-                              <Label>{t("funding.interest_message")}</Label>
+                              <Label>{t("funding.interest_message")} *</Label>
                               <Textarea
                                 value={interestMessage}
                                 onChange={e => setInterestMessage(e.target.value)}
@@ -346,7 +368,7 @@ const FundingViewPage = () => {
                                 rows={3}
                               />
                             </div>
-                            <Button className="w-full gap-2" onClick={() => handleInterest(item.user_id)}>
+                            <Button className="w-full gap-2" onClick={() => handleRequestInfo(item.user_id, profile.startup_name)}>
                               <Send className="h-4 w-4" />
                               {t("funding.submit_interest")}
                             </Button>
