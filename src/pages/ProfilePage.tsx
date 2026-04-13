@@ -35,7 +35,7 @@ const INDUSTRIES = [
 ];
 
 interface Profile {
-  name: string; surname: string; startup_name: string; startup_description: string; country: string; industry: string;
+  name: string; surname: string; startup_name: string; startup_description: string; country: string; industry: string; current_company: string; linkedin_url: string;
 }
 
 const ProfilePage = () => {
@@ -52,11 +52,11 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
-      const { data, error } = await supabase.from("profiles").select("name, surname, startup_name, startup_description, country, industry").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select("name, surname, startup_name, startup_description, country, industry, current_company, linkedin_url").eq("id", user.id).single();
       if (error) {
-        setProfile({ name: user.user_metadata?.name || "", surname: user.user_metadata?.surname || "", startup_name: user.user_metadata?.startup_name || "", startup_description: user.user_metadata?.startup_description || "", country: user.user_metadata?.country || "", industry: user.user_metadata?.industry || "" });
+        setProfile({ name: user.user_metadata?.name || "", surname: user.user_metadata?.surname || "", startup_name: user.user_metadata?.startup_name || "", startup_description: user.user_metadata?.startup_description || "", country: user.user_metadata?.country || "", industry: user.user_metadata?.industry || "", current_company: user.user_metadata?.current_company || "", linkedin_url: user.user_metadata?.linkedin_url || "" });
       } else {
-        setProfile({ name: data.name ?? "", surname: data.surname ?? "", startup_name: data.startup_name ?? "", startup_description: data.startup_description ?? "", country: (data as any).country ?? "", industry: (data as any).industry ?? "" });
+        setProfile({ name: data.name ?? "", surname: data.surname ?? "", startup_name: data.startup_name ?? "", startup_description: data.startup_description ?? "", country: (data as any).country ?? "", industry: (data as any).industry ?? "", current_company: (data as any).current_company ?? "", linkedin_url: (data as any).linkedin_url ?? "" });
       }
       setLoading(false);
     };
@@ -66,7 +66,7 @@ const ProfilePage = () => {
   const handleSave = async () => {
     if (!user || !profile) return;
     setSaving(true);
-    const { error } = await supabase.from("profiles").update({ name: profile.name, surname: profile.surname, startup_name: profile.startup_name, startup_description: profile.startup_description, country: profile.country, industry: profile.industry } as any).eq("id", user.id);
+    const { error } = await supabase.from("profiles").update({ name: profile.name, surname: profile.surname, startup_name: profile.startup_name, startup_description: profile.startup_description, country: profile.country, industry: profile.industry, current_company: profile.current_company, linkedin_url: profile.linkedin_url } as any).eq("id", user.id);
     setSaving(false);
     if (error) toast.error(t("common.loading"));
     else toast.success(t("profile.save") + " ✓");
@@ -102,6 +102,8 @@ const ProfilePage = () => {
                   <SelectContent>{COUNTRIES.map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2"><Label>Company</Label><Input value={profile?.current_company || ""} onChange={e => setProfile(p => p ? { ...p, current_company: e.target.value } : p)} placeholder="e.g. Acme Ventures" /></div>
+              <div className="space-y-2"><Label>LinkedIn URL</Label><Input value={profile?.linkedin_url || ""} onChange={e => setProfile(p => p ? { ...p, linkedin_url: e.target.value } : p)} placeholder="https://linkedin.com/in/yourprofile" /></div>
               <div className="space-y-2"><Label>{t("profile.joined")}</Label><div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" />{user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}</div></div>
               {isInvestorPending && (<div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700">⏳ {t("profile.pending")}</div>)}
               {isInvestor && (<div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-700">✅ {t("profile.approved")}</div>)}

@@ -21,6 +21,8 @@ const InvestorSignUp = () => {
     surname: "",
     email: "",
     password: "",
+    current_company: "",
+    linkedin_url: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,6 +56,8 @@ const InvestorSignUp = () => {
           startup_name: "Investor",
           startup_description: "",
           is_investor: "true",
+          current_company: form.current_company,
+          linkedin_url: form.linkedin_url,
         },
         emailRedirectTo: window.location.origin,
       },
@@ -100,6 +104,14 @@ const InvestorSignUp = () => {
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.email")} *</Label>
               <Input id="email" name="email" type="email" placeholder="investor@example.com" value={form.email} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="current_company">Company</Label>
+              <Input id="current_company" name="current_company" placeholder="e.g. Acme Ventures" value={form.current_company} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+              <Input id="linkedin_url" name="linkedin_url" placeholder="https://linkedin.com/in/yourprofile" value={form.linkedin_url} onChange={handleChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">{t("auth.password")} *</Label>

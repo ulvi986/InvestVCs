@@ -115,8 +115,7 @@ const FundingViewPage = () => {
     }
 
     try {
-      // 1. Insert interest record
-      // 1. Upsert interest record (allows re-sending with updated message)
+      // 1. Upsert interest record (DB trigger auto-syncs interest_count)
       const { error } = await supabase.from("funding_interests").upsert({
         startup_user_id: startupUserId,
         investor_user_id: user.id,
@@ -126,34 +125,25 @@ const FundingViewPage = () => {
       } as any, { onConflict: "startup_user_id,investor_user_id" } as any);
       if (error) throw error;
 
-      // 2. Increment interest_count on startup_funding
-      const existing = fundingList.find(f => f.user_id === startupUserId);
-      if (existing) {
-        await supabase.from("startup_funding").update({
-          interest_count: (existing.interest_count ?? 0) + 1,
-        }).eq("user_id", startupUserId);
-      } else {
-        await supabase.from("startup_funding").insert({
-          user_id: startupUserId,
-          interest_count: 1,
-        } as any);
-      }
-
-      // 3. Send email notification via Brevo
+      // 2. Send email notification via Brevo
       const investorProfile = profiles.find(p => p.id === user.id);
       const investorName = investorProfile
         ? `${investorProfile.name} ${investorProfile.surname}`
         : user.email || "An investor";
 
-      await supabase.functions.invoke("send-brevo-email", {
-        body: {
-          to: "u.sharifzade2007@gmail.com",
-          subject: `New Investor Interest: ${startupName}`,
-          message: `Investor: ${investorName}\nRole: ${interestRole}\n\nMessage:\n${interestMessage}\n\nStartup: ${startupName}\nTotal investors interested: ${(existing?.interest_count ?? 0) + 1}`,
-          senderName: investorName,
-          senderEmail: user.email,
-        },
-      });
+      try {
+        await supabase.functions.invoke("send-brevo-email", {
+          body: {
+            to: "u.sharifzade2007@gmail.com",
+            subject: `New Investor Interest: ${startupName}`,
+            message: `Investor: ${investorName}\nRole: ${interestRole}\n\nMessage:\n${interestMessage}\n\nStartup: ${startupName}`,
+            senderName: investorName,
+            senderEmail: user.email,
+          },
+        });
+      } catch (emailErr) {
+        console.warn("Email notification failed (non-blocking):", emailErr);
+      }
 
       // Update local state
       setFundingList(prev => prev.map(f =>

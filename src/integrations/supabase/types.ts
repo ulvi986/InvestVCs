@@ -216,9 +216,11 @@ export type Database = {
         Row: {
           country: string | null
           created_at: string
+          current_company: string
           email: string | null
           id: string
           industry: string | null
+          linkedin_url: string
           name: string
           startup_description: string | null
           startup_name: string
@@ -228,9 +230,11 @@ export type Database = {
         Insert: {
           country?: string | null
           created_at?: string
+          current_company?: string
           email?: string | null
           id: string
           industry?: string | null
+          linkedin_url?: string
           name: string
           startup_description?: string | null
           startup_name: string
@@ -240,9 +244,11 @@ export type Database = {
         Update: {
           country?: string | null
           created_at?: string
+          current_company?: string
           email?: string | null
           id?: string
           industry?: string | null
+          linkedin_url?: string
           name?: string
           startup_description?: string | null
           startup_name?: string
