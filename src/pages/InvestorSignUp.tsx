@@ -104,6 +104,13 @@ const InvestorSignUp = () => {
             <div className="space-y-2">
               <Label htmlFor="email">{t("auth.email")} *</Label>
               <Input id="email" name="email" type="email" placeholder="investor@example.com" value={form.email} onChange={handleChange} />
+            <div className="space-y-2">
+              <Label htmlFor="current_company">Company</Label>
+              <Input id="current_company" name="current_company" placeholder="e.g. Acme Ventures" value={form.current_company} onChange={handleChange} />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="linkedin_url">LinkedIn URL</Label>
+              <Input id="linkedin_url" name="linkedin_url" placeholder="https://linkedin.com/in/yourprofile" value={form.linkedin_url} onChange={handleChange} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">{t("auth.password")} *</Label>

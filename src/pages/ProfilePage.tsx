@@ -35,7 +35,7 @@ const INDUSTRIES = [
 ];
 
 interface Profile {
-  name: string; surname: string; startup_name: string; startup_description: string; country: string; industry: string;
+  name: string; surname: string; startup_name: string; startup_description: string; country: string; industry: string; current_company: string; linkedin_url: string;
 }
 
 const ProfilePage = () => {
