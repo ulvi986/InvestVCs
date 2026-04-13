@@ -52,11 +52,11 @@ const ProfilePage = () => {
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
-      const { data, error } = await supabase.from("profiles").select("name, surname, startup_name, startup_description, country, industry").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select("name, surname, startup_name, startup_description, country, industry, current_company, linkedin_url").eq("id", user.id).single();
       if (error) {
-        setProfile({ name: user.user_metadata?.name || "", surname: user.user_metadata?.surname || "", startup_name: user.user_metadata?.startup_name || "", startup_description: user.user_metadata?.startup_description || "", country: user.user_metadata?.country || "", industry: user.user_metadata?.industry || "" });
+        setProfile({ name: user.user_metadata?.name || "", surname: user.user_metadata?.surname || "", startup_name: user.user_metadata?.startup_name || "", startup_description: user.user_metadata?.startup_description || "", country: user.user_metadata?.country || "", industry: user.user_metadata?.industry || "", current_company: user.user_metadata?.current_company || "", linkedin_url: user.user_metadata?.linkedin_url || "" });
       } else {
-        setProfile({ name: data.name ?? "", surname: data.surname ?? "", startup_name: data.startup_name ?? "", startup_description: data.startup_description ?? "", country: (data as any).country ?? "", industry: (data as any).industry ?? "" });
+        setProfile({ name: data.name ?? "", surname: data.surname ?? "", startup_name: data.startup_name ?? "", startup_description: data.startup_description ?? "", country: (data as any).country ?? "", industry: (data as any).industry ?? "", current_company: (data as any).current_company ?? "", linkedin_url: (data as any).linkedin_url ?? "" });
       }
       setLoading(false);
     };
