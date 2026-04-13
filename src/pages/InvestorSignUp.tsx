@@ -21,6 +21,8 @@ const InvestorSignUp = () => {
     surname: "",
     email: "",
     password: "",
+    current_company: "",
+    linkedin_url: "",
   });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
