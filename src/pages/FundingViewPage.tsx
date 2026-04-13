@@ -107,29 +107,68 @@ const FundingViewPage = () => {
     load();
   }, []);
 
-  const handleInterest = async (startupUserId: string) => {
+  const handleRequestInfo = async (startupUserId: string, startupName: string) => {
     if (!user) { toast.error("Please sign in"); return; }
     if (!isInvestor) { toast.error("Only investors can show interest"); return; }
-    if (!interestAmount || Number(interestAmount) <= 0) {
-      toast.error(t("funding.amount_required"));
+    if (!interestMessage) {
+      toast.error(t("funding.message_required") || "Please write a message");
       return;
     }
-    const { error } = await supabase.from("funding_interests").insert({
-      startup_user_id: startupUserId,
-      investor_user_id: user.id,
-      role: interestRole,
-      amount: Number(interestAmount),
-      message: interestMessage || null,
-    } as any);
-    if (error) {
-      console.error("Interest error:", error);
-      toast.error("Error");
-    } else {
+
+    try {
+      // 1. Insert interest record
+      const { error } = await supabase.from("funding_interests").insert({
+        startup_user_id: startupUserId,
+        investor_user_id: user.id,
+        role: interestRole,
+        amount: null,
+        message: interestMessage || null,
+      } as any);
+      if (error) throw error;
+
+      // 2. Increment interest_count on startup_funding
+      const existing = fundingList.find(f => f.user_id === startupUserId);
+      if (existing) {
+        await supabase.from("startup_funding").update({
+          interest_count: (existing.interest_count ?? 0) + 1,
+        }).eq("user_id", startupUserId);
+      } else {
+        await supabase.from("startup_funding").insert({
+          user_id: startupUserId,
+          interest_count: 1,
+        } as any);
+      }
+
+      // 3. Send email notification via Brevo
+      const investorProfile = profiles.find(p => p.id === user.id);
+      const investorName = investorProfile
+        ? `${investorProfile.name} ${investorProfile.surname}`
+        : user.email || "An investor";
+
+      await supabase.functions.invoke("send-brevo-email", {
+        body: {
+          to: "u.sharifzade2007@gmail.com",
+          subject: `New Investor Interest: ${startupName}`,
+          message: `Investor: ${investorName}\nRole: ${interestRole}\n\nMessage:\n${interestMessage}\n\nStartup: ${startupName}\nTotal investors interested: ${(existing?.interest_count ?? 0) + 1}`,
+          senderName: investorName,
+          senderEmail: user.email,
+        },
+      });
+
+      // Update local state
+      setFundingList(prev => prev.map(f =>
+        f.user_id === startupUserId
+          ? { ...f, interest_count: (f.interest_count ?? 0) + 1 }
+          : f
+      ));
+
       toast.success(t("funding.interest_sent"));
       setInterestOpen(null);
-      setInterestAmount("");
       setInterestMessage("");
       setInterestRole("investor");
+    } catch (err) {
+      console.error("Request info error:", err);
+      toast.error("Error sending request");
     }
   };
 
