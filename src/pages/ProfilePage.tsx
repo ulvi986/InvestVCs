@@ -102,6 +102,8 @@ const ProfilePage = () => {
                   <SelectContent>{COUNTRIES.map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}</SelectContent>
                 </Select>
               </div>
+              <div className="space-y-2"><Label>Company</Label><Input value={profile?.current_company || ""} onChange={e => setProfile(p => p ? { ...p, current_company: e.target.value } : p)} placeholder="e.g. Acme Ventures" /></div>
+              <div className="space-y-2"><Label>LinkedIn URL</Label><Input value={profile?.linkedin_url || ""} onChange={e => setProfile(p => p ? { ...p, linkedin_url: e.target.value } : p)} placeholder="https://linkedin.com/in/yourprofile" /></div>
               <div className="space-y-2"><Label>{t("profile.joined")}</Label><div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground"><CalendarDays className="h-4 w-4" />{user?.created_at ? new Date(user.created_at).toLocaleDateString() : "—"}</div></div>
               {isInvestorPending && (<div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-sm text-amber-700">⏳ {t("profile.pending")}</div>)}
               {isInvestor && (<div className="rounded-lg border border-green-500/30 bg-green-500/10 p-3 text-sm text-green-700">✅ {t("profile.approved")}</div>)}
