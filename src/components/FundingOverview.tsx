@@ -114,7 +114,13 @@ const FundingOverview = () => {
     const totalRaised = rounds.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
     const updatedFunding = { ...funding, funding_raised: totalRaised };
 
-    const payload = { user_id: user.id, ...updatedFunding } as any;
+    const payload = {
+      user_id: user.id,
+      ...updatedFunding,
+      last_round_date: updatedFunding.last_round_date || null,
+      timeline: updatedFunding.timeline || null,
+      last_round_investor_type: updatedFunding.last_round_investor_type || null,
+    } as any;
     const { error: fErr } = await supabase.from("startup_funding").upsert(payload, { onConflict: "user_id" });
 
     // Save rounds
