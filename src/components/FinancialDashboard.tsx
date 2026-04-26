@@ -173,6 +173,13 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
 
   return (
     <div className="space-y-6">
+      <div className="flex items-center justify-end">
+        <Button onClick={handleExport} className="gap-2">
+          <Download className="h-4 w-4" />
+          Export to Excel
+        </Button>
+      </div>
+
       {/* Summary Cards - Cumulative */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <MetricCard icon={TrendingUp} title={t("financial.cumulative_revenue")} value={numFmt(cumulative.totalRevenue)} subtitle={`${t("financial.latest")}: ${format(latest.date, "dd MMM yyyy")}`} color="gradient-primary" />
