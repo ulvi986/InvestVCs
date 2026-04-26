@@ -92,43 +92,50 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
       XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
 
       // Sheet 2: Snapshots detail
-      const detailRows = snapshots.map((s) => ({
-        Date: format(s.date, "dd.MM.yyyy"),
-        "Revenue - Product Sales": s.revenue.productSales,
-        "Revenue - Subscription": s.revenue.subscription,
-        "Revenue - Service Fees": s.revenue.serviceFees,
-        "Revenue - Other": s.revenue.otherIncome,
-        "Total Revenue": s.revenue.total,
-        "Expenses - Salaries": s.expenses.salaries,
-        "Expenses - Rent": s.expenses.rent,
-        "Expenses - Sales & Marketing": s.expenses.salesMarketing,
-        "Expenses - Tech": s.expenses.tech,
-        "Expenses - Loan Payments": s.expenses.loanPayments,
-        "Expenses - Taxes": s.expenses.taxes,
-        "Expenses - Depreciation": s.expenses.depreciation,
-        "Expenses - Legal & Accounting": s.expenses.legalAccounting,
-        "Expenses - Other": s.expenses.otherExpenses,
-        "Total Expenses": s.expenses.total,
-        Profit: s.revenue.total - s.expenses.total,
-        "Starting Cash": s.cashFlow.startingCash,
-        "Cash Inflow": s.cashFlow.cashInflow,
-        "Cash Outflow": s.cashFlow.cashOutflow,
-        "Ending Cash": s.cashFlow.endingCash,
-        "Monthly Burn Rate": s.cashFlow.monthlyBurnRate,
-        "Runway (Months)": safe(s.cashFlow.runway),
-        "New Customers": s.customerMetrics.newCustomers,
-        "Lost Customers": s.customerMetrics.lostCustomers,
-        "Active Users": safe(s.customerMetrics.activeUsers),
-        ARPU: safe(s.customerMetrics.arpu),
-        "Churn Rate (%)": safe(s.customerMetrics.churnRate * 100),
-        CAC: safe(s.customerMetrics.cac),
-        CLTV: safe(s.customerMetrics.cltv),
-        "Gross Profit": safe(s.customerMetrics.grossProfit),
-        "Gross Margin (%)": safe(s.customerMetrics.grossMargin * 100),
-        "ROI (%)": safe(s.profitability.roi),
-        "CAGR (%)": safe(s.profitability.cagr),
-        "Profit Margin (%)": safe(s.profitability.profitMargin),
-      }));
+      const detailRows = snapshots.map((s) => {
+        const rev = s.revenue ?? ({} as any);
+        const exp = s.expenses ?? ({} as any);
+        const cf = s.cashFlow ?? ({} as any);
+        const cm = s.customerMetrics ?? ({} as any);
+        const pf = s.profitability ?? ({} as any);
+        return {
+          Date: format(s.date, "dd.MM.yyyy"),
+          "Revenue - Product Sales": safe(rev.productSales),
+          "Revenue - Subscription": safe(rev.subscription),
+          "Revenue - Service Fees": safe(rev.serviceFees),
+          "Revenue - Other": safe(rev.otherIncome),
+          "Total Revenue": safe(rev.total),
+          "Expenses - Salaries": safe(exp.salaries),
+          "Expenses - Rent": safe(exp.rent),
+          "Expenses - Sales & Marketing": safe(exp.salesMarketing),
+          "Expenses - Tech": safe(exp.tech),
+          "Expenses - Loan Payments": safe(exp.loanPayments),
+          "Expenses - Taxes": safe(exp.taxes),
+          "Expenses - Depreciation": safe(exp.depreciation),
+          "Expenses - Legal & Accounting": safe(exp.legalAccounting),
+          "Expenses - Other": safe(exp.otherExpenses),
+          "Total Expenses": safe(exp.total),
+          Profit: safe(rev.total) - safe(exp.total),
+          "Starting Cash": safe(cf.startingCash),
+          "Cash Inflow": safe(cf.cashInflow),
+          "Cash Outflow": safe(cf.cashOutflow),
+          "Ending Cash": safe(cf.endingCash),
+          "Monthly Burn Rate": safe(cf.monthlyBurnRate),
+          "Runway (Months)": safe(cf.runway),
+          "New Customers": safe(cm.newCustomers),
+          "Lost Customers": safe(cm.lostCustomers),
+          "Active Users": safe(cm.activeUsers),
+          ARPU: safe(cm.arpu),
+          "Churn Rate (%)": safe(cm.churnRate * 100),
+          CAC: safe(cm.cac),
+          CLTV: safe(cm.cltv),
+          "Gross Profit": safe(cm.grossProfit),
+          "Gross Margin (%)": safe(cm.grossMargin * 100),
+          "ROI (%)": safe(pf.roi),
+          "CAGR (%)": safe(pf.cagr),
+          "Profit Margin (%)": safe(pf.profitMargin),
+        };
+      });
       const wsDetail = XLSX.utils.json_to_sheet(detailRows);
       wsDetail["!cols"] = Object.keys(detailRows[0] || { Date: "" }).map(() => ({ wch: 20 }));
       XLSX.utils.book_append_sheet(wb, wsDetail, "Snapshots");
