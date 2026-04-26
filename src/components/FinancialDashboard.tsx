@@ -62,6 +62,86 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
   const latest = snapshots[snapshots.length - 1];
   const safe = (v: number) => (isFinite(v) && !isNaN(v) ? v : 0);
 
+  const handleExport = () => {
+    try {
+      const wb = XLSX.utils.book_new();
+
+      // Sheet 1: Summary
+      const summaryRows = [
+        ["Financial Report"],
+        [`Generated: ${format(new Date(), "dd.MM.yyyy HH:mm")}`],
+        [`Total snapshots: ${snapshots.length}`],
+        [],
+        ["Metric", "Value"],
+        ["Cumulative Revenue", cumulative.totalRevenue],
+        ["Cumulative Expenses", cumulative.totalExpenses],
+        ["Cumulative Profit", cumulative.totalRevenue - cumulative.totalExpenses],
+        ["Total New Customers", cumulative.totalNewCustomers],
+        ["Total Lost Customers", cumulative.totalLostCustomers],
+        ["Latest Ending Cash", latest.cashFlow.endingCash],
+        ["Latest Burn Rate (Monthly)", latest.cashFlow.monthlyBurnRate],
+        ["Latest Runway (Months)", safe(latest.cashFlow.runway)],
+        ["Latest Active Users", safe(latest.customerMetrics.activeUsers)],
+        ["Latest Churn Rate (%)", safe(latest.customerMetrics.churnRate * 100)],
+        ["Latest ARPU", safe(latest.customerMetrics.arpu)],
+        ["Latest CAC", safe(latest.customerMetrics.cac)],
+        ["Latest CLTV", safe(latest.customerMetrics.cltv)],
+      ];
+      const wsSummary = XLSX.utils.aoa_to_sheet(summaryRows);
+      wsSummary["!cols"] = [{ wch: 32 }, { wch: 20 }];
+      XLSX.utils.book_append_sheet(wb, wsSummary, "Summary");
+
+      // Sheet 2: Snapshots detail
+      const detailRows = snapshots.map((s) => ({
+        Date: format(s.date, "dd.MM.yyyy"),
+        "Revenue - Product Sales": s.revenue.productSales,
+        "Revenue - Subscription": s.revenue.subscription,
+        "Revenue - Service Fees": s.revenue.serviceFees,
+        "Revenue - Other": s.revenue.otherIncome,
+        "Total Revenue": s.revenue.total,
+        "Expenses - Salaries": s.expenses.salaries,
+        "Expenses - Rent": s.expenses.rent,
+        "Expenses - Sales & Marketing": s.expenses.salesMarketing,
+        "Expenses - Tech": s.expenses.tech,
+        "Expenses - Loan Payments": s.expenses.loanPayments,
+        "Expenses - Taxes": s.expenses.taxes,
+        "Expenses - Depreciation": s.expenses.depreciation,
+        "Expenses - Legal & Accounting": s.expenses.legalAccounting,
+        "Expenses - Other": s.expenses.otherExpenses,
+        "Total Expenses": s.expenses.total,
+        Profit: s.revenue.total - s.expenses.total,
+        "Starting Cash": s.cashFlow.startingCash,
+        "Cash Inflow": s.cashFlow.cashInflow,
+        "Cash Outflow": s.cashFlow.cashOutflow,
+        "Ending Cash": s.cashFlow.endingCash,
+        "Monthly Burn Rate": s.cashFlow.monthlyBurnRate,
+        "Runway (Months)": safe(s.cashFlow.runway),
+        "New Customers": s.customerMetrics.newCustomers,
+        "Lost Customers": s.customerMetrics.lostCustomers,
+        "Active Users": safe(s.customerMetrics.activeUsers),
+        ARPU: safe(s.customerMetrics.arpu),
+        "Churn Rate (%)": safe(s.customerMetrics.churnRate * 100),
+        CAC: safe(s.customerMetrics.cac),
+        CLTV: safe(s.customerMetrics.cltv),
+        "Gross Profit": safe(s.customerMetrics.grossProfit),
+        "Gross Margin (%)": safe(s.customerMetrics.grossMargin * 100),
+        "ROI (%)": safe(s.profitability.roi),
+        "CAGR (%)": safe(s.profitability.cagr),
+        "Profit Margin (%)": safe(s.profitability.profitMargin),
+      }));
+      const wsDetail = XLSX.utils.json_to_sheet(detailRows);
+      wsDetail["!cols"] = Object.keys(detailRows[0] || { Date: "" }).map(() => ({ wch: 20 }));
+      XLSX.utils.book_append_sheet(wb, wsDetail, "Snapshots");
+
+      const filename = `financial-report-${format(new Date(), "yyyy-MM-dd")}.xlsx`;
+      XLSX.writeFile(wb, filename);
+      toast.success("Export ugurlu oldu");
+    } catch (err) {
+      console.error("Export error", err);
+      toast.error("Export zamani xeta bas verdi");
+    }
+  };
+
 
   const chartData = snapshots.map((s) => ({
     date: format(s.date, "dd MMM yyyy"),
