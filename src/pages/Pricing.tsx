@@ -99,15 +99,27 @@ const Pricing = () => {
                     </li>
                   ))}
                 </ul>
-                <Link to={plan.to}>
-                  <Button
-                    className="w-full"
-                    size="lg"
-                    variant={plan.highlighted ? "default" : "outline"}
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
+                {(plan as any).polar ? (
+                  <a href={plan.to} data-polar-checkout data-polar-checkout-theme="dark" className="w-full">
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      variant={plan.highlighted ? "default" : "outline"}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </a>
+                ) : (
+                  <Link to={plan.to}>
+                    <Button
+                      className="w-full"
+                      size="lg"
+                      variant={plan.highlighted ? "default" : "outline"}
+                    >
+                      {plan.cta}
+                    </Button>
+                  </Link>
+                )}
               </CardContent>
             </Card>
           ))}
