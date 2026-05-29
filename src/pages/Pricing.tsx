@@ -21,7 +21,7 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$19",
+    price: "$3.99",
     period: "/month",
     description: "Everything you need to invest with confidence.",
     features: [
@@ -30,9 +30,10 @@ const plans = [
       "Unlimited searches",
       "Priority email support",
     ],
-    cta: "Start Pro Plan",
-    to: "/signup",
+    cta: "Purchase",
+    to: "https://buy.polar.sh/polar_cl_gwpOlxOIfQhictQbbV8BJ7mnqZZCjtAekaBOn0jTJuJ",
     highlighted: true,
+    polar: true,
   },
   {
     name: "Enterprise",
