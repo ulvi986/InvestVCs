@@ -22,6 +22,11 @@ import StartupVacancies from "./pages/StartupVacancies";
 import VentureAnalysis from "./pages/VentureAnalysis";
 import ContactPage from "./pages/ContactPage";
 import FundingViewPage from "./pages/FundingViewPage";
+import Success from "./pages/Success";
+import Cancel from "./pages/Cancel";
+import Pricing from "./pages/Pricing";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -66,6 +71,11 @@ const App = () => (
                 <Route path="/vacancies" element={<ProtectedRoute><StartupVacancies /></ProtectedRoute>} />
                 <Route path="/funding-view" element={<ProtectedRoute><FundingViewPage /></ProtectedRoute>} />
                 <Route path="/venture-analysis" element={<ProtectedRoute><VentureAnalysis /></ProtectedRoute>} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/success" element={<Success />} />
+                <Route path="/cancel" element={<Cancel />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
