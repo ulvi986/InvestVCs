@@ -136,6 +136,41 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         )}
+
+        {/* Upgrade CTA */}
+        <SidebarGroup>
+          <SidebarGroupContent>
+            {collapsed ? (
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip="Upgrade your profile">
+                    <Link
+                      to="/pricing"
+                      className="flex items-center justify-center rounded-lg px-3 py-2.5 text-primary hover:bg-primary/10"
+                    >
+                      <Sparkles className="h-[18px] w-[18px]" />
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            ) : (
+              <Link
+                to="/pricing"
+                className="mx-2 mb-2 block rounded-xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-3 transition-all hover:border-primary/40 hover:shadow-md"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="rounded-lg bg-primary/15 p-1.5">
+                    <Sparkles className="h-4 w-4 text-primary" />
+                  </div>
+                  <span className="text-sm font-semibold text-foreground">Upgrade your profile</span>
+                </div>
+                <p className="mt-1.5 text-xs text-muted-foreground">
+                  Unlock Pro features and AI insights.
+                </p>
+              </Link>
+            )}
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       {/* Footer */}
