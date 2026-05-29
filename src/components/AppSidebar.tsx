@@ -4,7 +4,7 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage, Language } from "@/context/LanguageContext";
 import {
   LayoutDashboard, Wallet, TrendingUp, Gauge, Briefcase, User,
-  Shield, LogOut, Globe, Settings, ChevronDown,
+  Shield, LogOut, Globe, Settings, ChevronDown, Sparkles,
 } from "lucide-react";
 import logoImg from "@/assets/logo.jpeg";
 import {
