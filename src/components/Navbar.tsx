@@ -201,6 +201,17 @@ const Navbar = () => {
                     </Link>
                   </div>
 
+                  {user && (
+                    <div className="mt-4 px-1">
+                      <Link to="/pricing" onClick={() => setOpen(false)}>
+                        <Button className="w-full gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold">
+                          <Sparkles className="h-4 w-4" />
+                          Upgrade your profile
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+
                   {!user && (
                     <div className="mt-4 space-y-2 px-1 sm:hidden">
                       <Link to="/signin" onClick={() => setOpen(false)}>
