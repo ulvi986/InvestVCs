@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Globe, ChevronDown, Sun, Moon } from "lucide-react";
+import { Menu, LogOut, Globe, ChevronDown, Sun, Moon, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
@@ -114,6 +114,18 @@ const Navbar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {user && (
+            <Link to="/pricing" className="hidden sm:block">
+              <Button
+                size="sm"
+                className="gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold shadow-sm hover:opacity-90"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Upgrade
+              </Button>
+            </Link>
+          )}
+
           {!user && (
             <div className="hidden sm:flex items-center gap-1.5">
               <Link to="/signin">
@@ -188,6 +200,17 @@ const Navbar = () => {
                       📩 {t("landing.contact_title")}
                     </Link>
                   </div>
+
+                  {user && (
+                    <div className="mt-4 px-1">
+                      <Link to="/pricing" onClick={() => setOpen(false)}>
+                        <Button className="w-full gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold">
+                          <Sparkles className="h-4 w-4" />
+                          Upgrade your profile
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
 
                   {!user && (
                     <div className="mt-4 space-y-2 px-1 sm:hidden">
