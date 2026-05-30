@@ -114,6 +114,18 @@ const Navbar = () => {
             </DropdownMenuContent>
           </DropdownMenu>
 
+          {user && (
+            <Link to="/pricing" className="hidden sm:block">
+              <Button
+                size="sm"
+                className="gap-1.5 rounded-lg bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold shadow-sm hover:opacity-90"
+              >
+                <Sparkles className="h-3.5 w-3.5" />
+                Upgrade
+              </Button>
+            </Link>
+          )}
+
           {!user && (
             <div className="hidden sm:flex items-center gap-1.5">
               <Link to="/signin">
