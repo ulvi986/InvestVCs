@@ -21,8 +21,8 @@ const plans = [
   },
   {
     name: "Pro",
-    price: "$3.99",
-    period: "/month",
+    price: "$2.99",
+    period: "/week",
     description: "Everything you need to invest with confidence.",
     features: [
       "AI insights & startup analysis",
@@ -31,7 +31,7 @@ const plans = [
       "Priority email support",
     ],
     cta: "Purchase",
-    to: "https://buy.polar.sh/polar_cl_gwpOlxOIfQhictQbbV8BJ7mnqZZCjtAekaBOn0jTJuJ",
+    to: "https://polar.sh/checkout/polar_c_wUNeObPe4ZasTgzncgZN3T8pwlaKmOAbWNP0M1tiqwT",
     highlighted: true,
     polar: true,
   },
