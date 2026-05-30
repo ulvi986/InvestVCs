@@ -243,6 +243,122 @@ const Index = () => {
 
 
 
+        {/* ═══════ Pricing ═══════ */}
+        <section id="pricing" className="relative py-20">
+          <div className="absolute inset-0 bg-card/40 dark:bg-card/20 backdrop-blur-sm border-y border-border/20" />
+          <div className="container relative">
+            <div className="text-center mb-14">
+              <motion.h2
+                className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                custom={0}
+              >
+                Simple,{" "}
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                  transparent pricing
+                </span>
+              </motion.h2>
+              <motion.p
+                className="mt-4 text-muted-foreground max-w-xl mx-auto"
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true }}
+                variants={fadeUp}
+                custom={1}
+              >
+                Start free. Upgrade when you're ready to unlock AI insights and a voucher code.
+              </motion.p>
+            </div>
+
+            <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
+              {[
+                {
+                  name: "Free",
+                  price: "$0",
+                  period: "forever",
+                  features: ["Basic startup discovery", "Limited monthly searches", "Community support"],
+                  cta: "Get Started",
+                  to: "/signup",
+                  highlighted: false,
+                },
+                {
+                  name: "Pro",
+                  price: "$3.99",
+                  period: "/month",
+                  features: ["AI insights & startup analysis", "Portfolio tracking", "Unlimited searches", "AI voucher code included"],
+                  cta: "Purchase",
+                  to: "https://buy.polar.sh/polar_cl_gwpOlxOIfQhictQbbV8BJ7mnqZZCjtAekaBOn0jTJuJ",
+                  highlighted: true,
+                  polar: true,
+                },
+                {
+                  name: "Enterprise",
+                  price: "Custom",
+                  period: "",
+                  features: ["Dedicated account manager", "Custom integrations", "Team seats & SSO", "SLA & priority support"],
+                  cta: "Contact Sales",
+                  to: "/contact",
+                  highlighted: false,
+                },
+              ].map((plan, i) => (
+                <motion.div
+                  key={plan.name}
+                  className={`relative flex flex-col rounded-2xl border p-6 backdrop-blur-xl transition-all ${
+                    plan.highlighted
+                      ? "border-primary/40 bg-card/80 dark:bg-white/10 shadow-xl ring-2 ring-primary/20"
+                      : "border-border/30 dark:border-white/10 bg-card/60 dark:bg-white/5"
+                  }`}
+                  initial="hidden"
+                  whileInView="visible"
+                  viewport={{ once: true }}
+                  variants={fadeUp}
+                  custom={i}
+                >
+                  {plan.highlighted && (
+                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-accent px-3 py-1 text-[11px] font-semibold text-primary-foreground shadow-md">
+                      Most Popular
+                    </span>
+                  )}
+                  <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
+                  <div className="mt-3 flex items-baseline gap-1">
+                    <span className="text-4xl font-extrabold text-foreground">{plan.price}</span>
+                    {plan.period && <span className="text-sm text-muted-foreground">{plan.period}</span>}
+                  </div>
+                  <ul className="mt-5 flex-1 space-y-2.5">
+                    {plan.features.map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-foreground">
+                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mt-6">
+                    {(plan as any).polar ? (
+                      <a href={plan.to} data-polar-checkout data-polar-checkout-theme="dark" className="block w-full">
+                        <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-xl h-11">
+                          {plan.cta}
+                        </Button>
+                      </a>
+                    ) : (
+                      <Link to={plan.to} className="block w-full">
+                        <Button
+                          variant={plan.highlighted ? "default" : "outline"}
+                          className="w-full rounded-xl h-11 font-semibold"
+                        >
+                          {plan.cta}
+                        </Button>
+                      </Link>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* ═══════ CTA ═══════ */}
         <section className="py-20">
           <div className="container">
