@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Shield, DollarSign, ClipboardCheck, BrainCircuit } from "lucide-react";
+import { ArrowRight, Zap, Shield, DollarSign, ClipboardCheck, BrainCircuit, Check } from "lucide-react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
