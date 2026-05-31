@@ -1,11 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut, Globe, ChevronDown, Sun, Moon, Sparkles } from "lucide-react";
+import { Menu, LogOut, Globe, ChevronDown, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage, Language } from "@/context/LanguageContext";
-import { useTheme } from "@/context/ThemeContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,7 +34,6 @@ const Navbar = () => {
   const { user, signOut } = useAuth();
   const { isAdmin, isInvestor, isInvestorPending } = useUserRole();
   const { t, language, setLanguage } = useLanguage();
-  const { theme, toggleTheme } = useTheme();
   const location = useLocation();
   const [open, setOpen] = useState(false);
 
@@ -72,7 +70,7 @@ const Navbar = () => {
 
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-border/10 dark:border-white/5 bg-card/60 dark:bg-slate-900/60 backdrop-blur-xl">
+    <nav className="sticky top-0 z-50 border-b border-white/[0.06] bg-background/70 backdrop-blur-xl">
       <div className="container flex h-16 items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2.5 font-display text-xl font-bold hover:opacity-80 transition-opacity">
@@ -82,16 +80,6 @@ const Navbar = () => {
 
         {/* Right side controls */}
         <div className="flex items-center gap-1.5">
-          {/* Theme toggle */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleTheme}
-            className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground"
-          >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-          </Button>
-
           {/* Language */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -132,7 +120,7 @@ const Navbar = () => {
                 <Button variant="ghost" size="sm" className="rounded-lg">{t("nav.signin")}</Button>
               </Link>
               <Link to="/signup">
-                <Button size="sm" className="bg-accent hover:bg-accent/90 text-accent-foreground border-0 rounded-lg font-semibold">
+                <Button size="sm" variant="white" className="origin-shimmer rounded-lg font-semibold">
                   {t("nav.signup")}
                 </Button>
               </Link>
@@ -146,7 +134,7 @@ const Navbar = () => {
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-72 bg-card/95 dark:bg-slate-900/95 backdrop-blur-xl border-border/20 p-0">
+            <SheetContent side="right" className="w-72 bg-background/95 backdrop-blur-xl border-white/10 p-0">
               <div className="flex flex-col h-full">
                 {/* Header */}
                 <div className="p-6 border-b border-border/20">

@@ -1,85 +1,79 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
+/* ═══════════════════════════════════════════════════════════════
+   Origin Financial — "Dark Canvas, Subtle Glow"
+   Elegant, premium, restrained. Deep ink canvas, light serif display,
+   soft pastel themed cards, ghost / white-filled buttons.
+   ═══════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
-    --foreground: 220 25% 10%;
-
+    /* Light fallback (app defaults to dark) */
+    --background: 40 30% 98%;
+    --foreground: 220 15% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-
+    --card-foreground: 220 15% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
-
-    --primary: 217 91% 60%;
+    --popover-foreground: 220 15% 12%;
+    --primary: 243 70% 64%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 20% 96%;
-    --secondary-foreground: 220 25% 10%;
-
-    --muted: 210 15% 95%;
-    --muted-foreground: 220 10% 46%;
-
-    --accent: 172 66% 50%;
+    --secondary: 240 20% 96%;
+    --secondary-foreground: 220 15% 12%;
+    --muted: 240 20% 95%;
+    --muted-foreground: 220 8% 46%;
+    --accent: 243 70% 64%;
     --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
+    --border: 240 15% 90%;
+    --input: 240 15% 90%;
+    --ring: 243 70% 64%;
 
-    --border: 214 20% 90%;
-    --input: 214 20% 90%;
-    --ring: 217 91% 60%;
-
-    --radius: 0.75rem;
-
-    --gradient-primary: linear-gradient(135deg, hsl(217, 91%, 60%), hsl(172, 66%, 50%));
-    --gradient-hero: linear-gradient(180deg, hsl(210, 20%, 98%) 0%, hsl(217, 91%, 97%) 100%);
-    --gradient-card: linear-gradient(135deg, hsl(0, 0%, 100%) 0%, hsl(210, 20%, 98%) 100%);
-    --shadow-card: 0 1px 3px 0 hsl(220 25% 10% / 0.04), 0 4px 16px 0 hsl(220 25% 10% / 0.06);
-    --shadow-elevated: 0 4px 24px 0 hsl(217 91% 60% / 0.1), 0 1px 4px 0 hsl(220 25% 10% / 0.06);
+    --radius: 0.875rem;
 
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary: 243 70% 64%;
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
     --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-ring: 243 70% 64%;
   }
 
   .dark {
-    --background: 220 25% 6%;
-    --foreground: 210 20% 96%;
-    --card: 220 20% 10%;
-    --card-foreground: 210 20% 96%;
-    --popover: 220 20% 10%;
-    --popover-foreground: 210 20% 96%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 0 0% 100%;
-    --secondary: 220 20% 14%;
-    --secondary-foreground: 210 20% 96%;
-    --muted: 220 15% 16%;
-    --muted-foreground: 215 15% 60%;
-    --accent: 172 66% 50%;
+    --background: 216 12% 6%;          /* Midnight Ink */
+    --foreground: 0 0% 98%;            /* Ghost White */
+    --card: 220 9% 11%;               /* Elevated charcoal */
+    --card-foreground: 0 0% 98%;
+    --popover: 220 10% 9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 244 100% 76%;          /* Violet Haze #847dff */
+    --primary-foreground: 245 40% 10%;
+    --secondary: 220 8% 15%;
+    --secondary-foreground: 0 0% 92%;
+    --muted: 220 7% 15%;
+    --muted-foreground: 220 7% 62%;   /* Subtle Ash */
+    --accent: 191 100% 44%;           /* Ocean Glimmer #00b3dd */
     --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 220 15% 18%;
-    --input: 220 15% 18%;
-    --ring: 217 91% 60%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --destructive: 0 62% 47%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 8% 17%;
+    --input: 220 8% 15%;
+    --ring: 244 100% 76%;
+
+    --sidebar-background: 220 11% 8%;
+    --sidebar-foreground: 0 0% 80%;
+    --sidebar-primary: 244 100% 76%;
+    --sidebar-primary-foreground: 245 40% 10%;
+    --sidebar-accent: 220 8% 14%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 220 8% 16%;
+    --sidebar-ring: 244 100% 76%;
   }
 }
 
@@ -88,40 +82,136 @@
     @apply border-border;
   }
 
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     @apply bg-background text-foreground font-body antialiased;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display;
+    @apply font-display tracking-tight;
   }
+
+  ::selection {
+    background: hsl(244 100% 76% / 0.3);
+    color: #fff;
+  }
+
+  /* Slim, quiet scrollbar */
+  .dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+  .dark ::-webkit-scrollbar-track { background: transparent; }
+  .dark ::-webkit-scrollbar-thumb {
+    background: hsl(220 6% 24%);
+    border-radius: 9999px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  .dark ::-webkit-scrollbar-thumb:hover { background: hsl(244 50% 55%); background-clip: content-box; }
+  .dark * { scrollbar-color: hsl(220 6% 24%) transparent; scrollbar-width: thin; }
 }
 
 @layer utilities {
-  .gradient-primary {
-    background: var(--gradient-primary);
+  /* Elegant serif display (Lyondisplay substitute) */
+  .font-origin-display {
+    font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+    letter-spacing: -0.015em;
   }
 
-  .gradient-hero {
-    background: var(--gradient-hero);
-  }
-
-  .gradient-card {
-    background: var(--gradient-card);
-  }
-
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
-
-  .shadow-elevated {
-    box-shadow: var(--shadow-elevated);
-  }
-
-  .text-gradient {
-    background: var(--gradient-primary);
+  /* Soft, slow accent gradient text */
+  .text-origin-gradient {
+    background: linear-gradient(100deg, #b8c6ff 0%, #847dff 45%, #d1c9ff 100%);
+    background-size: 200% auto;
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
     background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: origin-pan 9s linear infinite;
+  }
+  .text-warm-gradient {
+    background: linear-gradient(100deg, #c2b6ff 0%, #dd90d8 55%, #f0c0b0 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: origin-pan 10s linear infinite;
+  }
+
+  /* Subtle elevated glass surface */
+  .origin-glass {
+    background: rgba(255, 255, 255, 0.035);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    backdrop-filter: blur(16px);
+  }
+
+  /* Vivid themed decorative cards (Origin "Themed Content Card") */
+  .card-ocean    { background: linear-gradient(165deg, #0bbfe6, #008fb8); }
+  .card-violet   { background: linear-gradient(165deg, #8f88ff, #6a62e8); }
+  .card-rose     { background: linear-gradient(165deg, #e29fdd, #c878c2); }
+  .card-sky      { background: linear-gradient(165deg, #9cc0f4, #6f9ee0); }
+  .card-indigo   { background: linear-gradient(165deg, #5b59c4, #403e96); }
+  .card-lavender { background: linear-gradient(165deg, #ddd6ff, #c3b9ff); }
+
+  /* Soft tinted glass cards — pastel hint over charcoal (elegant, quiet) */
+  .tint-ocean    { background: linear-gradient(165deg, rgba(0,179,221,0.14), rgba(0,179,221,0.04)); border: 1px solid rgba(0,179,221,0.18); }
+  .tint-violet   { background: linear-gradient(165deg, rgba(132,125,255,0.16), rgba(132,125,255,0.04)); border: 1px solid rgba(132,125,255,0.20); }
+  .tint-rose     { background: linear-gradient(165deg, rgba(221,144,216,0.14), rgba(221,144,216,0.04)); border: 1px solid rgba(221,144,216,0.18); }
+  .tint-sky      { background: linear-gradient(165deg, rgba(144,184,240,0.14), rgba(144,184,240,0.04)); border: 1px solid rgba(144,184,240,0.18); }
+
+  /* Gentle, slow micro-motions only */
+  .animate-origin-float { animation: origin-float 9s ease-in-out infinite; }
+  .animate-origin-pulse { animation: origin-pulse 5s ease-in-out infinite; }
+
+  /* Quiet sheen on white CTAs (very subtle, slow) */
+  .origin-shimmer { position: relative; overflow: hidden; }
+  .origin-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
+    transform: translateX(-130%);
+    animation: origin-sheen 5s ease-in-out infinite;
+  }
+
+  /* ── Legacy class names, remapped to elegant Origin equivalents ──
+     (kept so existing pages/components inherit the new look) */
+  .gradient-primary { background: linear-gradient(135deg, #7d75f0 0%, #5b53c8 100%); }
+  .gradient-hero { background: linear-gradient(180deg, hsl(216 12% 6%) 0%, hsl(214 18% 9%) 100%); }
+  .gradient-card { background: linear-gradient(160deg, hsl(220 9% 13%), hsl(220 10% 10%)); }
+  .shadow-card { box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 14px 32px -20px rgba(0,0,0,0.65); }
+  .shadow-elevated { box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 28px 56px -30px rgba(0,0,0,0.75); }
+  .text-gradient {
+    background: linear-gradient(100deg, #b8c6ff 0%, #847dff 50%, #d1c9ff 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+@keyframes origin-pan {
+  to { background-position: 200% center; }
+}
+@keyframes origin-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes origin-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.04); }
+}
+@keyframes origin-sheen {
+  0% { transform: translateX(-130%); }
+  55%, 100% { transform: translateX(130%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .text-origin-gradient,
+  .text-warm-gradient,
+  .animate-origin-float,
+  .animate-origin-pulse,
+  .origin-shimmer::after {
+    animation: none !important;
   }
 }

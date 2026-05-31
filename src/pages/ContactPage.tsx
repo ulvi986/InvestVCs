@@ -9,7 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AuroraBackground from "@/components/AuroraBackground";
+import OriginBackground from "@/components/OriginBackground";
 
 const ContactPage = () => {
   const { t } = useLanguage();
@@ -42,11 +42,11 @@ const ContactPage = () => {
 
   return (
     <div className="relative min-h-screen flex flex-col">
-      <AuroraBackground />
+      <OriginBackground />
       <Navbar />
       <main className="flex-1 relative z-10 flex items-center justify-center py-16">
         <div className="w-full max-w-lg mx-auto px-4">
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground text-center mb-2">
+          <h1 className="text-3xl sm:text-4xl font-origin-display font-light text-foreground text-center mb-2">
             {t("landing.contact_title")}
           </h1>
           <p className="text-muted-foreground text-center mb-8">

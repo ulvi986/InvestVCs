@@ -9,7 +9,7 @@ interface EvaluationSummaryProps {
   riskFactor: number;
 }
 
-const colors = ["hsl(217, 91%, 60%)", "hsl(172, 66%, 50%)", "hsl(280, 60%, 55%)", "hsl(45, 93%, 58%)"];
+const colors = ["hsl(244, 100%, 76%)", "hsl(191, 100%, 44%)", "hsl(280, 60%, 55%)", "hsl(244, 100%, 76%)"];
 
 const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryProps) => {
   const { t } = useLanguage();
@@ -50,8 +50,7 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
     tips.push({ icon: Lightbulb, title: t("eval_summary.next_step"), text: average > 2_000_000 ? t("eval_summary.next_step_high") : t("eval_summary.next_step_low"), type: "info" });
   }
 
-  const typeStyles = { info: "border-primary/20 bg-primary/5", success: "border-accent/20 bg-accent/5", warning: "border-destructive/20 bg-destructive/5" };
-  const iconStyles = { info: "text-primary", success: "text-accent", warning: "text-destructive" };
+  const tipAccent = { info: "#847dff", success: "#00b3dd", warning: "#dd90d8" };
 
   return (
     <div className="space-y-8">
@@ -62,11 +61,11 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-          <h3 className="text-lg font-semibold text-foreground mb-4">{t("eval_summary.comparison")}</h3>
+        <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+          <h3 className="font-origin-display text-xl font-medium text-foreground mb-4">{t("eval_summary.comparison")}</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 8%, 18%)" />
               <XAxis dataKey="method" tick={{ fontSize: 12 }} />
               <YAxis tickFormatter={(v: number) => `$${(v / 1_000_000).toFixed(1)}M`} tick={{ fontSize: 12 }} />
               <Tooltip formatter={(v: number) => `$${v.toLocaleString("en-US")}`} />
@@ -79,8 +78,8 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
 
         <div className="space-y-6">
           <ValuationGauge value={average} max={5000000} label={t("eval_summary.overall_avg")} />
-          <div className="rounded-2xl border border-border bg-card p-6 shadow-card">
-            <h3 className="text-lg font-semibold text-foreground mb-3">{t("eval_summary.calculation")}</h3>
+          <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+            <h3 className="font-origin-display text-xl font-medium text-foreground mb-3">{t("eval_summary.calculation")}</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-muted-foreground">{t("eval_summary.berkus")}</span><span className="font-medium text-foreground">${berkus.toLocaleString()}</span></div>
               <div className="flex justify-between"><span className="text-muted-foreground">{t("eval_summary.scorecard")}</span><span className="font-medium text-foreground">${scorecard.toLocaleString()}</span></div>
@@ -95,16 +94,16 @@ const EvaluationSummary = ({ berkus, scorecard, riskFactor }: EvaluationSummaryP
       </div>
 
       <div>
-        <h3 className="text-xl font-bold text-foreground mb-4">💡 {t("eval_summary.advice_title")}</h3>
+        <h3 className="font-origin-display text-2xl font-light text-foreground mb-5">{t("eval_summary.advice_title")}</h3>
         <div className="grid gap-4 md:grid-cols-2">
           {tips.map((tip, i) => (
-            <div key={i} className={`rounded-xl border p-5 ${typeStyles[tip.type]}`}>
-              <div className="flex items-start gap-3">
-                <tip.icon className={`h-5 w-5 mt-0.5 shrink-0 ${iconStyles[tip.type]}`} />
-                <div>
-                  <h4 className="text-sm font-semibold text-foreground">{tip.title}</h4>
-                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{tip.text}</p>
-                </div>
+            <div key={i} className="flex items-start gap-4 rounded-2xl border border-white/[0.07] bg-card p-5" style={{ borderLeft: `2px solid ${tipAccent[tip.type]}` }}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${tipAccent[tip.type]}1f` }}>
+                <tip.icon className="h-4 w-4" style={{ color: tipAccent[tip.type] }} />
+              </div>
+              <div>
+                <h4 className="text-sm font-medium text-foreground">{tip.title}</h4>
+                <p className="mt-1 text-sm text-muted-foreground leading-relaxed font-light">{tip.text}</p>
               </div>
             </div>
           ))}

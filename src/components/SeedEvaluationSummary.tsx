@@ -8,7 +8,7 @@ interface SeedEvaluationSummaryProps {
   chicagoMethod: number;
 }
 
-const colors = ["hsl(217, 91%, 60%)", "hsl(172, 66%, 50%)", "hsl(45, 93%, 58%)"];
+const colors = ["hsl(244, 100%, 76%)", "hsl(191, 100%, 44%)", "hsl(244, 100%, 76%)"];
 
 const SeedEvaluationSummary = ({ vcMethod, chicagoMethod }: SeedEvaluationSummaryProps) => {
   const { t } = useLanguage();
@@ -60,7 +60,7 @@ const SeedEvaluationSummary = ({ vcMethod, chicagoMethod }: SeedEvaluationSummar
           <h3 className="text-lg font-semibold text-foreground mb-4">{t("eval_summary.comparison")}</h3>
           <ResponsiveContainer width="100%" height={280}>
             <BarChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(214, 20%, 90%)" />
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 8%, 18%)" />
               <XAxis dataKey="method" tick={{ fontSize: 12 }} />
               <YAxis tickFormatter={(v: number) => `$${(v / 1_000_000).toFixed(1)}M`} tick={{ fontSize: 12 }} />
               <Tooltip formatter={(v: number) => `$${v.toLocaleString("en-US")}`} />

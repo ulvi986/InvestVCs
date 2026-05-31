@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import OriginBackground from "@/components/OriginBackground";
 import logoImg from "@/assets/logo.jpeg";
 
 const COUNTRIES = [
@@ -91,14 +92,15 @@ const SignUp = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <Card className="w-full max-w-lg shadow-elevated border-border">
+    <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
+      <OriginBackground />
+      <Card className="w-full max-w-lg origin-glass">
         <CardHeader className="text-center space-y-2">
           <Link to="/" className="mx-auto flex items-center gap-2 font-display text-xl font-bold text-foreground">
-            <img src={logoImg} alt="InvestVCs" className="h-8 w-8 rounded-lg object-cover" />
-            InvestVCs
+            <img src={logoImg} alt="InvestVCs" className="h-9 w-9 rounded-xl object-cover" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">InvestVCs</span>
           </Link>
-          <CardTitle className="text-2xl font-bold">{t("auth.signup")}</CardTitle>
+          <CardTitle className="text-2xl font-origin-display font-light pt-1">{t("auth.signup")}</CardTitle>
           <CardDescription>{t("auth.signup_desc")}</CardDescription>
         </CardHeader>
 
@@ -158,7 +160,7 @@ const SignUp = () => {
             </div>
 
             {/* Ethical Agreement */}
-            <div className="rounded-lg border border-border bg-muted/30 p-4 space-y-3">
+            <div className="rounded-lg border border-border bg-white/[0.03] p-4 space-y-3">
               <h4 className="text-sm font-semibold text-foreground">{t("auth.ethical_title")}</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">{t("auth.ethical_text")}</p>
               <div className="flex items-center gap-2">
@@ -173,7 +175,7 @@ const SignUp = () => {
           </CardContent>
 
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full gradient-primary text-primary-foreground border-0" disabled={loading}>
+            <Button type="submit" variant="white" className="w-full origin-shimmer" disabled={loading}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {t("auth.signup")}
             </Button>

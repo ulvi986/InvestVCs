@@ -2,23 +2,17 @@ import DashboardLayout from "@/components/DashboardLayout";
 import { useStartupContext } from "@/context/StartupContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useMemo } from "react";
+import { motion } from "framer-motion";
 import { computeVCValuation, computeChicagoValuation } from "@/lib/valuationUtils";
 import {
-  TrendingUp, TrendingDown, Cpu, ShoppingCart, Landmark, Lightbulb,
-  AlertTriangle, CheckCircle, DollarSign, Users, Wallet, Target, Gauge
+  TrendingUp, TrendingDown, Lightbulb, AlertTriangle, CheckCircle,
+  DollarSign, Users, Wallet, Target,
 } from "lucide-react";
-import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, Cell
-} from "recharts";
 
-const TRL_COUNT = 9;
-const CRL_COUNT = 9;
-const FRL_COUNT = 9;
-
-const TRL_CRITERIA = [[1,2],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
-const CRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
-const FRL_CRITERIA = [[1,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1],[2,1]];
+const TRL_COUNT = 9, CRL_COUNT = 9, FRL_COUNT = 9;
+const TRL_CRITERIA = [[1, 2], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1]];
+const CRL_CRITERIA = [[1, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1]];
+const FRL_CRITERIA = [[1, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1]];
 
 function getFinalLevelFromAnswers(answers: Record<string, boolean>, prefix: string, levelCount: number, criteriaCounts: number[][]): number {
   let finalLevel = 0;
@@ -38,60 +32,69 @@ const numFmt = (v: number | null | undefined) => {
   return v.toLocaleString("en-US", { maximumFractionDigits: 2 });
 };
 
-const CircularGauge = ({ value, max, label, size = 90 }: { value: number; max: number; label: string; size?: number }) => {
-  const percentage = max > 0 ? (value / max) * 100 : 0;
-  const radius = (size - 12) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+const scoreHue = (s: number) =>
+  s >= 70 ? "#00b3dd" : s >= 40 ? "#847dff" : s > 0 ? "#dd90d8" : "#3a3a42";
+
+/* Large hero score ring */
+const ScoreRing = ({ score, size = 200 }: { score: number; size?: number }) => {
+  const stroke = 10;
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const off = c - (score / 100) * c;
   const center = size / 2;
-  const getColor = (pct: number) => {
-    if (pct >= 70) return "hsl(172, 66%, 50%)";
-    if (pct >= 40) return "hsl(45, 93%, 58%)";
-    if (pct > 0) return "hsl(0, 84%, 60%)";
-    return "hsl(220, 10%, 30%)";
-  };
-  const color = getColor(percentage);
   return (
-    <div className="flex flex-col items-center gap-2">
-      <svg width={size} height={size} className="transform -rotate-90">
-        <circle cx={center} cy={center} r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="6" opacity="0.3" />
-        <circle cx={center} cy={center} r={radius} fill="none" stroke={color} strokeWidth="6" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-1000 ease-out" />
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="-rotate-90">
+        <defs>
+          <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#847dff" />
+            <stop offset="100%" stopColor="#00b3dd" />
+          </linearGradient>
+        </defs>
+        <circle cx={center} cy={center} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
+        <motion.circle
+          cx={center} cy={center} r={r} fill="none" stroke="url(#ringGrad)" strokeWidth={stroke}
+          strokeLinecap="round" strokeDasharray={c}
+          initial={{ strokeDashoffset: c }}
+          animate={{ strokeDashoffset: off }}
+          transition={{ duration: 1.6, ease: [0.22, 1, 0.36, 1] }}
+        />
       </svg>
-      <div className="absolute flex items-center justify-center" style={{ width: size, height: size }}>
-        <span className="text-xl font-bold text-foreground">{Math.round(percentage)}</span>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="font-origin-display text-6xl font-light text-white leading-none">{Math.round(score)}</span>
+        <span className="mt-1 text-xs uppercase tracking-[0.2em] text-white/40">/ 100</span>
       </div>
-      <span className="text-xs font-medium text-muted-foreground mt-1">{label}</span>
     </div>
   );
 };
 
-const GlobalGauge = ({ score, label }: { score: number; label: string }) => {
-  const size = 140;
-  const radius = (size - 16) / 2;
-  const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (score / 100) * circumference;
-  const center = size / 2;
-  const getColor = (s: number) => {
-    if (s >= 70) return "hsl(172, 66%, 50%)";
-    if (s >= 40) return "hsl(45, 93%, 58%)";
-    if (s > 0) return "hsl(0, 84%, 60%)";
-    return "hsl(220, 10%, 30%)";
-  };
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative">
-        <svg width={size} height={size} className="transform -rotate-90">
-          <circle cx={center} cy={center} r={radius} fill="none" stroke="hsl(var(--muted))" strokeWidth="8" opacity="0.2" />
-          <circle cx={center} cy={center} r={radius} fill="none" stroke={getColor(score)} strokeWidth="8" strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={strokeDashoffset} className="transition-all duration-1000 ease-out" />
-        </svg>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-4xl font-bold text-foreground">{Math.round(score)}</span>
-        </div>
-      </div>
-      <p className="text-sm font-medium text-primary mt-2">{label}</p>
+/* Horizontal meter bar */
+const Meter = ({ name, score, i }: { name: string; score: number; i: number }) => (
+  <motion.div
+    className="flex items-center gap-4"
+    initial={{ opacity: 0, x: -16 }}
+    whileInView={{ opacity: 1, x: 0 }}
+    viewport={{ once: true }}
+    transition={{ delay: i * 0.06, duration: 0.5 }}
+  >
+    <span className="w-32 shrink-0 text-sm text-white/60">{name}</span>
+    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
+      <motion.div
+        className="absolute inset-y-0 left-0 rounded-full"
+        style={{ background: scoreHue(score) }}
+        initial={{ width: 0 }}
+        whileInView={{ width: `${score}%` }}
+        viewport={{ once: true }}
+        transition={{ delay: 0.2 + i * 0.06, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+      />
     </div>
-  );
-};
+    <span className="w-10 shrink-0 text-right font-origin-display text-lg text-white">{Math.round(score)}</span>
+  </motion.div>
+);
+
+const Eyebrow = ({ children }: { children: React.ReactNode }) => (
+  <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{children}</p>
+);
 
 const OverallSummary = () => {
   const { evaluation, financial, readiness } = useStartupContext();
@@ -110,12 +113,12 @@ const OverallSummary = () => {
   const chicagoValuation = useMemo(() => computeChicagoValuation(chicagoAnswers), [chicagoAnswers]);
   const hasSeedEvaluation = vcValuation > 0 || chicagoValuation > 0;
   const seedAvg = useMemo(() => {
-    const vals = [vcValuation, chicagoValuation].filter(v => v > 0);
+    const vals = [vcValuation, chicagoValuation].filter((v) => v > 0);
     return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
   }, [vcValuation, chicagoValuation]);
 
   const avgValuation = useMemo(() => {
-    const vals = [berkus, scorecard, riskFactor].filter(v => v > 0);
+    const vals = [berkus, scorecard, riskFactor].filter((v) => v > 0);
     return vals.length > 0 ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0;
   }, [berkus, scorecard, riskFactor]);
 
@@ -140,24 +143,18 @@ const OverallSummary = () => {
     return Math.min(s, 100);
   }, [latestSnapshot]);
 
-  const riskScore = useMemo(() => {
-    if (!hasEvaluation) return 0;
-    return Math.min(Math.round((avgValuation / 2500000) * 100), 100);
-  }, [hasEvaluation, avgValuation]);
-
+  const riskScore = useMemo(() => (!hasEvaluation ? 0 : Math.min(Math.round((avgValuation / 2500000) * 100), 100)), [hasEvaluation, avgValuation]);
   const trlScore = Math.round((trlLevel / TRL_COUNT) * 100);
   const founderScore = useMemo(() => Math.round((crlLevel / CRL_COUNT) * 100), [crlLevel]);
   const investmentScore = useMemo(() => Math.round((frlLevel / FRL_COUNT) * 100), [frlLevel]);
-
   const maturityScore = useMemo(() => {
     const scores = [financialScore, riskScore, trlScore, founderScore, investmentScore];
-    const active = scores.filter(s => s > 0);
-    return active.length > 0 ? Math.round(active.reduce((a, b) => a + b, 0) / active.length * 0.6) : 0;
+    const active = scores.filter((s) => s > 0);
+    return active.length > 0 ? Math.round((active.reduce((a, b) => a + b, 0) / active.length) * 0.6) : 0;
   }, [financialScore, riskScore, trlScore, founderScore, investmentScore]);
-
   const globalScore = useMemo(() => {
     const all = [financialScore, riskScore, trlScore, founderScore, investmentScore, maturityScore];
-    const active = all.filter(s => s > 0);
+    const active = all.filter((s) => s > 0);
     return active.length > 0 ? Math.round(active.reduce((a, b) => a + b, 0) / active.length) : 0;
   }, [financialScore, riskScore, trlScore, founderScore, investmentScore, maturityScore]);
 
@@ -169,13 +166,6 @@ const OverallSummary = () => {
     { name: t("summary.investment"), score: investmentScore },
     { name: t("summary.maturity_label"), score: maturityScore },
   ];
-
-  const barColors = modules.map(m => {
-    if (m.score >= 70) return "hsl(172, 66%, 50%)";
-    if (m.score >= 40) return "hsl(45, 93%, 58%)";
-    if (m.score > 0) return "hsl(0, 84%, 60%)";
-    return "hsl(220, 10%, 30%)";
-  });
 
   const getMaturityLabel = (score: number): string => {
     if (score >= 80) return t("summary.scale_up");
@@ -191,10 +181,7 @@ const OverallSummary = () => {
 
   const advice = useMemo((): Tip[] => {
     const tips: Tip[] = [];
-    if (!hasAnyData) {
-      tips.push({ icon: AlertTriangle, title: t("summary.no_data"), text: t("summary.no_data_desc"), type: "warning" });
-      return tips;
-    }
+    if (!hasAnyData) { tips.push({ icon: AlertTriangle, title: t("summary.no_data"), text: t("summary.no_data_desc"), type: "warning" }); return tips; }
     if (hasEvaluation) {
       if (avgValuation < 1_000_000) tips.push({ icon: AlertTriangle, title: t("summary.low_val"), text: `$${numFmt(avgValuation)} — ${t("summary.low_val_desc")}`, type: "warning" });
       else if (avgValuation < 2_500_000) tips.push({ icon: Lightbulb, title: t("summary.mod_val"), text: `$${numFmt(avgValuation)} — ${t("summary.mod_val_desc")}`, type: "info" });
@@ -217,153 +204,181 @@ const OverallSummary = () => {
     return tips;
   }, [hasAnyData, hasEvaluation, hasFinancial, hasReadiness, avgValuation, latestSnapshot, trlLevel, crlLevel, frlLevel, globalScore, t]);
 
-  const typeStyles = { info: "border-primary/20 bg-primary/5", success: "border-accent/20 bg-accent/5", warning: "border-destructive/20 bg-destructive/5" };
-  const iconStyles = { info: "text-primary", success: "text-accent", warning: "text-destructive" };
+  const tipAccent = { info: "#847dff", success: "#00b3dd", warning: "#dd90d8" };
+
+  const readinessRows = [
+    { label: t("summary.technology_trl"), level: trlLevel, max: TRL_COUNT, labels: trlLabels, color: "#847dff" },
+    { label: t("summary.commercial_crl"), level: crlLevel, max: CRL_COUNT, labels: crlLabels, color: "#00b3dd" },
+    { label: t("summary.funding_frl"), level: frlLevel, max: FRL_COUNT, labels: frlLabels, color: "#dd90d8" },
+  ];
 
   return (
     <DashboardLayout title={t("summary.title")} subtitle={t("summary.subtitle")}>
-      {hasReadiness && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-            <Cpu className="h-5 w-5 text-primary" /> {t("summary.readiness_levels")}
-          </h3>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {[
-              { label: t("summary.technology_trl"), level: trlLevel, max: TRL_COUNT, color: "text-primary", labels: trlLabels },
-              { label: t("summary.commercial_crl"), level: crlLevel, max: CRL_COUNT, color: "text-accent", labels: crlLabels },
-              { label: t("summary.funding_frl"), level: frlLevel, max: FRL_COUNT, color: "text-purple-500", labels: frlLabels },
-            ].map((r) => (
-              <div key={r.label} className="rounded-lg border border-border p-4 bg-muted/30">
-                <p className="text-xs text-muted-foreground mb-1">{r.label}</p>
-                <p className={`text-2xl font-bold ${r.color}`}>{r.level} / {r.max}</p>
-                <p className="text-xs text-muted-foreground mt-1">{r.level > 0 ? r.labels[r.level - 1] : t("summary.not_started")}</p>
-                <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">
-                  <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${(r.level / r.max) * 100}%` }} />
-                </div>
-              </div>
-            ))}
+      {/* ── Hero: global health ── */}
+      <motion.section
+        className="relative overflow-hidden rounded-[28px] border border-white/[0.07] p-8 sm:p-12 mb-6"
+        style={{ background: "linear-gradient(140deg, hsl(220 9% 12%), hsl(220 11% 9%))" }}
+        initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+      >
+        <div className="pointer-events-none absolute -top-24 -right-16 h-80 w-80 rounded-full"
+          style={{ background: "radial-gradient(circle, rgba(132,125,255,0.22), transparent 70%)", filter: "blur(20px)" }} />
+        <div className="relative flex flex-col items-center gap-8 md:flex-row md:gap-12">
+          <ScoreRing score={globalScore} />
+          <div className="text-center md:text-left">
+            <Eyebrow>{t("summary.global_health")}</Eyebrow>
+            <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl leading-tight max-w-md">
+              {t("summary.maturity")}:{" "}
+              <span className="italic text-origin-gradient">{getMaturityLabel(globalScore)}</span>
+            </h2>
+            <div className="mt-6 flex flex-wrap justify-center gap-2 md:justify-start">
+              {hasEvaluation && <span className="rounded-full tint-violet px-4 py-1.5 text-xs text-white/80">Valuation ✓</span>}
+              {hasFinancial && <span className="rounded-full tint-ocean px-4 py-1.5 text-xs text-white/80">Financials ✓</span>}
+              {hasReadiness && <span className="rounded-full tint-rose px-4 py-1.5 text-xs text-white/80">Readiness ✓</span>}
+            </div>
           </div>
         </div>
-      )}
+      </motion.section>
 
-      <div className="rounded-2xl border border-border bg-card p-8 shadow-card mb-8 flex flex-col items-center">
-        <GlobalGauge score={globalScore} label={t("summary.global_health")} />
-        <p className="mt-3 text-lg font-semibold text-foreground">
-          {t("summary.maturity")}: <span className="text-primary">{getMaturityLabel(globalScore)}</span>
-        </p>
-      </div>
-
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-        {modules.map((mod) => (
-          <div key={mod.name} className="rounded-xl border border-border bg-card p-5 shadow-card flex flex-col items-center relative">
-            <CircularGauge value={mod.score} max={100} label={mod.name} />
-          </div>
+      {/* ── Themed headline cards ── */}
+      <div className="grid gap-5 md:grid-cols-3 mb-6">
+        {[
+          { cls: "card-violet", show: hasEvaluation, label: t("summary.avg_valuation") + " (Pre-Seed)", value: `$${avgValuation.toLocaleString()}`, note: `${t("eval_summary.berkus")} · ${t("eval_summary.scorecard")} · ${t("eval_summary.risk_factor")}` },
+          { cls: "card-ocean", show: hasFinancial && !!latestSnapshot, label: t("summary.ending_cash"), value: latestSnapshot ? `$${numFmt(latestSnapshot.cashFlow.endingCash)}` : "—", note: latestSnapshot ? `${numFmt(latestSnapshot.cashFlow.runway)} ${t("financial.months")} runway` : "" },
+          { cls: "card-rose", show: hasReadiness, label: t("summary.readiness_levels"), value: `TRL ${trlLevel} · CRL ${crlLevel}`, note: `FRL ${frlLevel} / 9` },
+        ].filter((c) => c.show).map((c, i) => (
+          <motion.div key={c.label} className={`${c.cls} rounded-3xl p-7`}
+            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            transition={{ delay: i * 0.1, duration: 0.6 }}>
+            <p className="text-[13px] font-medium text-white/75">{c.label}</p>
+            <p className="mt-3 font-origin-display text-3xl font-medium text-white">{c.value}</p>
+            <p className="mt-3 text-[13px] leading-relaxed text-white/65">{c.note}</p>
+          </motion.div>
         ))}
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-        <h3 className="text-lg font-semibold text-foreground mb-4">{t("summary.module_comparison")}</h3>
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={modules} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="name" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-            <YAxis domain={[0, 100]} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-            <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", color: "hsl(var(--foreground))" }} />
-            <Bar dataKey="score" radius={[6, 6, 0, 0]} maxBarSize={60}>
-              {modules.map((_, i) => (<Cell key={i} fill={barColors[i]} />))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* ── Module breakdown (meters) ── */}
+      <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+        initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+        <Eyebrow>{t("summary.module_comparison")}</Eyebrow>
+        <div className="mt-7 space-y-5">
+          {modules.map((m, i) => <Meter key={m.name} name={m.name} score={m.score} i={i} />)}
+        </div>
+      </motion.section>
 
+      {/* ── Readiness detail ── */}
+      {hasReadiness && (
+        <div className="grid gap-5 sm:grid-cols-3 mb-6">
+          {readinessRows.map((r, i) => (
+            <motion.div key={r.label} className="rounded-3xl border border-white/[0.07] bg-card p-6"
+              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}>
+              <p className="text-xs text-white/45">{r.label}</p>
+              <p className="mt-2 font-origin-display text-3xl font-light text-white">
+                {r.level} <span className="text-white/35 text-xl">/ {r.max}</span>
+              </p>
+              <p className="mt-1 text-xs text-white/55">{r.level > 0 ? r.labels[r.level - 1] : t("summary.not_started")}</p>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                <motion.div className="h-full rounded-full" style={{ background: r.color }}
+                  initial={{ width: 0 }} whileInView={{ width: `${(r.level / r.max) * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }} />
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Financial report tiles ── */}
       {hasFinancial && latestSnapshot && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">{t("summary.financial_report")}</h3>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          <Eyebrow>{t("summary.financial_report")}</Eyebrow>
+          <div className="mt-7 grid gap-px overflow-hidden rounded-2xl bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-4">
             {[
-              { label: t("summary.total_revenue"), value: `$${numFmt(latestSnapshot.revenue.total)}`, icon: TrendingUp, positive: true },
-              { label: t("summary.total_expenses"), value: `$${numFmt(latestSnapshot.expenses.total)}`, icon: TrendingDown, positive: false },
-              { label: t("summary.ending_cash"), value: `$${numFmt(latestSnapshot.cashFlow.endingCash)}`, icon: Wallet, positive: latestSnapshot.cashFlow.endingCash > 0 },
-              { label: t("summary.active_users"), value: numFmt(latestSnapshot.customerMetrics.activeUsers), icon: Users, positive: true },
-              { label: "ARPU", value: `$${numFmt(latestSnapshot.customerMetrics.arpu)}`, icon: DollarSign, positive: true },
-              { label: t("summary.churn_rate"), value: `${numFmt(latestSnapshot.customerMetrics.churnRate * 100)}%`, icon: AlertTriangle, positive: latestSnapshot.customerMetrics.churnRate < 0.05 },
-              { label: t("summary.burn_rate"), value: `$${numFmt(latestSnapshot.cashFlow.monthlyBurnRate)}`, icon: TrendingDown, positive: latestSnapshot.cashFlow.monthlyBurnRate > 0 },
-              { label: "CLTV", value: `$${numFmt(latestSnapshot.customerMetrics.cltv)}`, icon: Target, positive: true },
-            ].map(metric => (
-              <div key={metric.label} className="rounded-lg border border-border p-4 bg-muted/30">
-                <div className="flex items-center gap-2 mb-1">
-                  <metric.icon className={`h-4 w-4 ${metric.positive ? "text-accent" : "text-destructive"}`} />
-                  <span className="text-xs text-muted-foreground">{metric.label}</span>
+              { label: t("summary.total_revenue"), value: `$${numFmt(latestSnapshot.revenue.total)}`, icon: TrendingUp, up: true },
+              { label: t("summary.total_expenses"), value: `$${numFmt(latestSnapshot.expenses.total)}`, icon: TrendingDown, up: false },
+              { label: t("summary.ending_cash"), value: `$${numFmt(latestSnapshot.cashFlow.endingCash)}`, icon: Wallet, up: latestSnapshot.cashFlow.endingCash > 0 },
+              { label: t("summary.active_users"), value: numFmt(latestSnapshot.customerMetrics.activeUsers), icon: Users, up: true },
+              { label: "ARPU", value: `$${numFmt(latestSnapshot.customerMetrics.arpu)}`, icon: DollarSign, up: true },
+              { label: t("summary.churn_rate"), value: `${numFmt(latestSnapshot.customerMetrics.churnRate * 100)}%`, icon: AlertTriangle, up: latestSnapshot.customerMetrics.churnRate < 0.05 },
+              { label: t("summary.burn_rate"), value: `$${numFmt(latestSnapshot.cashFlow.monthlyBurnRate)}`, icon: TrendingDown, up: latestSnapshot.cashFlow.monthlyBurnRate > 0 },
+              { label: "CLTV", value: `$${numFmt(latestSnapshot.customerMetrics.cltv)}`, icon: Target, up: true },
+            ].map((m) => (
+              <div key={m.label} className="bg-card p-5">
+                <div className="flex items-center gap-2 text-white/45">
+                  <m.icon className="h-4 w-4" style={{ color: m.up ? "#00b3dd" : "#dd90d8" }} />
+                  <span className="text-xs">{m.label}</span>
                 </div>
-                <p className="text-lg font-bold text-foreground">{metric.value}</p>
+                <p className="mt-2 font-origin-display text-xl text-white">{m.value}</p>
               </div>
             ))}
           </div>
-        </div>
+        </motion.section>
       )}
 
+      {/* ── Valuation results ── */}
       {hasEvaluation && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">{t("summary.valuation_results")}</h3>
-          <div className="grid gap-4 sm:grid-cols-3">
+        <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          <Eyebrow>{t("summary.valuation_results")}</Eyebrow>
+          <div className="mt-7 grid gap-4 sm:grid-cols-3">
             {[
-              { method: t("eval_summary.berkus"), value: berkus, color: "text-primary" },
-              { method: t("eval_summary.scorecard"), value: scorecard, color: "text-accent" },
-              { method: t("eval_summary.risk_factor"), value: riskFactor, color: "text-purple-500" },
-            ].map(v => (
-              <div key={v.method} className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                <p className="text-xs text-muted-foreground mb-1">{v.method}</p>
-                <p className={`text-xl font-bold ${v.color}`}>${v.value.toLocaleString()}</p>
+              { method: t("eval_summary.berkus"), value: berkus, color: "#847dff" },
+              { method: t("eval_summary.scorecard"), value: scorecard, color: "#00b3dd" },
+              { method: t("eval_summary.risk_factor"), value: riskFactor, color: "#dd90d8" },
+            ].map((v) => (
+              <div key={v.method} className="rounded-2xl bg-white/[0.03] p-5 text-center">
+                <p className="text-xs text-white/45">{v.method}</p>
+                <p className="mt-2 font-origin-display text-2xl" style={{ color: v.color }}>${v.value.toLocaleString()}</p>
               </div>
             ))}
           </div>
-          <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-4 text-center">
-            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")} (Pre-Seed)</p>
-            <p className="text-2xl font-bold text-primary">${avgValuation.toLocaleString()}</p>
-          </div>
-        </div>
+        </motion.section>
       )}
 
+      {/* ── Seed valuation ── */}
       {hasSeedEvaluation && (
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-card mb-8">
-          <h3 className="text-lg font-semibold text-foreground mb-4">{t("summary.seed_valuation_results")}</h3>
-          <div className="grid gap-4 sm:grid-cols-2">
+        <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          <Eyebrow>{t("summary.seed_valuation_results")}</Eyebrow>
+          <div className="mt-7 grid gap-4 sm:grid-cols-3">
             {vcValuation > 0 && (
-              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.vc_method")}</p>
-                <p className="text-xl font-bold text-primary">${vcValuation.toLocaleString()}</p>
+              <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
+                <p className="text-xs text-white/45">{t("seed_summary.vc_method")}</p>
+                <p className="mt-2 font-origin-display text-2xl text-[#847dff]">${vcValuation.toLocaleString()}</p>
               </div>
             )}
             {chicagoValuation > 0 && (
-              <div className="rounded-lg border border-border p-4 bg-muted/30 text-center">
-                <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.chicago_method")}</p>
-                <p className="text-xl font-bold text-accent">${chicagoValuation.toLocaleString()}</p>
+              <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
+                <p className="text-xs text-white/45">{t("seed_summary.chicago_method")}</p>
+                <p className="mt-2 font-origin-display text-2xl text-[#00b3dd]">${chicagoValuation.toLocaleString()}</p>
               </div>
             )}
+            <div className="rounded-2xl tint-ocean p-5 text-center">
+              <p className="text-xs text-white/70">{t("summary.avg_valuation")} (Seed)</p>
+              <p className="mt-2 font-origin-display text-2xl text-white">${seedAvg.toLocaleString()}</p>
+            </div>
           </div>
-          <div className="mt-4 rounded-lg border border-accent/20 bg-accent/5 p-4 text-center">
-            <p className="text-sm text-muted-foreground">{t("summary.avg_valuation")} (Seed)</p>
-            <p className="text-2xl font-bold text-accent">${seedAvg.toLocaleString()}</p>
-          </div>
-        </div>
+        </motion.section>
       )}
 
-      <div>
-        <h3 className="text-xl font-bold text-foreground mb-4">{t("summary.recommendations")}</h3>
+      {/* ── Recommendations ── */}
+      <section>
+        <h3 className="font-origin-display text-2xl font-light text-white mb-5">{t("summary.recommendations")}</h3>
         <div className="grid gap-4 md:grid-cols-2">
           {advice.map((tip, i) => (
-            <div key={i} className={`rounded-xl border p-5 ${typeStyles[tip.type]}`}>
-              <div className="flex items-start gap-3">
-                <tip.icon className={`h-5 w-5 mt-0.5 shrink-0 ${iconStyles[tip.type]}`} />
-                <div>
-                  <h4 className="text-sm font-semibold text-foreground">{tip.title}</h4>
-                  <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{tip.text}</p>
-                </div>
+            <motion.div key={i}
+              className="flex items-start gap-4 rounded-2xl border border-white/[0.07] bg-card p-5"
+              style={{ borderLeft: `2px solid ${tipAccent[tip.type]}` }}
+              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05, duration: 0.5 }}>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${tipAccent[tip.type]}1f` }}>
+                <tip.icon className="h-4 w-4" style={{ color: tipAccent[tip.type] }} />
               </div>
-            </div>
+              <div>
+                <h4 className="text-sm font-medium text-white">{tip.title}</h4>
+                <p className="mt-1 text-sm leading-relaxed text-white/55 font-light">{tip.text}</p>
+              </div>
+            </motion.div>
           ))}
         </div>
-      </div>
+      </section>
     </DashboardLayout>
   );
 };

@@ -31,7 +31,7 @@ const plans = [
       "Priority email support",
     ],
     cta: "Purchase",
-    to: "https://polar.sh/checkout/polar_c_wUNeObPe4ZasTgzncgZN3T8pwlaKmOAbWNP0M1tiqwT",
+    to: "https://polar.sh/checkout/polar_c_HLSqATQ43uZEWSbZVexf0V9xUVczrOKRNEOQv3o0Wxy",
     highlighted: true,
     polar: true,
   },
@@ -57,10 +57,10 @@ const Pricing = () => {
     <Layout>
       <div className="container py-16">
         <div className="mx-auto mb-12 max-w-2xl text-center">
-          <h1 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-            Simple, transparent pricing
+          <h1 className="text-4xl font-origin-display font-light tracking-tight text-foreground sm:text-5xl">
+            Simple, <span className="text-warm-gradient font-medium">transparent pricing</span>
           </h1>
-          <p className="mt-4 text-lg text-muted-foreground">
+          <p className="mt-4 text-lg text-muted-foreground font-light">
             Choose the plan that fits your investment journey.
           </p>
         </div>
@@ -104,7 +104,7 @@ const Pricing = () => {
                     <Button
                       className="w-full"
                       size="lg"
-                      variant={plan.highlighted ? "default" : "outline"}
+                      variant={plan.highlighted ? "white" : "outline"}
                     >
                       {plan.cta}
                     </Button>
@@ -114,7 +114,7 @@ const Pricing = () => {
                     <Button
                       className="w-full"
                       size="lg"
-                      variant={plan.highlighted ? "default" : "outline"}
+                      variant={plan.highlighted ? "white" : "outline"}
                     >
                       {plan.cta}
                     </Button>

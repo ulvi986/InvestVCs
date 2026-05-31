@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
+import OriginBackground from "./OriginBackground";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -10,20 +11,21 @@ interface DashboardLayoutProps {
 
 const DashboardLayout = ({ children, title, subtitle }: DashboardLayoutProps) => {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="relative flex min-h-screen flex-col">
+      <OriginBackground />
       <Navbar />
-      <main className="flex-1">
+      <main className="flex-1 relative z-10">
         {(title || subtitle) && (
-          <div className="border-b border-border/30 bg-card/30 backdrop-blur-sm">
-            <div className="container py-6">
-              {title && <h1 className="text-2xl font-bold text-foreground">{title}</h1>}
-              {subtitle && <p className="text-sm text-muted-foreground mt-1">{subtitle}</p>}
+          <div className="border-b border-white/5 bg-white/[0.02] backdrop-blur-md">
+            <div className="container py-7">
+              {title && (
+                <h1 className="text-2xl sm:text-3xl font-origin-display font-light text-foreground">{title}</h1>
+              )}
+              {subtitle && <p className="text-sm text-muted-foreground mt-1.5 font-light">{subtitle}</p>}
             </div>
           </div>
         )}
-        <div className="container py-6">
-          {children}
-        </div>
+        <div className="container py-8">{children}</div>
       </main>
       <Footer />
     </div>

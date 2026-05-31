@@ -77,12 +77,12 @@ const ResultRow = ({ label, value, prefix = "$", suffix = "", bold = false, high
 );
 
 const SectionCard = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
-  <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-    <div className="flex items-center gap-2 mb-4">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg gradient-primary">
-        <Icon className="h-4 w-4 text-primary-foreground" />
+  <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+    <div className="flex items-center gap-3 mb-5">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#847dff]/15">
+        <Icon className="h-4 w-4 text-[#b9a7ff]" />
       </div>
-      <h3 className="text-base font-semibold text-foreground">{title}</h3>
+      <h3 className="font-origin-display text-xl font-medium text-foreground">{title}</h3>
     </div>
     {children}
   </div>
@@ -210,9 +210,9 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
   return (
     <div className="space-y-6">
       {/* Date Picker & Save */}
-      <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card">
+      <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/[0.07] bg-card p-6">
         <div className="flex items-center gap-3 flex-1">
-          <CalendarIcon className="h-5 w-5 text-primary" />
+          <CalendarIcon className="h-5 w-5 text-[#847dff]" />
           <div>
             <p className="text-sm font-semibold text-foreground">{t("financial.select_date")}</p>
             <p className="text-xs text-muted-foreground">{t("financial.select_date_desc")}</p>
@@ -235,7 +235,7 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
             />
           </PopoverContent>
         </Popover>
-        <Button onClick={handleSave} className="gradient-primary text-primary-foreground border-0 gap-2">
+        <Button onClick={handleSave} className="gap-2">
           <Save className="h-4 w-4" /> {t("financial.save_dashboard")}
         </Button>
       </div>

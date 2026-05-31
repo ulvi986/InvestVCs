@@ -58,23 +58,23 @@ const StartupEvaluation = () => {
 
   return (
     <DashboardLayout title={t("eval.title")} subtitle={t("eval.subtitle")}>
-      <div className="flex gap-3 mb-6">
+      <div className="flex gap-2 mb-8 p-1 rounded-full origin-glass w-fit">
         <button
           onClick={() => setStage("pre-seed")}
-          className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+          className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
             stage === "pre-seed"
-              ? "bg-primary text-primary-foreground shadow-md"
-              : "bg-muted text-muted-foreground hover:bg-accent"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           {t("eval.preseed")}
         </button>
         <button
           onClick={() => setStage("seed")}
-          className={`px-5 py-2.5 rounded-xl font-semibold text-sm transition-all ${
+          className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
             stage === "seed"
-              ? "bg-primary text-primary-foreground shadow-md"
-              : "bg-muted text-muted-foreground hover:bg-accent"
+              ? "bg-primary text-primary-foreground"
+              : "text-muted-foreground hover:text-foreground"
           }`}
         >
           {t("eval.seed")}

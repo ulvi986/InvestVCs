@@ -1,400 +1,437 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Zap, Shield, DollarSign, ClipboardCheck, BrainCircuit, Check } from "lucide-react";
-import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  ArrowUpRight,
+  Shield,
+  DollarSign,
+  ClipboardCheck,
+  BrainCircuit,
+  Check,
+  Rocket,
+  Briefcase,
+  Target,
+} from "lucide-react";
+import { motion, useScroll, useTransform, useInView, animate } from "framer-motion";
 import { useAuth } from "@/context/AuthContext";
 import { useLanguage } from "@/context/LanguageContext";
-import AuroraBackground from "@/components/AuroraBackground";
+import OriginBackground from "@/components/OriginBackground";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { useEffect, useRef, useState } from "react";
+
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const fadeUp = {
-  hidden: { opacity: 0, y: 20 },
+  hidden: { opacity: 0, y: 26 },
   visible: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.1, duration: 0.6, ease: "easeOut" as const },
+    transition: { delay: i * 0.1, duration: 0.8, ease },
   }),
 };
 
-const scaleIn = {
-  hidden: { opacity: 0, scale: 0.95 },
-  visible: (i: number) => ({
-    opacity: 1,
-    scale: 1,
-    transition: { delay: i * 0.08, duration: 0.5, ease: "easeOut" as const },
-  }),
+/* Count-up figure, triggered on scroll into view */
+const Counter = ({ to, suffix = "" }: { to: number; suffix?: string }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  const [val, setVal] = useState(0);
+
+  useEffect(() => {
+    if (!inView) return;
+    const controls = animate(0, to, {
+      duration: 1.8,
+      ease,
+      onUpdate: (v) => setVal(v),
+      onComplete: () => setVal(to),
+    });
+    return () => controls.stop();
+  }, [inView, to]);
+
+  return (
+    <span ref={ref}>
+      {Math.round(val)}
+      {suffix}
+    </span>
+  );
 };
 
 const Index = () => {
   const { user } = useAuth();
   const { t } = useLanguage();
 
+  const heroRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const yUp = useTransform(scrollYProgress, [0, 1], [0, -60]);
+  const fade = useTransform(scrollYProgress, [0, 0.85], [1, 0]);
+
+  // Origin "Themed Content Cards" shown beneath the hero
+  const showcase = [
+    { cls: "card-violet", label: "Pre-seed valuation", value: "$4.2M", note: "Berkus · Scorecard · VC Method" },
+    { cls: "card-ocean", label: "Runway", value: "18 months", note: "Burn $42k / mo · tracked monthly" },
+    { cls: "card-rose", label: "Readiness", value: "TRL 7", note: "Investor-ready across TRL · CRL · FRL" },
+  ];
+
   const features = [
-    {
-      icon: Shield,
-      title: t("landing.feature1_title"),
-      description: t("landing.feature1_desc"),
-      link: "/evaluation",
-      gradient: "from-blue-500 to-cyan-400",
-      bg: "bg-blue-500/10 dark:bg-blue-400/10",
-    },
-    {
-      icon: DollarSign,
-      title: t("landing.feature2_title"),
-      description: t("landing.feature2_desc"),
-      link: "/preparation",
-      gradient: "from-emerald-500 to-teal-400",
-      bg: "bg-emerald-500/10 dark:bg-emerald-400/10",
-    },
-    {
-      icon: ClipboardCheck,
-      title: t("landing.feature3_title"),
-      description: t("landing.feature3_desc"),
-      link: "/readiness",
-      gradient: "from-violet-500 to-purple-400",
-      bg: "bg-violet-500/10 dark:bg-violet-400/10",
-    },
+    { icon: Shield, title: t("landing.feature1_title"), description: t("landing.feature1_desc"), link: "/evaluation", tint: "tint-ocean", color: "#00b3dd" },
+    { icon: DollarSign, title: t("landing.feature2_title"), description: t("landing.feature2_desc"), link: "/preparation", tint: "tint-violet", color: "#847dff" },
+    { icon: ClipboardCheck, title: t("landing.feature3_title"), description: t("landing.feature3_desc"), link: "/readiness", tint: "tint-rose", color: "#dd90d8" },
     {
       icon: BrainCircuit,
       title: t("landing.feature4_title") || "Venture Analysis",
       description: t("landing.feature4_desc") || "Business Model Canvas and Pitch Deck analysis with AI-powered insights.",
       link: "/venture-analysis",
-      gradient: "from-amber-500 to-orange-400",
-      bg: "bg-amber-500/10 dark:bg-amber-400/10",
+      tint: "tint-sky",
+      color: "#90b8f0",
     },
   ];
 
   const stats = [
-    { value: "5+", label: t("landing.stat_valuation") },
-    { value: "15+", label: t("landing.stat_metrics") },
-    { value: "3", label: t("landing.stat_readiness") },
-    { value: "∞", label: t("landing.stat_snapshots") },
+    { value: 5, suffix: "+", label: t("landing.stat_valuation") },
+    { value: 15, suffix: "+", label: t("landing.stat_metrics") },
+    { value: 3, suffix: "", label: t("landing.stat_readiness") },
+    { value: 100, suffix: "%", label: "Data-driven" },
+  ];
+
+  const audiences = [
+    { icon: Rocket, color: "#847dff", title: "Early-stage founders", desc: "Turn a raw idea into an investor-ready story with valuations, financials and readiness scores that hold up in the room." },
+    { icon: Briefcase, color: "#00b3dd", title: "Investors & VCs", desc: "Screen deals faster. Compare startups on the same five frameworks and surface the metrics that move a decision." },
+    { icon: Target, color: "#dd90d8", title: "Accelerators & builders", desc: "Standardise how your cohort measures traction, runway and readiness — from day one to demo day." },
+  ];
+
+  const steps = [
+    { t: t("landing.step1_title") || "Sign up", d: t("landing.step1_desc") || "Create your free account in seconds." },
+    { t: t("landing.step2_title") || "Input your data", d: t("landing.step2_desc") || "Fill in valuation methods, financials and readiness checks." },
+    { t: t("landing.step3_title") || "Get insights", d: t("landing.step3_desc") || "Receive instant valuations, charts and strategic advice." },
+    { t: t("landing.step4_title") || "Pitch with confidence", d: t("landing.step4_desc") || "Use data-backed valuations in investor conversations." },
   ];
 
   return (
     <div className="relative min-h-screen flex flex-col">
-      <AuroraBackground />
+      <OriginBackground />
       <Navbar />
 
       <main className="flex-1 relative z-10">
-        {/* ═══════ Hero — split layout ═══════ */}
-        <section className="relative min-h-[88vh] flex items-center">
-          <div className="container relative z-10 py-16 lg:py-24">
-            <div className="max-w-3xl mx-auto text-center">
-                <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-                  <span className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 dark:border-white/10 dark:bg-white/5 backdrop-blur-md px-5 py-2 text-xs font-semibold text-primary dark:text-cyan-300 mb-6">
-                    <Zap className="h-3.5 w-3.5" />
-                    {t("landing.badge")}
-                  </span>
-                </motion.div>
+        {/* ───────── Hero ───────── */}
+        <section ref={heroRef} className="relative">
+          <motion.div style={{ y: yUp, opacity: fade }} className="container pt-24 pb-16 lg:pt-32 lg:pb-20">
+            <div className="mx-auto max-w-3xl text-center">
+              <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
+                <span className="inline-flex items-center gap-2 rounded-full origin-glass px-4 py-1.5 text-[13px] text-white/70">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#847dff]" />
+                  {t("landing.badge")}
+                </span>
+              </motion.div>
 
-                <motion.h1
-                  className="text-4xl font-extrabold tracking-tight text-foreground sm:text-5xl lg:text-6xl xl:text-7xl leading-[1.08]"
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                  custom={1}
-                >
-                  {t("landing.hero_title")}{" "}
-                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary via-accent to-primary">
-                    {t("landing.hero_highlight")}
-                  </span>
-                </motion.h1>
-
-                <motion.p
-                  className="mt-5 text-lg text-muted-foreground font-medium max-w-lg mx-auto"
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                  custom={2}
-                >
+              <motion.h1
+                className="mt-8 font-origin-display font-light text-white text-5xl sm:text-6xl lg:text-7xl leading-[1.05]"
+                initial="hidden"
+                animate="visible"
+                variants={fadeUp}
+                custom={1}
+              >
+                {t("landing.hero_title")}{" "}
+                <span className="italic text-origin-gradient">{t("landing.hero_highlight")}</span>
+                <span className="block text-white/55 mt-2 text-3xl sm:text-4xl lg:text-5xl">
                   {t("landing.hero_sub")}
-                </motion.p>
-
-                <motion.p
-                  className="mt-4 text-sm text-muted-foreground/70 max-w-md mx-auto leading-relaxed"
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                  custom={2.5}
-                >
-                  {t("landing.hero_desc")}
-                </motion.p>
-
-                <motion.div
-                  className="mt-8 flex flex-col sm:flex-row gap-3 justify-center"
-                  initial="hidden"
-                  animate="visible"
-                  variants={fadeUp}
-                  custom={3}
-                >
-                  {user ? (
-                    <Link to="/summary">
-                      <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold border-0 px-8 h-12 rounded-xl shadow-lg transition-all">
-                        {t("landing.go_dashboard")}
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  ) : (
-                    <>
-                      <Link to="/signup">
-                        <Button size="lg" className="bg-accent hover:bg-accent/90 text-accent-foreground font-semibold border-0 px-8 h-12 rounded-xl shadow-lg transition-all">
-                          {t("landing.get_started")}
-                          <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </Link>
-                      <Link to="/signin">
-                        <Button variant="outline" size="lg" className="px-8 h-12 rounded-xl border-border/40 bg-card/30 dark:bg-white/5 backdrop-blur-md transition-all">
-                          {t("landing.signin")}
-                        </Button>
-                      </Link>
-                    </>
-                  )}
-                </motion.div>
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════ Features section with glassmorphism ═══════ */}
-        <section className="relative py-20">
-          <div className="absolute inset-0 bg-card/40 dark:bg-card/20 backdrop-blur-sm border-y border-border/20" />
-          <div className="container relative">
-            <div className="text-center mb-14">
-              <motion.h2
-                className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={0}
-              >
-                {t("landing.features_title")}{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                  {t("landing.features_highlight")}
                 </span>
-              </motion.h2>
+              </motion.h1>
+
               <motion.p
-                className="mt-4 text-muted-foreground max-w-xl mx-auto"
+                className="mx-auto mt-7 max-w-xl text-base sm:text-lg font-light leading-relaxed text-white/55"
                 initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
+                animate="visible"
                 variants={fadeUp}
-                custom={1}
+                custom={2}
               >
-                {t("landing.features_desc")}
+                {t("landing.hero_desc")}
               </motion.p>
-            </div>
 
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-              {features.map((f, i) => (
-                <motion.div
-                  key={f.title}
-                  className="group relative rounded-2xl border border-border/30 dark:border-white/10 bg-card/60 dark:bg-white/5 backdrop-blur-xl p-6 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-400"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeUp}
-                  custom={i}
-                >
-                  <div className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br ${f.gradient} shadow-lg`}>
-                    <f.icon className="h-7 w-7 text-white" strokeWidth={1.8} />
-                  </div>
-                  <h3 className="text-base font-bold text-foreground mb-2">{f.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                    {f.description}
-                  </p>
-                  <Link
-                    to={user ? f.link : "/signup"}
-                    className="inline-flex items-center text-sm font-semibold text-primary group-hover:gap-2 gap-1 transition-all"
-                  >
-                    {t("landing.explore")}
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════ Stats ═══════ */}
-        <section className="py-16 relative">
-          <div className="container">
-            <div className="mx-auto max-w-4xl grid grid-cols-2 gap-8 md:grid-cols-4">
-              {stats.map((s, i) => (
-                <motion.div
-                  key={s.label}
-                  className="text-center"
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={scaleIn}
-                  custom={i}
-                >
-                  <p className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                    {s.value}
-                  </p>
-                  <p className="mt-2 text-sm text-muted-foreground font-medium">{s.label}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-
-
-        {/* ═══════ Pricing ═══════ */}
-        <section id="pricing" className="relative py-20">
-          <div className="absolute inset-0 bg-card/40 dark:bg-card/20 backdrop-blur-sm border-y border-border/20" />
-          <div className="container relative">
-            <div className="text-center mb-14">
-              <motion.h2
-                className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight"
+              <motion.div
+                className="mt-9 flex flex-col sm:flex-row gap-3 justify-center"
                 initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
+                animate="visible"
                 variants={fadeUp}
-                custom={0}
+                custom={3}
               >
-                Simple,{" "}
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-                  transparent pricing
-                </span>
-              </motion.h2>
-              <motion.p
-                className="mt-4 text-muted-foreground max-w-xl mx-auto"
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true }}
-                variants={fadeUp}
-                custom={1}
-              >
-                Start free. Upgrade when you're ready to unlock AI insights and a voucher code.
-              </motion.p>
-            </div>
-
-            <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
-              {[
-                {
-                  name: "Free",
-                  price: "$0",
-                  period: "forever",
-                  features: ["Basic startup discovery", "Limited monthly searches", "Community support"],
-                  cta: "Get Started",
-                  to: "/signup",
-                  highlighted: false,
-                },
-                {
-                  name: "Pro",
-                  price: "$2.99",
-                  period: "/week",
-                  features: ["AI insights & startup analysis", "Portfolio tracking", "Unlimited searches", "AI voucher code included"],
-                  cta: "Purchase",
-                  to: "https://polar.sh/checkout/polar_c_wUNeObPe4ZasTgzncgZN3T8pwlaKmOAbWNP0M1tiqwT",
-                  highlighted: true,
-                  polar: true,
-                },
-                {
-                  name: "Enterprise",
-                  price: "Custom",
-                  period: "",
-                  features: ["Dedicated account manager", "Custom integrations", "Team seats & SSO", "SLA & priority support"],
-                  cta: "Contact Sales",
-                  to: "/contact",
-                  highlighted: false,
-                },
-              ].map((plan, i) => (
-                <motion.div
-                  key={plan.name}
-                  className={`relative flex flex-col rounded-2xl border p-6 backdrop-blur-xl transition-all ${
-                    plan.highlighted
-                      ? "border-primary/40 bg-card/80 dark:bg-white/10 shadow-xl ring-2 ring-primary/20"
-                      : "border-border/30 dark:border-white/10 bg-card/60 dark:bg-white/5"
-                  }`}
-                  initial="hidden"
-                  whileInView="visible"
-                  viewport={{ once: true }}
-                  variants={fadeUp}
-                  custom={i}
-                >
-                  {plan.highlighted && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-accent px-3 py-1 text-[11px] font-semibold text-primary-foreground shadow-md">
-                      Most Popular
-                    </span>
-                  )}
-                  <h3 className="text-lg font-bold text-foreground">{plan.name}</h3>
-                  <div className="mt-3 flex items-baseline gap-1">
-                    <span className="text-4xl font-extrabold text-foreground">{plan.price}</span>
-                    {plan.period && <span className="text-sm text-muted-foreground">{plan.period}</span>}
-                  </div>
-                  <ul className="mt-5 flex-1 space-y-2.5">
-                    {plan.features.map((f) => (
-                      <li key={f} className="flex items-start gap-2 text-sm text-foreground">
-                        <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-6">
-                    {(plan as any).polar ? (
-                      <a href={plan.to} data-polar-checkout data-polar-checkout-theme="dark" className="block w-full">
-                        <Button className="w-full bg-accent hover:bg-accent/90 text-accent-foreground font-semibold rounded-xl h-11">
-                          {plan.cta}
-                        </Button>
-                      </a>
-                    ) : (
-                      <Link to={plan.to} className="block w-full">
-                        <Button
-                          variant={plan.highlighted ? "default" : "outline"}
-                          className="w-full rounded-xl h-11 font-semibold"
-                        >
-                          {plan.cta}
-                        </Button>
-                      </Link>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* ═══════ CTA ═══════ */}
-        <section className="py-20">
-          <div className="container">
-            <motion.div
-              className="relative overflow-hidden rounded-3xl p-12 text-center md:p-16"
-              style={{
-                background: "linear-gradient(135deg, hsl(215 50% 20%) 0%, hsl(200 45% 22%) 50%, hsl(172 40% 25%) 100%)",
-              }}
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={scaleIn}
-              custom={0}
-            >
-              <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,hsl(172_50%_40%/0.12),transparent_70%)]" />
-              <div className="relative">
-                <h2 className="text-3xl sm:text-4xl font-extrabold text-white">
-                  {t("landing.cta_title")}
-                </h2>
-                <p className="mt-4 text-white/60 max-w-lg mx-auto text-base">
-                  {t("landing.cta_desc")}
-                </p>
-                <div className="mt-8">
-                  <Link to={user ? "/summary" : "/signup"}>
-                    <Button
-                      size="lg"
-                      className="bg-accent hover:bg-accent/90 text-accent-foreground font-bold border-0 px-10 h-12 rounded-xl shadow-lg"
-                    >
-                      {user ? t("landing.go_dashboard") : t("landing.cta_btn")}
-                      <ArrowRight className="ml-2 h-4 w-4" />
+                {user ? (
+                  <Link to="/summary">
+                    <Button variant="white" size="lg" className="origin-shimmer px-8">
+                      {t("landing.go_dashboard")} <ArrowRight className="ml-1 h-4 w-4" />
                     </Button>
                   </Link>
-                </div>
-              </div>
-            </motion.div>
+                ) : (
+                  <>
+                    <Link to="/signup">
+                      <Button variant="white" size="lg" className="origin-shimmer px-8">
+                        {t("landing.get_started")} <ArrowRight className="ml-1 h-4 w-4" />
+                      </Button>
+                    </Link>
+                    <Link to="/signin">
+                      <Button variant="outline" size="lg" className="px-8">
+                        {t("landing.signin")}
+                      </Button>
+                    </Link>
+                  </>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Themed showcase cards */}
+            <div className="mx-auto mt-16 grid max-w-5xl gap-5 sm:grid-cols-3">
+              {showcase.map((c, i) => (
+                <motion.div
+                  key={c.label}
+                  className={`${c.cls} rounded-3xl p-7 text-left`}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 + i * 0.14, duration: 0.8, ease }}
+                >
+                  <div className="animate-origin-float" style={{ animationDelay: `${i * 1.3}s` }}>
+                    <p className="text-[13px] font-medium text-white/70">{c.label}</p>
+                    <p className="mt-3 font-origin-display text-4xl font-medium text-white">{c.value}</p>
+                    <p className="mt-3 text-[13px] leading-relaxed text-white/65">{c.note}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        </section>
+
+        {/* ───────── Features ───────── */}
+        <section className="container py-24 lg:py-28">
+          <div className="max-w-2xl">
+            <motion.p
+              className="text-[13px] uppercase tracking-[0.25em] text-white/40"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            >
+              The platform
+            </motion.p>
+            <motion.h2
+              className="mt-4 font-origin-display font-light text-white text-4xl sm:text-5xl leading-tight"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+            >
+              {t("landing.features_title")}{" "}
+              <span className="italic text-origin-gradient">{t("landing.features_highlight")}</span>
+            </motion.h2>
+            <motion.p
+              className="mt-5 text-white/55 font-light text-lg leading-relaxed"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
+            >
+              {t("landing.features_desc")}
+            </motion.p>
           </div>
+
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {features.map((f, i) => (
+              <motion.div
+                key={f.title}
+                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
+              >
+                <Link
+                  to={user ? f.link : "/signup"}
+                  className={`group block h-full rounded-3xl ${f.tint} p-7 transition-all duration-500 hover:-translate-y-1`}
+                >
+                  <div
+                    className="flex h-12 w-12 items-center justify-center rounded-2xl"
+                    style={{ background: "rgba(255,255,255,0.08)" }}
+                  >
+                    <f.icon className="h-6 w-6" style={{ color: f.color }} strokeWidth={1.6} />
+                  </div>
+                  <h3 className="mt-6 font-origin-display text-xl font-medium text-white">{f.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-white/55 font-light">{f.description}</p>
+                  <span className="mt-5 inline-flex items-center gap-1 text-sm text-white/70 group-hover:gap-2 transition-all">
+                    {t("landing.explore")} <ArrowUpRight className="h-4 w-4" />
+                  </span>
+                </Link>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ───────── Stats ───────── */}
+        <section className="container py-12">
+          <div className="grid grid-cols-2 gap-y-12 md:grid-cols-4 border-y border-white/[0.07] py-14">
+            {stats.map((s, i) => (
+              <motion.div
+                key={s.label}
+                className="text-center"
+                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
+              >
+                <p className="font-origin-display text-5xl font-light text-white">
+                  <Counter to={s.value} suffix={s.suffix} />
+                </p>
+                <p className="mt-3 text-[13px] uppercase tracking-wider text-white/40">{s.label}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ───────── Who it's for ───────── */}
+        <section className="container py-24 lg:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <motion.p
+              className="text-[13px] uppercase tracking-[0.25em] text-white/40"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            >
+              Built for both sides of the table
+            </motion.p>
+            <motion.h2
+              className="mt-4 font-origin-display font-light text-white text-4xl sm:text-5xl"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+            >
+              One platform for <span className="italic text-origin-gradient">founders & investors</span>
+            </motion.h2>
+          </div>
+
+          <div className="mt-14 grid gap-5 md:grid-cols-3">
+            {audiences.map((a, i) => (
+              <motion.div
+                key={a.title}
+                className="rounded-3xl bg-card border border-white/[0.07] p-8 transition-all duration-500 hover:-translate-y-1"
+                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: `${a.color}1f` }}>
+                  <a.icon className="h-6 w-6" style={{ color: a.color }} strokeWidth={1.6} />
+                </div>
+                <h3 className="mt-6 font-origin-display text-xl font-medium text-white">{a.title}</h3>
+                <p className="mt-3 text-sm leading-relaxed text-white/55 font-light">{a.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ───────── How it works ───────── */}
+        <section className="container py-24 lg:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <motion.h2
+              className="font-origin-display font-light text-white text-4xl sm:text-5xl"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            >
+              {t("landing.how_title") || "How it works"}
+            </motion.h2>
+            <motion.p
+              className="mt-4 text-white/55 font-light text-lg"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+            >
+              {t("landing.how_desc") || "Four simple steps to data-driven startup valuation."}
+            </motion.p>
+          </div>
+
+          <div className="mt-14 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {steps.map((step, i) => (
+              <motion.div
+                key={i}
+                className="rounded-3xl bg-card border border-white/[0.07] p-7"
+                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
+              >
+                <span className="font-origin-display text-3xl font-light text-origin-gradient">0{i + 1}</span>
+                <h3 className="mt-5 text-lg font-medium text-white">{step.t}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/55 font-light">{step.d}</p>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ───────── Pricing ───────── */}
+        <section id="pricing" className="container py-24 lg:py-28">
+          <div className="mx-auto max-w-2xl text-center">
+            <motion.p
+              className="text-[13px] uppercase tracking-[0.25em] text-white/40"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+            >
+              Pricing
+            </motion.p>
+            <motion.h2
+              className="mt-4 font-origin-display font-light text-white text-4xl sm:text-5xl"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+            >
+              Simple, <span className="italic text-origin-gradient">transparent pricing</span>
+            </motion.h2>
+            <motion.p
+              className="mt-5 text-white/55 font-light text-lg"
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
+            >
+              Start free. Upgrade when you're ready to unlock AI insights and a voucher code.
+            </motion.p>
+          </div>
+
+          <div className="mx-auto mt-14 grid max-w-5xl gap-5 md:grid-cols-3">
+            {[
+              { name: "Free", price: "$0", period: "forever", features: ["Basic startup discovery", "Limited monthly searches", "Community support"], cta: "Get Started", to: "/signup", highlighted: false },
+              { name: "Pro", price: "$2.99", period: "/week", features: ["AI insights & startup analysis", "Portfolio tracking", "Unlimited searches", "AI voucher code included"], cta: "Purchase", to: "https://polar.sh/checkout/polar_c_HLSqATQ43uZEWSbZVexf0V9xUVczrOKRNEOQv3o0Wxy", highlighted: true, polar: true },
+              { name: "Enterprise", price: "Custom", period: "", features: ["Dedicated account manager", "Custom integrations", "Team seats & SSO", "SLA & priority support"], cta: "Contact Sales", to: "/contact", highlighted: false },
+            ].map((plan, i) => (
+              <motion.div
+                key={plan.name}
+                className={`relative flex flex-col rounded-3xl p-8 transition-all duration-500 hover:-translate-y-1 ${
+                  plan.highlighted ? "tint-violet" : "bg-card border border-white/[0.07]"
+                }`}
+                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
+              >
+                {plan.highlighted && (
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-1 text-[11px] font-semibold text-black">
+                    Most Popular
+                  </span>
+                )}
+                <h3 className="font-origin-display text-xl font-medium text-white">{plan.name}</h3>
+                <div className="mt-4 flex items-baseline gap-1">
+                  <span className="font-origin-display text-4xl font-light text-white">{plan.price}</span>
+                  {plan.period && <span className="text-sm text-white/45">{plan.period}</span>}
+                </div>
+                <ul className="mt-6 flex-1 space-y-3">
+                  {plan.features.map((f) => (
+                    <li key={f} className="flex items-start gap-2.5 text-sm text-white/70 font-light">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-[#847dff]" />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-8">
+                  {(plan as any).polar ? (
+                    <a href={plan.to} data-polar-checkout data-polar-checkout-theme="dark" className="block w-full">
+                      <Button variant="white" className="w-full origin-shimmer">{plan.cta}</Button>
+                    </a>
+                  ) : (
+                    <Link to={plan.to} className="block w-full">
+                      <Button variant={plan.highlighted ? "white" : "outline"} className="w-full">{plan.cta}</Button>
+                    </Link>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+
+        {/* ───────── CTA ───────── */}
+        <section className="container pb-28">
+          <motion.div
+            className="relative overflow-hidden rounded-[32px] px-8 py-20 text-center md:px-16"
+            style={{ background: "var(--gradient-hero, linear-gradient(180deg,#0d0e10,#12161d))" }}
+            initial={{ opacity: 0, scale: 0.97 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, ease }}
+          >
+            <div
+              className="pointer-events-none absolute inset-0"
+              style={{ background: "radial-gradient(ellipse 55% 60% at 50% 0%, rgba(132,125,255,0.28), transparent 70%)" }}
+            />
+            <div className="relative">
+              <h2 className="mx-auto max-w-2xl font-origin-display font-light text-white text-4xl sm:text-5xl leading-tight">
+                {t("landing.cta_title")}
+              </h2>
+              <p className="mx-auto mt-5 max-w-lg text-white/55 font-light text-lg">{t("landing.cta_desc")}</p>
+              <div className="mt-9">
+                <Link to={user ? "/summary" : "/signup"}>
+                  <Button variant="white" size="lg" className="origin-shimmer px-10">
+                    {user ? t("landing.go_dashboard") : t("landing.cta_btn")}
+                    <ArrowRight className="ml-1 h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
         </section>
       </main>
 

@@ -1,7 +1,7 @@
 import logoImg from "@/assets/logo.jpeg";
 
 const Footer = () => (
-  <footer className="relative z-10 border-t border-border/20 dark:border-white/5 bg-card/50 dark:bg-slate-900/50 backdrop-blur-sm">
+  <footer className="relative z-10 border-t border-white/[0.06] bg-background/50 backdrop-blur-sm">
     <div className="container py-12">
       <div className="flex flex-col items-center gap-4 md:flex-row md:justify-between">
         <div className="flex items-center gap-2 font-display text-lg font-bold text-foreground">
