@@ -10,4 +10,4 @@ cmds = ["npm ci"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "serve -s dist -l $PORT"
+cmd = "npm run start"
