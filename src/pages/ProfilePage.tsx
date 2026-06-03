@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import FundingOverview from "@/components/FundingOverview";
 import { useAuth } from "@/context/AuthContext";
 import { useStartupContext } from "@/context/StartupContext";
@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/components/ui/sonner";
 import {
-  User, Building2, Mail, CalendarDays, Loader2, Save,
+  User, Building2, Mail, CalendarDays, Loader2, Save, Camera,
   TrendingUp, TrendingDown, Users, DollarSign, BarChart3, Activity
 } from "lucide-react";
 
@@ -35,8 +35,31 @@ const INDUSTRIES = [
 ];
 
 interface Profile {
-  name: string; surname: string; startup_name: string; startup_description: string; country: string; industry: string; current_company: string; linkedin_url: string;
+  name: string; surname: string; startup_name: string; startup_description: string; country: string; industry: string; current_company: string; linkedin_url: string; avatar_url: string;
 }
+
+const AvatarUploader = ({ url, initials, uploading, onPick }: { url?: string; initials: string; uploading: boolean; onPick: () => void }) => (
+  <div className="flex items-center gap-4">
+    <div className="relative">
+      <div className="h-20 w-20 overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl font-semibold text-white">
+        {url ? <img src={url} alt="Profile" className="h-full w-full object-cover" /> : initials}
+      </div>
+      <button
+        type="button"
+        onClick={onPick}
+        disabled={uploading}
+        aria-label="Change profile photo"
+        className="absolute -bottom-1.5 -right-1.5 flex h-7 w-7 items-center justify-center rounded-full bg-white text-black shadow-lg transition-transform hover:scale-105 disabled:opacity-60"
+      >
+        {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+      </button>
+    </div>
+    <div>
+      <p className="text-sm font-medium text-foreground">Profile photo</p>
+      <p className="text-xs text-muted-foreground">PNG or JPG, up to 5MB</p>
+    </div>
+  </div>
+);
 
 const ProfilePage = () => {
   const { user } = useAuth();
@@ -46,22 +69,60 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const isInvestorUser = isInvestor || isInvestorPending;
 
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) return;
-      const { data, error } = await supabase.from("profiles").select("name, surname, startup_name, startup_description, country, industry, current_company, linkedin_url").eq("id", user.id).single();
+      const { data, error } = await supabase.from("profiles").select("name, surname, startup_name, startup_description, country, industry, current_company, linkedin_url, avatar_url").eq("id", user.id).single();
       if (error) {
-        setProfile({ name: user.user_metadata?.name || "", surname: user.user_metadata?.surname || "", startup_name: user.user_metadata?.startup_name || "", startup_description: user.user_metadata?.startup_description || "", country: user.user_metadata?.country || "", industry: user.user_metadata?.industry || "", current_company: user.user_metadata?.current_company || "", linkedin_url: user.user_metadata?.linkedin_url || "" });
+        setProfile({ name: user.user_metadata?.name || "", surname: user.user_metadata?.surname || "", startup_name: user.user_metadata?.startup_name || "", startup_description: user.user_metadata?.startup_description || "", country: user.user_metadata?.country || "", industry: user.user_metadata?.industry || "", current_company: user.user_metadata?.current_company || "", linkedin_url: user.user_metadata?.linkedin_url || "", avatar_url: user.user_metadata?.avatar_url || "" });
       } else {
-        setProfile({ name: data.name ?? "", surname: data.surname ?? "", startup_name: data.startup_name ?? "", startup_description: data.startup_description ?? "", country: (data as any).country ?? "", industry: (data as any).industry ?? "", current_company: (data as any).current_company ?? "", linkedin_url: (data as any).linkedin_url ?? "" });
+        setProfile({ name: data.name ?? "", surname: data.surname ?? "", startup_name: data.startup_name ?? "", startup_description: data.startup_description ?? "", country: (data as any).country ?? "", industry: (data as any).industry ?? "", current_company: (data as any).current_company ?? "", linkedin_url: (data as any).linkedin_url ?? "", avatar_url: (data as any).avatar_url ?? "" });
       }
       setLoading(false);
     };
     fetchProfile();
   }, [user]);
+
+  const initials = ((profile?.name?.[0] || "") + (profile?.surname?.[0] || "")).toUpperCase() || (user?.email?.[0]?.toUpperCase() ?? "U");
+
+  const handleAvatarPick = () => fileRef.current?.click();
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-selecting the same file later
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+
+    setUploading(true);
+    try {
+      const ext = (file.name.split(".").pop() || "jpg").toLowerCase();
+      const path = `${user.id}/avatar.${ext}`;
+      // Remove any previous avatar(s) so different extensions don't pile up.
+      const { data: existing } = await supabase.storage.from("avatars").list(user.id);
+      if (existing?.length) {
+        await supabase.storage.from("avatars").remove(existing.map((f) => `${user.id}/${f.name}`));
+      }
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, { upsert: true, cacheControl: "3600" });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const publicUrl = pub.publicUrl;
+      const { error: dbErr } = await supabase.from("profiles").update({ avatar_url: publicUrl } as any).eq("id", user.id);
+      if (dbErr) throw dbErr;
+      // cache-bust for immediate preview
+      setProfile((p) => (p ? { ...p, avatar_url: `${publicUrl}?t=${Date.now()}` } : p));
+      toast.success("Profile photo updated ✓");
+    } catch (err: any) {
+      toast.error(err?.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!user || !profile) return;
@@ -90,6 +151,8 @@ const ProfilePage = () => {
               <CardTitle className="flex items-center gap-2 text-lg"><User className="h-5 w-5 text-primary" />{t("profile.personal_info")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <AvatarUploader url={profile?.avatar_url || undefined} initials={initials} uploading={uploading} onPick={handleAvatarPick} />
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2"><Label>{t("profile.first_name")}</Label><Input value={profile?.name || ""} onChange={e => setProfile(p => p ? { ...p, name: e.target.value } : p)} /></div>
                 <div className="space-y-2"><Label>{t("profile.last_name")}</Label><Input value={profile?.surname || ""} onChange={e => setProfile(p => p ? { ...p, surname: e.target.value } : p)} /></div>
@@ -124,6 +187,8 @@ const ProfilePage = () => {
           <Card className="lg:col-span-1 border-border shadow-card">
             <CardHeader className="pb-4"><CardTitle className="flex items-center gap-2 text-lg"><User className="h-5 w-5 text-primary" />{t("profile.personal_info")}</CardTitle></CardHeader>
             <CardContent className="space-y-4">
+              <AvatarUploader url={profile?.avatar_url || undefined} initials={initials} uploading={uploading} onPick={handleAvatarPick} />
+              <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
               <div className="space-y-2"><Label>{t("profile.first_name")}</Label><Input value={profile?.name || ""} onChange={e => setProfile(p => p ? { ...p, name: e.target.value } : p)} /></div>
               <div className="space-y-2"><Label>{t("profile.last_name")}</Label><Input value={profile?.surname || ""} onChange={e => setProfile(p => p ? { ...p, surname: e.target.value } : p)} /></div>
               <div className="space-y-2"><Label>{t("profile.email")}</Label><div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground"><Mail className="h-4 w-4" />{user?.email}</div></div>

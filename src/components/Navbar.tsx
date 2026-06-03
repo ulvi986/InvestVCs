@@ -61,6 +61,7 @@ const Navbar = () => {
               { to: "/preparation", label: t("nav.financial") },
               { to: "/readiness", label: t("nav.readiness") },
               { to: "/venture-analysis", label: t("nav.venture_analysis") },
+              { to: "/growth-hub", label: "Growth Hub" },
               { to: "/vacancies", label: t("nav.vacancies") },
               { to: "/profile", label: t("nav.profile") },
             ]
@@ -174,8 +175,21 @@ const Navbar = () => {
                     ))}
                   </div>
 
-                  {/* Contact link */}
-                  <div className="mt-2 border-t border-border/20 pt-2">
+                  {/* Always-visible links */}
+                  <div className="mt-2 border-t border-border/20 pt-2 space-y-1">
+                    {(!user || isInvestorUser) && (
+                      <Link
+                        to="/growth-hub"
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                          location.pathname === "/growth-hub"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        🚀 Growth Hub
+                      </Link>
+                    )}
                     <Link
                       to="/contact"
                       onClick={() => setOpen(false)}
