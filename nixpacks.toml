@@ -1,0 +1,13 @@
+# Force the Node/npm toolchain (the repo's bun.lockb otherwise makes Nixpacks
+# pick Bun, which leaves npm unavailable for `npm run build`).
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.install]
+cmds = ["npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "serve -s dist -l $PORT"
