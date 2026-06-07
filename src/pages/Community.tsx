@@ -1,0 +1,309 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { Linkedin, Send, Trash2, Loader2, MessageSquare, Globe, ImagePlus, X } from "lucide-react";
+import DashboardLayout from "@/components/DashboardLayout";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { formatDistanceToNow } from "date-fns";
+
+type Author = {
+  name?: string;
+  surname?: string;
+  avatar_url?: string;
+  linkedin_url?: string;
+  startup_name?: string;
+  current_company?: string;
+  industry?: string;
+};
+
+type Post = {
+  id: string;
+  user_id: string;
+  content: string;
+  image_url?: string | null;
+  created_at: string;
+  author: Author;
+};
+
+const initialsOf = (a: Author, fallback = "U") =>
+  ((a.name?.[0] || "") + (a.surname?.[0] || "")).toUpperCase() || fallback;
+
+const headlineOf = (a: Author) =>
+  [a.startup_name || a.current_company, a.industry].filter(Boolean).join(" · ");
+
+const Avatar = ({ author, size = 44 }: { author: Author; size?: number }) => (
+  <div
+    className="shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-semibold text-white"
+    style={{ width: size, height: size, fontSize: size * 0.4 }}
+  >
+    {author.avatar_url ? (
+      <img src={author.avatar_url} alt="" className="h-full w-full object-cover" />
+    ) : (
+      initialsOf(author)
+    )}
+  </div>
+);
+
+const Community = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const [posts, setPosts] = useState<Post[]>([]);
+  const [profilesById, setProfilesById] = useState<Record<string, Author>>({});
+  const [content, setContent] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [posting, setPosting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const load = async () => {
+    const [postRes, profRes] = await Promise.all([
+      supabase.from("community_posts").select("*").order("created_at", { ascending: false }).limit(200),
+      supabase.from("profiles").select("id, name, surname, avatar_url, linkedin_url, startup_name, current_company, industry"),
+    ]);
+    const profs = (profRes.data as any[]) ?? [];
+    const map: Record<string, Author> = {};
+    profs.forEach((p) => {
+      map[p.id] = {
+        name: p.name, surname: p.surname, avatar_url: p.avatar_url || undefined,
+        linkedin_url: p.linkedin_url || undefined, startup_name: p.startup_name || undefined,
+        current_company: p.current_company || undefined, industry: p.industry || undefined,
+      };
+    });
+    setProfilesById(map);
+    const rows = (postRes.data as any[]) ?? [];
+    setPosts(rows.map((r) => ({ ...r, author: map[r.user_id] || {} })));
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    load().catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const myAuthor = useMemo<Author>(() => (user ? profilesById[user.id] || {} : {}), [user, profilesById]);
+
+  const pickImage = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    if (!file.type.startsWith("image/")) { toast.error("Please choose an image file"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Image must be under 5MB"); return; }
+    setImageFile(file);
+    setImagePreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const clearImage = () => {
+    setImageFile(null);
+    setImagePreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return null;
+    });
+  };
+
+  const handlePost = async () => {
+    const text = content.trim();
+    if ((!text && !imageFile) || !user) return;
+    setPosting(true);
+    try {
+      let image_url: string | null = null;
+      if (imageFile) {
+        const ext = (imageFile.name.split(".").pop() || "jpg").toLowerCase();
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage
+          .from("community")
+          .upload(path, imageFile, { cacheControl: "3600" });
+        if (upErr) throw upErr;
+        image_url = supabase.storage.from("community").getPublicUrl(path).data.publicUrl;
+      }
+      const { data, error } = await supabase
+        .from("community_posts")
+        .insert({ user_id: user.id, content: text, image_url } as any)
+        .select("*")
+        .single();
+      if (error) throw error;
+      const newPost: Post = { ...(data as any), author: profilesById[user.id] || {} };
+      setPosts((prev) => [newPost, ...prev]);
+      setContent("");
+      clearImage();
+      toast.success("Shared with the community ✓");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not post");
+    } finally {
+      setPosting(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const prev = posts;
+    setPosts((p) => p.filter((x) => x.id !== id));
+    const { error } = await supabase.from("community_posts").delete().eq("id", id);
+    if (error) {
+      setPosts(prev);
+      toast.error("Could not delete");
+    }
+  };
+
+  return (
+    <DashboardLayout title="Community" subtitle="Share updates, wins and ideas with founders & investors">
+      <div className="mx-auto max-w-2xl space-y-6">
+        {/* Composer */}
+        <div className="rounded-3xl border border-white/[0.07] bg-card p-5">
+          <div className="flex gap-3">
+            <Avatar author={myAuthor} />
+            <div className="flex-1">
+              <Textarea
+                value={content}
+                onChange={(e) => setContent(e.target.value)}
+                placeholder="Share something with the community…"
+                rows={3}
+                className="resize-none border-white/[0.07] bg-white/[0.02]"
+              />
+
+              {imagePreview && (
+                <div className="relative mt-3 inline-block">
+                  <img src={imagePreview} alt="" className="max-h-64 rounded-2xl border border-white/[0.07] object-cover" />
+                  <button
+                    onClick={clearImage}
+                    aria-label="Remove image"
+                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white/80 backdrop-blur transition-colors hover:bg-black/80 hover:text-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={pickImage}
+              />
+
+              <div className="mt-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={posting}
+                    aria-label="Add image"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07] disabled:opacity-50"
+                  >
+                    <ImagePlus className="h-3.5 w-3.5" /> Photo
+                  </button>
+                  <span className="text-xs text-white/35">{content.length}/2000</span>
+                </div>
+                <Button
+                  variant="white"
+                  size="sm"
+                  className="origin-shimmer"
+                  disabled={posting || (!content.trim() && !imageFile) || content.length > 2000}
+                  onClick={handlePost}
+                >
+                  {posting ? <Loader2 className="h-4 w-4 animate-spin" /> : <>Post <Send className="ml-1 h-3.5 w-3.5" /></>}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Feed */}
+        {loading ? (
+          <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>
+        ) : posts.length === 0 ? (
+          <div className="rounded-3xl border border-white/[0.07] bg-card p-12 text-center">
+            <MessageSquare className="mx-auto mb-3 h-10 w-10 text-white/20" />
+            <p className="font-origin-display text-xl font-light text-white">No posts yet</p>
+            <p className="mt-1 text-sm text-white/45">Be the first to share something with the community.</p>
+          </div>
+        ) : (
+          posts.map((post, i) => {
+            const a = post.author;
+            const headline = headlineOf(a);
+            const fullName = [a.name, a.surname].filter(Boolean).join(" ") || "InvestVCs member";
+            return (
+              <motion.article
+                key={post.id}
+                className="rounded-3xl border border-white/[0.07] bg-card p-5"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.45 }}
+              >
+                <div className="flex items-start gap-3">
+                  <button
+                    onClick={() => navigate(`/u/${post.user_id}`)}
+                    aria-label={`View ${fullName}'s profile`}
+                    className="transition-opacity hover:opacity-80"
+                  >
+                    <Avatar author={a} />
+                  </button>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => navigate(`/u/${post.user_id}`)}
+                        className="truncate font-medium text-white transition-colors hover:text-primary"
+                      >
+                        {fullName}
+                      </button>
+                      {a.linkedin_url && (
+                        <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
+                          className="text-[#90b8f0] hover:text-white transition-colors">
+                          <Linkedin className="h-4 w-4" />
+                        </a>
+                      )}
+                    </div>
+                    {headline && <p className="truncate text-xs text-white/45">{headline}</p>}
+                    <p className="text-[11px] text-white/30">
+                      {(() => { try { return formatDistanceToNow(new Date(post.created_at), { addSuffix: true }); } catch { return ""; } })()}
+                    </p>
+                  </div>
+                  {user?.id === post.user_id && (
+                    <button onClick={() => handleDelete(post.id)} aria-label="Delete"
+                      className="text-white/30 transition-colors hover:text-[#dd90d8]">
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                {post.content && (
+                  <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/75">{post.content}</p>
+                )}
+
+                {post.image_url && (
+                  <a href={post.image_url} target="_blank" rel="noopener noreferrer" className="mt-4 block">
+                    <img
+                      src={post.image_url}
+                      alt=""
+                      loading="lazy"
+                      className="max-h-[28rem] w-full rounded-2xl border border-white/[0.07] object-cover"
+                    />
+                  </a>
+                )}
+
+                {a.linkedin_url && (
+                  <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07]">
+                    <Linkedin className="h-3.5 w-3.5 text-[#90b8f0]" /> Connect on LinkedIn
+                  </a>
+                )}
+              </motion.article>
+            );
+          })
+        )}
+
+        <p className="flex items-center justify-center gap-1.5 pb-4 text-center text-xs text-white/30">
+          <Globe className="h-3.5 w-3.5" /> Everyone in the InvestVCs community can see what you share.
+        </p>
+      </div>
+    </DashboardLayout>
+  );
+};
+
+export default Community;

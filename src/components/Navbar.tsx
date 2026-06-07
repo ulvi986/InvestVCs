@@ -177,6 +177,19 @@ const Navbar = () => {
 
                   {/* Always-visible links */}
                   <div className="mt-2 border-t border-border/20 pt-2 space-y-1">
+                    {user && (
+                      <Link
+                        to="/community"
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                          location.pathname === "/community"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        💬 Community
+                      </Link>
+                    )}
                     {(!user || isInvestorUser) && (
                       <Link
                         to="/growth-hub"

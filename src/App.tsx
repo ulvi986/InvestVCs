@@ -22,6 +22,8 @@ import StartupVacancies from "./pages/StartupVacancies";
 import VentureAnalysis from "./pages/VentureAnalysis";
 import ContactPage from "./pages/ContactPage";
 import GrowthHub from "./pages/GrowthHub";
+import Community from "./pages/Community";
+import PublicProfile from "./pages/PublicProfile";
 import FundingViewPage from "./pages/FundingViewPage";
 import Success from "./pages/Success";
 import Cancel from "./pages/Cancel";
@@ -62,8 +64,10 @@ const App = () => (
                 <Route path="/investor-signup" element={<AuthRoute><InvestorSignUp /></AuthRoute>} />
                 <Route path="/" element={<Index />} />
                 <Route path="/growth-hub" element={<GrowthHub />} />
+                <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
+                <Route path="/u/:id" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
                 <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
                 <Route path="/preparation" element={<ProtectedRoute><PreparationPhase /></ProtectedRoute>} />
                 <Route path="/readiness" element={<ProtectedRoute><ReadinessLevel /></ProtectedRoute>} />
