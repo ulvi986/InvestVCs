@@ -16,6 +16,11 @@ import {
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import logoImg from "@/assets/logo.jpeg";
 
 const langLabels: Record<Language, string> = {
@@ -36,8 +41,19 @@ const Navbar = () => {
   const { t, language, setLanguage } = useLanguage();
   const location = useLocation();
   const [open, setOpen] = useState(false);
+  const [startupOpen, setStartupOpen] = useState(true);
 
   const isInvestorUser = isInvestor || isInvestorPending;
+
+  // Startup ana başlığı altında açılan altbaşlıqlar
+  const startupSubLinks = user && !isInvestorUser
+    ? [
+        { to: "/evaluation", label: t("nav.evaluation") },
+        { to: "/preparation", label: t("nav.financial") },
+        { to: "/readiness", label: t("nav.readiness") },
+        { to: "/venture-analysis", label: t("nav.venture_analysis") },
+      ]
+    : [];
 
   const links = user
     ? [
@@ -57,10 +73,6 @@ const Navbar = () => {
         ...(!isInvestorUser
           ? [
               { to: "/summary", label: t("nav.summary") },
-              { to: "/evaluation", label: t("nav.evaluation") },
-              { to: "/preparation", label: t("nav.financial") },
-              { to: "/readiness", label: t("nav.readiness") },
-              { to: "/venture-analysis", label: t("nav.venture_analysis") },
               { to: "/growth-hub", label: "Growth Hub" },
               { to: "/vacancies", label: t("nav.vacancies") },
               { to: "/profile", label: t("nav.profile") },
@@ -159,6 +171,36 @@ const Navbar = () => {
                   )}
 
                   <div className="space-y-1">
+                    {/* Startup ana başlığı — açılan altbaşlıqlarla */}
+                    {startupSubLinks.length > 0 && (
+                      <Collapsible open={startupOpen} onOpenChange={setStartupOpen}>
+                        <CollapsibleTrigger className="flex w-full items-center justify-between rounded-xl px-4 py-3 text-sm font-semibold text-foreground transition-all duration-200 hover:bg-muted/50">
+                          <span>Startup</span>
+                          <ChevronDown
+                            className={`h-4 w-4 transition-transform duration-200 ${startupOpen ? "rotate-180" : ""}`}
+                          />
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="overflow-hidden">
+                          <div className="ml-3 mt-1 space-y-1 border-l border-border/30 pl-3">
+                            {startupSubLinks.map((link) => (
+                              <Link
+                                key={link.to}
+                                to={link.to}
+                                onClick={() => setOpen(false)}
+                                className={`flex items-center rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+                                  location.pathname === link.to
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                }`}
+                              >
+                                {link.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+
                     {links.map((link) => (
                       <Link
                         key={link.to}
