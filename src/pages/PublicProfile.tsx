@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Linkedin, Loader2, ArrowLeft, Building2, Briefcase, Rocket, MapPin, UserX,
-  DollarSign, Target, TrendingUp, Users, CalendarDays, Layers, Clock, PieChart,
+  DollarSign, Target, TrendingUp, Users, CalendarDays, Layers, Clock, PieChart, Mail,
 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ type Profile = {
   id: string;
   name?: string;
   surname?: string;
+  email?: string;
   avatar_url?: string;
   linkedin_url?: string;
   startup_name?: string;
@@ -98,7 +99,7 @@ const PublicProfile = () => {
       const [profRes, fundRes] = await Promise.all([
         supabase
           .from("profiles")
-          .select("id, name, surname, avatar_url, linkedin_url, startup_name, startup_description, current_company, industry, country")
+          .select("id, name, surname, email, avatar_url, linkedin_url, startup_name, startup_description, current_company, industry, country")
           .eq("id", id)
           .single(),
         supabase
@@ -175,16 +176,26 @@ const PublicProfile = () => {
                       {[profile.startup_name || profile.current_company, profile.industry].filter(Boolean).join(" · ")}
                     </p>
                   )}
-                  {profile.linkedin_url && (
-                    <a
-                      href={profile.linkedin_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07]"
-                    >
-                      <Linkedin className="h-3.5 w-3.5 text-[#90b8f0]" /> Connect on LinkedIn
-                    </a>
-                  )}
+                  <div className="mt-4 flex flex-wrap items-center gap-2">
+                    {profile.email && (
+                      <a
+                        href={`mailto:${profile.email}`}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07]"
+                      >
+                        <Mail className="h-3.5 w-3.5 text-primary" /> {profile.email}
+                      </a>
+                    )}
+                    {profile.linkedin_url && (
+                      <a
+                        href={profile.linkedin_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07]"
+                      >
+                        <Linkedin className="h-3.5 w-3.5 text-[#90b8f0]" /> Connect on LinkedIn
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>

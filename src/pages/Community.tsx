@@ -29,6 +29,15 @@ type Post = {
   author: Author;
 };
 
+type Reply = {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+  author: Author;
+};
+
 const initialsOf = (a: Author, fallback = "U") =>
   ((a.name?.[0] || "") + (a.surname?.[0] || "")).toUpperCase() || fallback;
 
@@ -60,10 +69,16 @@ const Community = () => {
   const [posting, setPosting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const [repliesByPost, setRepliesByPost] = useState<Record<string, Reply[]>>({});
+  const [openReplies, setOpenReplies] = useState<Record<string, boolean>>({});
+  const [replyText, setReplyText] = useState<Record<string, string>>({});
+  const [replyBusy, setReplyBusy] = useState<string | null>(null);
+
   const load = async () => {
-    const [postRes, profRes] = await Promise.all([
+    const [postRes, profRes, replyRes] = await Promise.all([
       supabase.from("community_posts").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("profiles").select("id, name, surname, avatar_url, linkedin_url, startup_name, current_company, industry"),
+      (supabase as any).from("community_post_replies").select("*").order("created_at", { ascending: true }).limit(2000),
     ]);
     const profs = (profRes.data as any[]) ?? [];
     const map: Record<string, Author> = {};
@@ -77,6 +92,13 @@ const Community = () => {
     setProfilesById(map);
     const rows = (postRes.data as any[]) ?? [];
     setPosts(rows.map((r) => ({ ...r, author: map[r.user_id] || {} })));
+
+    const replyRows = (replyRes.data as any[]) ?? [];
+    const grouped: Record<string, Reply[]> = {};
+    replyRows.forEach((r) => {
+      (grouped[r.post_id] ||= []).push({ ...r, author: map[r.user_id] || {} });
+    });
+    setRepliesByPost(grouped);
     setLoading(false);
   };
 
@@ -148,6 +170,38 @@ const Community = () => {
     if (error) {
       setPosts(prev);
       toast.error("Could not delete");
+    }
+  };
+
+  const handleReply = async (postId: string) => {
+    const text = (replyText[postId] || "").trim();
+    if (!text || !user) return;
+    setReplyBusy(postId);
+    try {
+      const { data, error } = await (supabase as any)
+        .from("community_post_replies")
+        .insert({ post_id: postId, user_id: user.id, content: text })
+        .select("*")
+        .single();
+      if (error) throw error;
+      const newReply: Reply = { ...(data as any), author: profilesById[user.id] || {} };
+      setRepliesByPost((prev) => ({ ...prev, [postId]: [...(prev[postId] || []), newReply] }));
+      setReplyText((prev) => ({ ...prev, [postId]: "" }));
+      setOpenReplies((prev) => ({ ...prev, [postId]: true }));
+    } catch (err: any) {
+      toast.error(err?.message || "Could not reply");
+    } finally {
+      setReplyBusy(null);
+    }
+  };
+
+  const handleDeleteReply = async (postId: string, replyId: string) => {
+    const prev = repliesByPost[postId] || [];
+    setRepliesByPost((p) => ({ ...p, [postId]: prev.filter((r) => r.id !== replyId) }));
+    const { error } = await (supabase as any).from("community_post_replies").delete().eq("id", replyId);
+    if (error) {
+      setRepliesByPost((p) => ({ ...p, [postId]: prev }));
+      toast.error("Could not delete reply");
     }
   };
 
@@ -293,6 +347,80 @@ const Community = () => {
                     <Linkedin className="h-3.5 w-3.5 text-[#90b8f0]" /> Connect on LinkedIn
                   </a>
                 )}
+
+                {/* Replies */}
+                {(() => {
+                  const replies = repliesByPost[post.id] || [];
+                  const isOpen = openReplies[post.id] || false;
+                  return (
+                    <div className="mt-4 border-t border-white/[0.06] pt-3">
+                      <button
+                        onClick={() => setOpenReplies((prev) => ({ ...prev, [post.id]: !isOpen }))}
+                        className="inline-flex items-center gap-1.5 text-xs text-white/45 transition-colors hover:text-white/80"
+                      >
+                        <MessageSquare className="h-3.5 w-3.5" />
+                        {replies.length > 0 ? `${replies.length} ${replies.length === 1 ? "reply" : "replies"}` : "Reply"}
+                      </button>
+
+                      {isOpen && (
+                        <div className="mt-3 space-y-3">
+                          {replies.map((r) => {
+                            const ra = r.author;
+                            const rName = [ra.name, ra.surname].filter(Boolean).join(" ") || "InvestVCs member";
+                            return (
+                              <div key={r.id} className="flex items-start gap-2.5">
+                                <button onClick={() => navigate(`/u/${r.user_id}`)} className="transition-opacity hover:opacity-80">
+                                  <Avatar author={ra} size={30} />
+                                </button>
+                                <div className="min-w-0 flex-1 rounded-2xl bg-white/[0.03] px-3 py-2">
+                                  <div className="flex items-center gap-2">
+                                    <button onClick={() => navigate(`/u/${r.user_id}`)} className="truncate text-xs font-medium text-white hover:text-primary">
+                                      {rName}
+                                    </button>
+                                    <span className="text-[10px] text-white/30">
+                                      {(() => { try { return formatDistanceToNow(new Date(r.created_at), { addSuffix: true }); } catch { return ""; } })()}
+                                    </span>
+                                    {user?.id === r.user_id && (
+                                      <button onClick={() => handleDeleteReply(post.id, r.id)} aria-label="Delete reply"
+                                        className="ml-auto text-white/25 transition-colors hover:text-[#dd90d8]">
+                                        <Trash2 className="h-3.5 w-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                  <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-white/75">{r.content}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+
+                          <div className="flex items-start gap-2.5">
+                            <Avatar author={myAuthor} size={30} />
+                            <div className="flex flex-1 items-end gap-2">
+                              <Textarea
+                                value={replyText[post.id] || ""}
+                                onChange={(e) => setReplyText((prev) => ({ ...prev, [post.id]: e.target.value }))}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleReply(post.id); }
+                                }}
+                                placeholder="Write a reply…"
+                                rows={1}
+                                maxLength={1000}
+                                className="min-h-[40px] resize-none border-white/[0.07] bg-white/[0.02] text-sm"
+                              />
+                              <Button
+                                variant="white" size="sm"
+                                disabled={replyBusy === post.id || !(replyText[post.id] || "").trim()}
+                                onClick={() => handleReply(post.id)}
+                              >
+                                {replyBusy === post.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
               </motion.article>
             );
           })
