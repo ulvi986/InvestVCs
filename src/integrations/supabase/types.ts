@@ -524,6 +524,20 @@ export type Database = {
         }
         Returns: Json
       }
+      list_investors: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          name: string | null
+          surname: string | null
+          avatar_url: string | null
+          linkedin_url: string | null
+          current_company: string | null
+          industry: string | null
+          country: string | null
+          email: string | null
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "investor" | "startup"

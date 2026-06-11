@@ -117,6 +117,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Evaluation
     "eval.title": "Startup Evaluation",
     "eval.subtitle": "Choose your funding stage and valuation method to get an instant estimate.",
+    "eval.investors_title": "Investors",
+    "eval.investors_empty": "No investors yet.",
+    "eval.investors_contact": "Contact",
     "eval.preseed": "💲 Pre-Seed",
     "eval.seed": "🚀 Seed",
     "eval.berkus_tab": "Berkus Method",
@@ -936,6 +939,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Evaluation
     "eval.title": "Girişim Değerlendirmesi",
     "eval.subtitle": "Finansman aşamanızı ve değerleme yönteminizi seçerek anlık tahmin alın.",
+    "eval.investors_title": "Yatırımcılar",
+    "eval.investors_empty": "Henüz yatırımcı yok.",
+    "eval.investors_contact": "İletişim",
     "eval.preseed": "💲 Ön Tohum",
     "eval.seed": "🚀 Tohum",
     "eval.berkus_tab": "Berkus Yöntemi",
@@ -1667,6 +1673,9 @@ const translations: Record<Language, Record<string, string>> = {
     // Evaluation
     "eval.title": "Startap Qiymətləndirmə",
     "eval.subtitle": "Maliyyələşdirmə mərhələnizi və qiymətləndirmə metodunuzu seçərək ani təxmin alın.",
+    "eval.investors_title": "İnvestorlar",
+    "eval.investors_empty": "Hələ investor yoxdur.",
+    "eval.investors_contact": "Əlaqə",
     "eval.preseed": "💲 Pre-Seed",
     "eval.seed": "🚀 Seed",
     "eval.berkus_tab": "Berkus Metodu",

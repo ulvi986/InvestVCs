@@ -12,6 +12,7 @@ import { useStartupContext } from "@/context/StartupContext";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import InvestorsPanel from "@/components/InvestorsPanel";
 
 const PRE_SEED_TABS = ["berkus", "scorecard", "risk", "summary"] as const;
 const SEED_TABS = ["vc", "chicago", "summary"] as const;
@@ -58,6 +59,8 @@ const StartupEvaluation = () => {
 
   return (
     <DashboardLayout title={t("eval.title")} subtitle={t("eval.subtitle")}>
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0">
       <div className="flex gap-2 mb-8 p-1 rounded-full origin-glass w-fit">
         <button
           onClick={() => setStage("pre-seed")}
@@ -127,6 +130,9 @@ const StartupEvaluation = () => {
           </TabsContent>
         </Tabs>
       )}
+        </div>
+        <InvestorsPanel />
+      </div>
     </DashboardLayout>
   );
 };
