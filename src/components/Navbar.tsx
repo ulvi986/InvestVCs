@@ -232,6 +232,19 @@ const Navbar = () => {
                         💬 Community
                       </Link>
                     )}
+                    {user && (
+                      <Link
+                        to="/investors"
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                          location.pathname === "/investors"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        💰 {t("nav.investors")}
+                      </Link>
+                    )}
                     {(!user || isInvestorUser) && (
                       <Link
                         to="/growth-hub"

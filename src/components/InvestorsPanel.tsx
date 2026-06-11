@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/context/LanguageContext";
 import { Linkedin, Loader2, Users, Mail, Building2 } from "lucide-react";
+import { gmailComposeUrl } from "@/lib/contact";
 
 type Investor = {
   id: string;
@@ -82,7 +83,7 @@ const InvestorsPanel = () => {
                   {(inv.email || inv.linkedin_url) && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {inv.email && (
-                        <a href={`mailto:${inv.email}`} className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-white/60 hover:bg-white/[0.07]">
+                        <a href={gmailComposeUrl(inv.email)} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 rounded-full border border-white/10 bg-white/[0.03] px-2 py-1 text-[10px] text-white/60 hover:bg-white/[0.07]">
                           <Mail className="h-3 w-3 text-primary" /> {t("eval.investors_contact")}
                         </a>
                       )}

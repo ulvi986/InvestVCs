@@ -15,6 +15,9 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.investor_dashboard": "📈 Investor Dashboard",
     "nav.vacancies": "💼 Vacancies",
     "nav.profile": "👤 Profile",
+    "nav.investors": "Investors",
+    "investors.title": "Investors",
+    "investors.subtitle": "Browse investors on InvestVCs and reach out directly.",
     "nav.evaluation": "Startup Evaluation",
     "nav.financial": "Financial Management",
     "nav.readiness": "Readiness Level",
@@ -130,6 +133,7 @@ const translations: Record<Language, Record<string, string>> = {
     "eval.chicago_tab": "First Chicago Method",
     "eval.back": "Back",
     "eval.next": "Next",
+    "eval.view_summary": "View full summary",
 
     // Financial
     "financial.title": "Financial Management",
@@ -839,6 +843,9 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.investor_dashboard": "📈 Yatırımcı Paneli",
     "nav.vacancies": "💼 İş İlanları",
     "nav.profile": "👤 Profil",
+    "nav.investors": "Yatırımcılar",
+    "investors.title": "Yatırımcılar",
+    "investors.subtitle": "InvestVCs'teki yatırımcılara göz atın ve doğrudan iletişime geçin.",
     "nav.evaluation": "Girişim Değerlendirmesi",
     "nav.financial": "Finansal Yönetim",
     "nav.readiness": "Hazırlık Seviyesi",
@@ -954,6 +961,7 @@ const translations: Record<Language, Record<string, string>> = {
     "eval.chicago_tab": "First Chicago Yöntemi",
     "eval.back": "Geri",
     "eval.next": "İleri",
+    "eval.view_summary": "Tam özeti gör",
 
     // Financial
     "financial.title": "Finansal Yönetim",
@@ -1575,6 +1583,9 @@ const translations: Record<Language, Record<string, string>> = {
     "nav.investor_dashboard": "📈 İnvestor Paneli",
     "nav.vacancies": "💼 Vakansiyalar",
     "nav.profile": "👤 Profil",
+    "nav.investors": "İnvestorlar",
+    "investors.title": "İnvestorlar",
+    "investors.subtitle": "InvestVCs-dəki investorlara baxın və birbaşa əlaqə saxlayın.",
     "nav.evaluation": "Startap Qiymətləndirmə",
     "nav.financial": "Maliyyə İdarəetməsi",
     "nav.readiness": "Hazırlıq Səviyyəsi",
@@ -1690,6 +1701,7 @@ const translations: Record<Language, Record<string, string>> = {
     "eval.chicago_tab": "First Chicago Metodu",
     "eval.back": "Geri",
     "eval.next": "İrəli",
+    "eval.view_summary": "Tam xülasəyə bax",
 
     // Financial
     "financial.title": "Maliyyə İdarəetməsi",

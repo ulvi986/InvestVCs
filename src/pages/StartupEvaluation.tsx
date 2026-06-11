@@ -10,7 +10,8 @@ import SeedEvaluationSummary from "@/components/SeedEvaluationSummary";
 import VCMethod from "@/components/VCMethod";
 import { useStartupContext } from "@/context/StartupContext";
 import { useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, FileBarChart } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "@/context/LanguageContext";
 import InvestorsPanel from "@/components/InvestorsPanel";
 
@@ -28,16 +29,24 @@ const TabNav = ({
   onChange: (tab: string) => void;
   t: (key: string) => string;
 }) => {
+  const navigate = useNavigate();
   const idx = tabs.indexOf(current);
+  const isLast = idx >= tabs.length - 1;
   return (
     <div className="flex justify-between items-center mt-8 pt-6 border-t border-border">
       <Button variant="outline" onClick={() => onChange(tabs[idx - 1])} disabled={idx <= 0} className="gap-2">
         <ChevronLeft className="h-4 w-4" /> {t("eval.back")}
       </Button>
       <span className="text-sm text-muted-foreground">{idx + 1} / {tabs.length}</span>
-      <Button onClick={() => onChange(tabs[idx + 1])} disabled={idx >= tabs.length - 1} className="gap-2 gradient-primary text-primary-foreground border-0">
-        {t("eval.next")} <ChevronRight className="h-4 w-4" />
-      </Button>
+      {isLast ? (
+        <Button onClick={() => navigate("/summary")} className="gap-2 gradient-primary text-primary-foreground border-0">
+          {t("eval.view_summary")} <FileBarChart className="h-4 w-4" />
+        </Button>
+      ) : (
+        <Button onClick={() => onChange(tabs[idx + 1])} className="gap-2 gradient-primary text-primary-foreground border-0">
+          {t("eval.next")} <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
     </div>
   );
 };

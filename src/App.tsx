@@ -23,6 +23,7 @@ import VentureAnalysis from "./pages/VentureAnalysis";
 import ContactPage from "./pages/ContactPage";
 import GrowthHub from "./pages/GrowthHub";
 import Community from "./pages/Community";
+import Investors from "./pages/Investors";
 import PublicProfile from "./pages/PublicProfile";
 import FundingViewPage from "./pages/FundingViewPage";
 import Success from "./pages/Success";
@@ -65,6 +66,7 @@ const App = () => (
                 <Route path="/" element={<Index />} />
                 <Route path="/growth-hub" element={<GrowthHub />} />
                 <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
+                <Route path="/investors" element={<ProtectedRoute><Investors /></ProtectedRoute>} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/u/:id" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
