@@ -12,7 +12,7 @@ const NotFound = () => {
   }, [location.pathname]);
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4">
+    <div className="relative flex min-h-dvh items-center justify-center px-4">
       <OriginBackground />
       <div className="relative text-center">
         <p className="font-origin-display text-[120px] sm:text-[180px] leading-none font-light text-origin-gradient">

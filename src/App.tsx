@@ -36,14 +36,14 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+  if (loading) return <div className="flex min-h-dvh items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/signin" replace />;
   return <>{children}</>;
 };
 
 const AuthRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
-  if (loading) return <div className="flex min-h-screen items-center justify-center text-muted-foreground">Loading...</div>;
+  if (loading) return <div className="flex min-h-dvh items-center justify-center text-muted-foreground">Loading...</div>;
   if (user) return <Navigate to="/" replace />;
   return <>{children}</>;
 };

@@ -41,7 +41,7 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="relative min-h-screen flex flex-col">
+    <div className="relative min-h-dvh flex flex-col">
       <OriginBackground />
       <Navbar />
       <main className="flex-1 relative z-10 flex items-center justify-center py-16">

@@ -92,7 +92,7 @@ const SignUp = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center px-4 py-12">
+    <div className="relative flex min-h-dvh items-center justify-center px-4 py-12">
       <OriginBackground />
       <Card className="w-full max-w-lg origin-glass">
         <CardHeader className="text-center space-y-2">
