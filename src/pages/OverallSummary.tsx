@@ -218,41 +218,43 @@ const OverallSummary = () => {
 
   // ── AI-generated investment-readiness analysis (grounded in the real metrics) ──
   const [aiLoading, setAiLoading] = useState(false);
+  const [deepLoading, setDeepLoading] = useState(false);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+
+  const buildPayload = () => ({
+    globalScore,
+    maturity: getMaturityLabel(globalScore),
+    moduleScores: modules.reduce((acc, m) => ({ ...acc, [m.name]: m.score }), {} as Record<string, number>),
+    valuation: {
+      preSeedAverage: avgValuation,
+      berkus, scorecard, riskFactor,
+      seedAverage: seedAvg,
+      vcMethod: vcValuation,
+      chicagoMethod: chicagoValuation,
+    },
+    financial: latestSnapshot ? {
+      revenue: latestSnapshot.revenue.total,
+      expenses: latestSnapshot.expenses.total,
+      monthlyBurn: latestSnapshot.revenue.total - latestSnapshot.expenses.total,
+      runwayMonths: latestSnapshot.cashFlow.runway,
+      endingCash: latestSnapshot.cashFlow.endingCash,
+      churnRate: latestSnapshot.customerMetrics.churnRate,
+      grossMargin: latestSnapshot.customerMetrics.grossMargin,
+    } : null,
+    readiness: {
+      TRL: trlLevel, CRL: crlLevel, FRL: frlLevel, maxLevel: 9,
+      trlLabel: trlLevel > 0 ? trlLabels[trlLevel - 1] : null,
+      crlLabel: crlLevel > 0 ? crlLabels[crlLevel - 1] : null,
+      frlLabel: frlLevel > 0 ? frlLabels[frlLevel - 1] : null,
+    },
+    completeness: { hasEvaluation, hasFinancial, hasReadiness },
+  });
 
   const runAiSummary = async () => {
     setAiLoading(true);
     try {
-      const payload = {
-        globalScore,
-        maturity: getMaturityLabel(globalScore),
-        moduleScores: modules.reduce((acc, m) => ({ ...acc, [m.name]: m.score }), {} as Record<string, number>),
-        valuation: {
-          preSeedAverage: avgValuation,
-          berkus, scorecard, riskFactor,
-          seedAverage: seedAvg,
-          vcMethod: vcValuation,
-          chicagoMethod: chicagoValuation,
-        },
-        financial: latestSnapshot ? {
-          revenue: latestSnapshot.revenue.total,
-          expenses: latestSnapshot.expenses.total,
-          monthlyBurn: latestSnapshot.revenue.total - latestSnapshot.expenses.total,
-          runwayMonths: latestSnapshot.cashFlow.runway,
-          endingCash: latestSnapshot.cashFlow.endingCash,
-          churnRate: latestSnapshot.customerMetrics.churnRate,
-          grossMargin: latestSnapshot.customerMetrics.grossMargin,
-        } : null,
-        readiness: {
-          TRL: trlLevel, CRL: crlLevel, FRL: frlLevel, maxLevel: 9,
-          trlLabel: trlLevel > 0 ? trlLabels[trlLevel - 1] : null,
-          crlLabel: crlLevel > 0 ? crlLabels[crlLevel - 1] : null,
-          frlLabel: frlLevel > 0 ? frlLabels[frlLevel - 1] : null,
-        },
-        completeness: { hasEvaluation, hasFinancial, hasReadiness },
-      };
       const { data, error } = await supabase.functions.invoke("analyze-venture", {
-        body: { type: "summary", data: payload },
+        body: { type: "summary", data: buildPayload() },
       });
       if (error) throw error;
       setAiAnalysis(data.analysis);
@@ -260,6 +262,22 @@ const OverallSummary = () => {
       toast({ title: e.message || t("venture.analysis_error"), variant: "destructive" });
     } finally {
       setAiLoading(false);
+    }
+  };
+
+  // Deep multi-agent orchestration (researcher → validator → analyst → scorer).
+  const runDeepAnalysis = async () => {
+    setDeepLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("orchestrate-analysis", {
+        body: { data: buildPayload() },
+      });
+      if (error) throw error;
+      setAiAnalysis(data.report);
+    } catch (e: any) {
+      toast({ title: e.message || t("venture.analysis_error"), variant: "destructive" });
+    } finally {
+      setDeepLoading(false);
     }
   };
 
@@ -444,14 +462,25 @@ const OverallSummary = () => {
                 <p className="mt-1 text-sm text-white/55 font-light">{t("summary.ai_desc")}</p>
               </div>
             </div>
-            <Button
-              onClick={runAiSummary}
-              disabled={aiLoading || !hasAnyData}
-              className="shrink-0 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold"
-            >
-              {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {aiLoading ? t("summary.ai_analyzing") : aiAnalysis ? t("summary.ai_regenerate") : t("summary.ai_generate")}
-            </Button>
+            <div className="flex shrink-0 flex-wrap gap-2">
+              <Button
+                onClick={runAiSummary}
+                disabled={aiLoading || deepLoading || !hasAnyData}
+                variant="outline"
+                className="gap-2 rounded-xl"
+              >
+                {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {aiLoading ? t("summary.ai_analyzing") : aiAnalysis ? t("summary.ai_regenerate") : t("summary.ai_generate")}
+              </Button>
+              <Button
+                onClick={runDeepAnalysis}
+                disabled={aiLoading || deepLoading || !hasAnyData}
+                className="gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold"
+              >
+                {deepLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {deepLoading ? t("summary.ai_deep_running") : t("summary.ai_deep")}
+              </Button>
+            </div>
           </div>
 
           {!hasAnyData && (
