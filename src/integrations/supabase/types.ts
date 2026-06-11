@@ -516,6 +516,14 @@ export type Database = {
         }
         Returns: Json
       }
+      validate_voucher: {
+        Args: {
+          _analysis_type: string
+          _user_id: string
+          _voucher_code: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       app_role: "admin" | "investor" | "startup"

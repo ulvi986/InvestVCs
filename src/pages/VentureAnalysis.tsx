@@ -12,22 +12,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useCallback } from "react";
 
-function renderMarkdown(text: string): string {
-  return text
-    .replace(/### (.*)/g, '<h3 class="text-base font-semibold mt-4 mb-2">$1</h3>')
-    .replace(/## (.*)/g, '<h2 class="text-lg font-bold mt-5 mb-2">$1</h2>')
-    .replace(/# (.*)/g, '<h1 class="text-xl font-bold mt-6 mb-3">$1</h1>')
-    .replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/^\*   /gm, '• ')
-    .replace(/^\- /gm, '• ')
-    .replace(/\n\n/g, '</p><p class="mb-3">')
-    .replace(/\n(• )/g, '<br/>$1')
-    .replace(/\n/g, '<br/>')
-    .replace(/^/, '<p class="mb-3">')
-    .replace(/$/, '</p>');
-}
+import { renderMarkdown } from "@/lib/markdown";
 import { toast } from "@/hooks/use-toast";
 import { Loader2, Upload, FileText, Sparkles, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
 
@@ -119,14 +104,14 @@ const VentureAnalysis = () => {
     setBmcSaving(false);
   };
 
-  // Validate voucher using server-side RPC
+  // Check-only voucher validation (does NOT consume the voucher).
   const validateVoucher = async (type: "bmc" | "pitch_deck"): Promise<boolean> => {
     if (!voucherCode.trim()) {
       toast({ title: t("venture.enter_voucher"), variant: "destructive" });
       return false;
     }
 
-    const { data, error } = await supabase.rpc("redeem_voucher", {
+    const { data, error } = await supabase.rpc("validate_voucher", {
       _voucher_code: voucherCode.trim(),
       _user_id: user!.id,
       _analysis_type: type,
@@ -154,6 +139,17 @@ const VentureAnalysis = () => {
     return true;
   };
 
+  // Consume the voucher AFTER a successful analysis. If this fails (rare race),
+  // the analysis was already delivered, so we don't block the user.
+  const redeemVoucher = async (type: "bmc" | "pitch_deck") => {
+    const { error } = await supabase.rpc("redeem_voucher", {
+      _voucher_code: voucherCode.trim(),
+      _user_id: user!.id,
+      _analysis_type: type,
+    });
+    if (error) console.error("redeem_voucher failed after analysis:", error);
+  };
+
   // Analyze BMC
   const analyzeBMC = async () => {
     const filledBlocks = Object.values(canvasData).filter(v => v?.trim()).length;
@@ -167,31 +163,39 @@ const VentureAnalysis = () => {
   };
 
   const executeAnalysis = async () => {
-    const valid = await validateVoucher(pendingAnalysisType);
+    const type = pendingAnalysisType;
+    const valid = await validateVoucher(type);
     if (!valid) return;
     setVoucherDialogOpen(false);
 
-    if (pendingAnalysisType === "bmc") {
-      setBmcLoading(true);
-      try {
-        await saveBMC();
-        const { data, error } = await supabase.functions.invoke("analyze-venture", {
-          body: { type: "bmc", data: canvasData },
-        });
-        if (error) throw error;
-        setBmcAnalysis(data.analysis);
-        if (bmcId) {
-          await supabase.from("business_model_canvas")
-            .update({ analysis_result: data.analysis, analyzed_at: new Date().toISOString() })
-            .eq("id", bmcId);
-        }
-        toast({ title: t("venture.analysis_complete") });
-      } catch (e: any) {
-        toast({ title: e.message || t("venture.analysis_error"), variant: "destructive" });
+    const analysisOk = type === "bmc" ? await runBmcAnalysis() : await uploadAndAnalyzePD();
+
+    // Only consume the voucher when the analysis actually succeeded.
+    if (analysisOk) await redeemVoucher(type);
+  };
+
+  // Run BMC analysis. Returns true only on success.
+  const runBmcAnalysis = async (): Promise<boolean> => {
+    setBmcLoading(true);
+    try {
+      await saveBMC();
+      const { data, error } = await supabase.functions.invoke("analyze-venture", {
+        body: { type: "bmc", data: canvasData },
+      });
+      if (error) throw error;
+      setBmcAnalysis(data.analysis);
+      if (bmcId) {
+        await supabase.from("business_model_canvas")
+          .update({ analysis_result: data.analysis, analyzed_at: new Date().toISOString() })
+          .eq("id", bmcId);
       }
+      toast({ title: t("venture.analysis_complete") });
+      return true;
+    } catch (e: any) {
+      toast({ title: e.message || t("venture.analysis_error"), variant: "destructive" });
+      return false;
+    } finally {
       setBmcLoading(false);
-    } else {
-      await uploadAndAnalyzePD();
     }
   };
 
@@ -238,8 +242,9 @@ const VentureAnalysis = () => {
     return slides.length > 0 ? slides.join("\n\n") : "No text content found in the presentation.";
   };
 
-  const uploadAndAnalyzePD = async () => {
-    if (!pdFile || !user) return;
+  // Upload + analyze the pitch deck. Returns true only on success.
+  const uploadAndAnalyzePD = async (): Promise<boolean> => {
+    if (!pdFile || !user) return false;
     setPdUploading(true);
     setPdLoading(true);
 
@@ -270,11 +275,14 @@ const VentureAnalysis = () => {
       setPdAnalysis(data.analysis);
       if (pdRecord) setPdHistory(prev => [pdRecord, ...prev]);
       toast({ title: t("venture.analysis_complete") });
+      return true;
     } catch (e: any) {
       toast({ title: e.message || t("venture.analysis_error"), variant: "destructive" });
+      return false;
+    } finally {
+      setPdUploading(false);
+      setPdLoading(false);
     }
-    setPdUploading(false);
-    setPdLoading(false);
   };
 
   return (

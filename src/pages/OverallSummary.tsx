@@ -1,12 +1,16 @@
 import DashboardLayout from "@/components/DashboardLayout";
 import { useStartupContext } from "@/context/StartupContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { computeVCValuation, computeChicagoValuation } from "@/lib/valuationUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { renderMarkdown } from "@/lib/markdown";
+import { Button } from "@/components/ui/button";
 import {
   TrendingUp, TrendingDown, Lightbulb, AlertTriangle, CheckCircle,
-  DollarSign, Users, Wallet, Target,
+  DollarSign, Users, Wallet, Target, Sparkles, Loader2,
 } from "lucide-react";
 
 const TRL_COUNT = 9, CRL_COUNT = 9, FRL_COUNT = 9;
@@ -212,6 +216,53 @@ const OverallSummary = () => {
     { label: t("summary.funding_frl"), level: frlLevel, max: FRL_COUNT, labels: frlLabels, color: "#dd90d8" },
   ];
 
+  // ── AI-generated investment-readiness analysis (grounded in the real metrics) ──
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+
+  const runAiSummary = async () => {
+    setAiLoading(true);
+    try {
+      const payload = {
+        globalScore,
+        maturity: getMaturityLabel(globalScore),
+        moduleScores: modules.reduce((acc, m) => ({ ...acc, [m.name]: m.score }), {} as Record<string, number>),
+        valuation: {
+          preSeedAverage: avgValuation,
+          berkus, scorecard, riskFactor,
+          seedAverage: seedAvg,
+          vcMethod: vcValuation,
+          chicagoMethod: chicagoValuation,
+        },
+        financial: latestSnapshot ? {
+          revenue: latestSnapshot.revenue.total,
+          expenses: latestSnapshot.expenses.total,
+          monthlyBurn: latestSnapshot.revenue.total - latestSnapshot.expenses.total,
+          runwayMonths: latestSnapshot.cashFlow.runway,
+          endingCash: latestSnapshot.cashFlow.endingCash,
+          churnRate: latestSnapshot.customerMetrics.churnRate,
+          grossMargin: latestSnapshot.customerMetrics.grossMargin,
+        } : null,
+        readiness: {
+          TRL: trlLevel, CRL: crlLevel, FRL: frlLevel, maxLevel: 9,
+          trlLabel: trlLevel > 0 ? trlLabels[trlLevel - 1] : null,
+          crlLabel: crlLevel > 0 ? crlLabels[crlLevel - 1] : null,
+          frlLabel: frlLevel > 0 ? frlLabels[frlLevel - 1] : null,
+        },
+        completeness: { hasEvaluation, hasFinancial, hasReadiness },
+      };
+      const { data, error } = await supabase.functions.invoke("analyze-venture", {
+        body: { type: "summary", data: payload },
+      });
+      if (error) throw error;
+      setAiAnalysis(data.analysis);
+    } catch (e: any) {
+      toast({ title: e.message || t("venture.analysis_error"), variant: "destructive" });
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   return (
     <DashboardLayout title={t("summary.title")} subtitle={t("summary.subtitle")}>
       {/* ── Hero: global health ── */}
@@ -377,6 +428,42 @@ const OverallSummary = () => {
               </div>
             </motion.div>
           ))}
+        </div>
+      </section>
+
+      {/* ── AI investment-readiness analysis ── */}
+      <section className="mt-6">
+        <div className="rounded-3xl border border-white/[0.07] bg-card p-6 sm:p-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(132,125,255,0.14)" }}>
+                <Sparkles className="h-5 w-5 text-[#847dff]" />
+              </div>
+              <div>
+                <h3 className="font-origin-display text-xl font-light text-white">{t("summary.ai_title")}</h3>
+                <p className="mt-1 text-sm text-white/55 font-light">{t("summary.ai_desc")}</p>
+              </div>
+            </div>
+            <Button
+              onClick={runAiSummary}
+              disabled={aiLoading || !hasAnyData}
+              className="shrink-0 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold"
+            >
+              {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {aiLoading ? t("summary.ai_analyzing") : aiAnalysis ? t("summary.ai_regenerate") : t("summary.ai_generate")}
+            </Button>
+          </div>
+
+          {!hasAnyData && (
+            <p className="mt-5 text-sm text-white/40">{t("summary.no_data_desc")}</p>
+          )}
+
+          {aiAnalysis && (
+            <div
+              className="prose prose-sm prose-invert max-w-none mt-6 border-t border-white/[0.07] pt-6 text-white/85"
+              dangerouslySetInnerHTML={{ __html: renderMarkdown(aiAnalysis) }}
+            />
+          )}
         </div>
       </section>
     </DashboardLayout>
