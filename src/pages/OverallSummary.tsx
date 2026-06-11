@@ -73,7 +73,7 @@ const Meter = ({ name, score, i }: { name: string; score: number; i: number }) =
   <motion.div
     className="flex items-center gap-4"
     initial={{ opacity: 0, x: -16 }}
-    whileInView={{ opacity: 1, x: 0 }}
+    animate={{ opacity: 1, x: 0 }}
     viewport={{ once: true }}
     transition={{ delay: i * 0.06, duration: 0.5 }}
   >
@@ -83,7 +83,7 @@ const Meter = ({ name, score, i }: { name: string; score: number; i: number }) =
         className="absolute inset-y-0 left-0 rounded-full"
         style={{ background: scoreHue(score) }}
         initial={{ width: 0 }}
-        whileInView={{ width: `${score}%` }}
+        animate={{ width: `${score}%` }}
         viewport={{ once: true }}
         transition={{ delay: 0.2 + i * 0.06, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       />
@@ -247,7 +247,7 @@ const OverallSummary = () => {
           { cls: "card-rose", show: hasReadiness, label: t("summary.readiness_levels"), value: `TRL ${trlLevel} · CRL ${crlLevel}`, note: `FRL ${frlLevel} / 9` },
         ].filter((c) => c.show).map((c, i) => (
           <motion.div key={c.label} className={`${c.cls} rounded-3xl p-7`}
-            initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             transition={{ delay: i * 0.1, duration: 0.6 }}>
             <p className="text-[13px] font-medium text-white/75">{c.label}</p>
             <p className="mt-3 font-origin-display text-3xl font-medium text-white">{c.value}</p>
@@ -258,7 +258,7 @@ const OverallSummary = () => {
 
       {/* ── Module breakdown (meters) ── */}
       <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
-        initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
         <Eyebrow>{t("summary.module_comparison")}</Eyebrow>
         <div className="mt-7 space-y-5">
           {modules.map((m, i) => <Meter key={m.name} name={m.name} score={m.score} i={i} />)}
@@ -270,7 +270,7 @@ const OverallSummary = () => {
         <div className="grid gap-5 sm:grid-cols-3 mb-6">
           {readinessRows.map((r, i) => (
             <motion.div key={r.label} className="rounded-3xl border border-white/[0.07] bg-card p-6"
-              initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}>
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}>
               <p className="text-xs text-white/45">{r.label}</p>
               <p className="mt-2 font-origin-display text-3xl font-light text-white">
                 {r.level} <span className="text-white/35 text-xl">/ {r.max}</span>
@@ -278,7 +278,7 @@ const OverallSummary = () => {
               <p className="mt-1 text-xs text-white/55">{r.level > 0 ? r.labels[r.level - 1] : t("summary.not_started")}</p>
               <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                 <motion.div className="h-full rounded-full" style={{ background: r.color }}
-                  initial={{ width: 0 }} whileInView={{ width: `${(r.level / r.max) * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }} />
+                  initial={{ width: 0 }} animate={{ width: `${(r.level / r.max) * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }} />
               </div>
             </motion.div>
           ))}
@@ -288,7 +288,7 @@ const OverallSummary = () => {
       {/* ── Financial report tiles ── */}
       {hasFinancial && latestSnapshot && (
         <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <Eyebrow>{t("summary.financial_report")}</Eyebrow>
           <div className="mt-7 grid gap-px overflow-hidden rounded-2xl bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-4">
             {[
@@ -316,7 +316,7 @@ const OverallSummary = () => {
       {/* ── Valuation results ── */}
       {hasEvaluation && (
         <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <Eyebrow>{t("summary.valuation_results")}</Eyebrow>
           <div className="mt-7 grid gap-4 sm:grid-cols-3">
             {[
@@ -336,7 +336,7 @@ const OverallSummary = () => {
       {/* ── Seed valuation ── */}
       {hasSeedEvaluation && (
         <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
-          initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <Eyebrow>{t("summary.seed_valuation_results")}</Eyebrow>
           <div className="mt-7 grid gap-4 sm:grid-cols-3">
             {vcValuation > 0 && (
@@ -367,7 +367,7 @@ const OverallSummary = () => {
             <motion.div key={i}
               className="flex items-start gap-4 rounded-2xl border border-white/[0.07] bg-card p-5"
               style={{ borderLeft: `2px solid ${tipAccent[tip.type]}` }}
-              initial={{ opacity: 0, y: 14 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05, duration: 0.5 }}>
+              initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05, duration: 0.5 }}>
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${tipAccent[tip.type]}1f` }}>
                 <tip.icon className="h-4 w-4" style={{ color: tipAccent[tip.type] }} />
               </div>

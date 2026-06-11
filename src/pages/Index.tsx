@@ -203,20 +203,20 @@ const Index = () => {
           <div className="max-w-2xl">
             <motion.p
               className="text-[13px] uppercase tracking-[0.25em] text-white/40"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             >
               The platform
             </motion.p>
             <motion.h2
               className="mt-4 font-origin-display font-light text-white text-4xl sm:text-5xl leading-tight"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
             >
               {t("landing.features_title")}{" "}
               <span className="italic text-origin-gradient">{t("landing.features_highlight")}</span>
             </motion.h2>
             <motion.p
               className="mt-5 text-white/55 font-light text-lg leading-relaxed"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
             >
               {t("landing.features_desc")}
             </motion.p>
@@ -226,7 +226,7 @@ const Index = () => {
             {features.map((f, i) => (
               <motion.div
                 key={f.title}
-                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
+                initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
               >
                 <Link
                   to={user ? f.link : "/signup"}
@@ -256,7 +256,7 @@ const Index = () => {
               <motion.div
                 key={s.label}
                 className="text-center"
-                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
+                initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
               >
                 <p className="font-origin-display text-5xl font-light text-white">
                   <Counter to={s.value} suffix={s.suffix} />
@@ -272,13 +272,13 @@ const Index = () => {
           <div className="mx-auto max-w-2xl text-center">
             <motion.p
               className="text-[13px] uppercase tracking-[0.25em] text-white/40"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             >
               Built for both sides of the table
             </motion.p>
             <motion.h2
               className="mt-4 font-origin-display font-light text-white text-4xl sm:text-5xl"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
             >
               One platform for <span className="italic text-origin-gradient">founders & investors</span>
             </motion.h2>
@@ -289,7 +289,7 @@ const Index = () => {
               <motion.div
                 key={a.title}
                 className="rounded-3xl bg-card border border-white/[0.07] p-8 transition-all duration-500 hover:-translate-y-1"
-                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
+                initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
               >
                 <div className="flex h-12 w-12 items-center justify-center rounded-2xl" style={{ background: `${a.color}1f` }}>
                   <a.icon className="h-6 w-6" style={{ color: a.color }} strokeWidth={1.6} />
@@ -306,13 +306,13 @@ const Index = () => {
           <div className="mx-auto max-w-2xl text-center">
             <motion.h2
               className="font-origin-display font-light text-white text-4xl sm:text-5xl"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             >
               {t("landing.how_title") || "How it works"}
             </motion.h2>
             <motion.p
               className="mt-4 text-white/55 font-light text-lg"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
             >
               {t("landing.how_desc") || "Four simple steps to data-driven startup valuation."}
             </motion.p>
@@ -323,7 +323,7 @@ const Index = () => {
               <motion.div
                 key={i}
                 className="rounded-3xl bg-card border border-white/[0.07] p-7"
-                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
+                initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}
               >
                 <span className="font-origin-display text-3xl font-light text-origin-gradient">0{i + 1}</span>
                 <h3 className="mt-5 text-lg font-medium text-white">{step.t}</h3>
@@ -338,19 +338,19 @@ const Index = () => {
           <div className="mx-auto max-w-2xl text-center">
             <motion.p
               className="text-[13px] uppercase tracking-[0.25em] text-white/40"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={0}
             >
               Pricing
             </motion.p>
             <motion.h2
               className="mt-4 font-origin-display font-light text-white text-4xl sm:text-5xl"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={1}
             >
               Simple, <span className="italic text-origin-gradient">transparent pricing</span>
             </motion.h2>
             <motion.p
               className="mt-5 text-white/55 font-light text-lg"
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
+              initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={2}
             >
               Start free. Upgrade when you're ready to unlock AI insights and a voucher code.
             </motion.p>
@@ -367,7 +367,7 @@ const Index = () => {
                 className={`relative flex flex-col rounded-3xl p-8 transition-all duration-500 hover:-translate-y-1 ${
                   plan.highlighted ? "tint-violet" : "bg-card border border-white/[0.07]"
                 }`}
-                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
+                initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={i}
               >
                 {plan.highlighted && (
                   <span className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-white px-4 py-1 text-[11px] font-semibold text-black">
@@ -409,7 +409,7 @@ const Index = () => {
             className="relative overflow-hidden rounded-[32px] px-8 py-20 text-center md:px-16"
             style={{ background: "var(--gradient-hero, linear-gradient(180deg,#0d0e10,#12161d))" }}
             initial={{ opacity: 0, scale: 0.97 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
             transition={{ duration: 0.9, ease }}
           >

@@ -209,7 +209,7 @@ const GrowthHub = () => {
               { icon: TrendingUp, value: `${fmt(stats.raised)}+`, label: "Funds in motion" },
             ].map((s, i) => (
               <motion.div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-7 text-center"
-                initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
+                initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
                 <s.icon className="h-5 w-5 text-[#847dff]" />
                 <p className="font-origin-display text-3xl sm:text-4xl font-light text-white">{s.value}</p>
                 <p className="text-xs uppercase tracking-wider text-white/40">{s.label}</p>
@@ -238,7 +238,7 @@ const GrowthHub = () => {
                 <motion.article key={s.id}
                   onClick={() => setSelected(s)}
                   className="group flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-card transition-all duration-500 hover:-translate-y-1 hover:border-white/15"
-                  initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i % 3}>
+                  initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i % 3}>
                   {/* Banner — profile photo fills the whole background */}
                   <div className="relative h-44 overflow-hidden">
                     {s.avatar ? (
@@ -272,7 +272,7 @@ const GrowthHub = () => {
                         </div>
                         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                           <motion.div className="h-full rounded-full" style={{ background: s.tint }}
-                            initial={{ width: 0 }} whileInView={{ width: `${pct}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease }} />
+                            initial={{ width: 0 }} animate={{ width: `${pct}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease }} />
                         </div>
                         <div className="mt-2 flex items-center justify-between text-xs text-white/45">
                           <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {s.investors} interested</span>
@@ -303,7 +303,7 @@ const GrowthHub = () => {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, i) => (
               <motion.div key={step.title} className="rounded-3xl border border-white/[0.07] bg-card p-7"
-                initial="hidden" whileInView="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}>
+                initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}>
                 <div className="flex items-center justify-between">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#847dff]/15">
                     <step.icon className="h-5 w-5 text-[#b9a7ff]" strokeWidth={1.7} />
