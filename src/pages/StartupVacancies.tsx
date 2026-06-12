@@ -10,7 +10,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Briefcase, Plus, Trash2, X, Pencil, Mail, Clock, Send } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Briefcase, Plus, Trash2, X, Pencil, Mail, Clock, Send, Search, MapPin } from "lucide-react";
 
 interface Vacancy {
   id: string; user_id: string; startup_name: string; country: string; job_type: string;
@@ -31,6 +32,12 @@ const StartupVacancies = () => {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+
+  // Search + filters
+  const [search, setSearch] = useState("");
+  const [fType, setFType] = useState("all");
+  const [fCountry, setFCountry] = useState("all");
+  const [fSpec, setFSpec] = useState("all");
 
   // Contact modal state
   const [contactOpen, setContactOpen] = useState(false);
@@ -142,6 +149,26 @@ const StartupVacancies = () => {
 
   const visibleVacancies = isAdmin ? vacancies : vacancies.filter((v) => v.approved || v.user_id === user?.id);
 
+  const uniqueValues = (key: keyof Vacancy) =>
+    Array.from(new Set(visibleVacancies.map((v) => v[key]).filter(Boolean) as string[])).sort();
+
+  const filteredVacancies = visibleVacancies.filter((v) => {
+    const q = search.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      [v.startup_name, v.specialization, v.job_description, v.startup_description, v.job_type, v.country]
+        .some((s) => (s || "").toLowerCase().includes(q));
+    return (
+      matchesSearch &&
+      (fType === "all" || v.job_type === fType) &&
+      (fCountry === "all" || v.country === fCountry) &&
+      (fSpec === "all" || v.specialization === fSpec)
+    );
+  });
+
+  const hasActiveFilters = search.trim() || fType !== "all" || fCountry !== "all" || fSpec !== "all";
+  const clearFilters = () => { setSearch(""); setFType("all"); setFCountry("all"); setFSpec("all"); };
+
   return (
     <DashboardLayout title={t("vacancies.title")} subtitle="">
       <div className="space-y-6">
@@ -175,6 +202,49 @@ const StartupVacancies = () => {
           </form>
         )}
 
+        {/* Search + filters */}
+        {!loading && visibleVacancies.length > 0 && (
+          <div className="rounded-2xl border border-white/[0.07] bg-card p-4">
+            <div className="relative">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder={t("vacancies.search_placeholder")}
+                className="pl-10 rounded-xl"
+              />
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Select value={fType} onValueChange={setFType}>
+                <SelectTrigger className="h-9 w-auto min-w-[140px] rounded-lg text-sm"><SelectValue placeholder={t("vacancies.job_type")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("vacancies.all_types")}</SelectItem>
+                  {uniqueValues("job_type").map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={fCountry} onValueChange={setFCountry}>
+                <SelectTrigger className="h-9 w-auto min-w-[140px] rounded-lg text-sm"><SelectValue placeholder={t("vacancies.country")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("vacancies.all_countries")}</SelectItem>
+                  {uniqueValues("country").map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              <Select value={fSpec} onValueChange={setFSpec}>
+                <SelectTrigger className="h-9 w-auto min-w-[150px] rounded-lg text-sm"><SelectValue placeholder={t("vacancies.specialization")} /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">{t("vacancies.all_specs")}</SelectItem>
+                  {uniqueValues("specialization").map((x) => <SelectItem key={x} value={x}>{x}</SelectItem>)}
+                </SelectContent>
+              </Select>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="h-9 gap-1.5 text-muted-foreground">
+                  <X className="h-3.5 w-3.5" /> {t("vacancies.clear")}
+                </Button>
+              )}
+            </div>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-muted-foreground">{t("common.loading")}</p>
         ) : visibleVacancies.length === 0 ? (
@@ -184,58 +254,73 @@ const StartupVacancies = () => {
             <p className="text-sm text-muted-foreground mt-1">{t("vacancies.be_first")}</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {visibleVacancies.map((v) => (
-              <div key={v.id} className={`rounded-xl border p-6 shadow-card ${!v.approved ? "border-amber-500/30 bg-amber-500/5" : "border-border bg-card"}`}>
-                <div className="flex flex-wrap items-start justify-between gap-4 mb-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-lg font-bold text-foreground">{v.startup_name}</h3>
-                      {!v.approved && (
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-600 flex items-center gap-1">
-                          <Clock className="h-3 w-3" /> {t("vacancies.pending_approval")}
-                        </span>
+          <>
+            <p className="text-sm text-muted-foreground">
+              {filteredVacancies.length} / {visibleVacancies.length} {t("vacancies.results")}
+            </p>
+            {filteredVacancies.length === 0 ? (
+              <div className="text-center py-12">
+                <Search className="h-12 w-12 text-muted-foreground/30 mx-auto mb-3" />
+                <p className="text-muted-foreground">{t("vacancies.no_match")}</p>
+              </div>
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {filteredVacancies.map((v) => (
+                  <div
+                    key={v.id}
+                    className={`group flex flex-col rounded-2xl border p-5 transition-all hover:-translate-y-0.5 hover:border-white/15 ${!v.approved ? "border-amber-500/30 bg-amber-500/[0.04]" : "border-white/[0.07] bg-card"}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-lg font-bold text-white">
+                        {(v.startup_name?.[0] || "?").toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <p className="truncate text-sm font-medium text-foreground">{v.startup_name}</p>
+                          <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">{v.job_type}</span>
+                        </div>
+                        <h3 className="mt-0.5 truncate font-semibold text-foreground">{v.specialization}</h3>
+                        <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                          <MapPin className="h-3.5 w-3.5" /> {v.country}
+                        </p>
+                      </div>
+                      {user?.id === v.user_id && (
+                        <div className="flex shrink-0 flex-col gap-1">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(v)} className="h-7 w-7 text-primary"><Pencil className="h-3.5 w-3.5" /></Button>
+                          <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)} className="h-7 w-7 text-destructive"><Trash2 className="h-3.5 w-3.5" /></Button>
+                        </div>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-2 mt-1">
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-primary/10 text-primary">{v.country}</span>
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-accent/10 text-accent">{v.job_type}</span>
-                      <span className="text-xs font-medium px-2 py-1 rounded-full bg-muted text-muted-foreground">{v.specialization}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
-                    {user?.id === v.user_id && (
-                      <>
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(v)} className="text-primary hover:text-primary"><Pencil className="h-4 w-4" /></Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(v.id)} className="text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /></Button>
-                      </>
+
+                    {!v.approved && (
+                      <span className="mt-3 inline-flex w-fit items-center gap-1 rounded-full bg-amber-500/15 px-2 py-0.5 text-[11px] font-medium text-amber-500">
+                        <Clock className="h-3 w-3" /> {t("vacancies.pending_approval")}
+                      </span>
                     )}
-                  </div>
-                </div>
-                {v.startup_description && <p className="text-sm text-muted-foreground mb-3">{v.startup_description}</p>}
-                <p className="text-sm text-foreground leading-relaxed mb-3">{v.job_description}</p>
-                <div className="flex items-center justify-between flex-wrap gap-3">
-                  {v.contact_email && (
-                    <div className="flex items-center gap-2 text-sm text-primary">
-                      <Mail className="h-4 w-4" />
-                      <a href={`mailto:${v.contact_email}`} className="hover:underline">{v.contact_email}</a>
+
+                    <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground">{v.job_description}</p>
+
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
+                      <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
+                      {v.contact_email && user && user.id !== v.user_id ? (
+                        <Button
+                          size="sm"
+                          onClick={() => openContactModal(v.contact_email, v.startup_name)}
+                          className="h-8 gap-1.5 gradient-primary text-primary-foreground border-0"
+                        >
+                          <Send className="h-3.5 w-3.5" /> {t("vacancies.contact")}
+                        </Button>
+                      ) : v.contact_email ? (
+                        <a href={`mailto:${v.contact_email}`} className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+                          <Mail className="h-3.5 w-3.5" /> {v.contact_email}
+                        </a>
+                      ) : null}
                     </div>
-                  )}
-                  {v.contact_email && user && user.id !== v.user_id && (
-                    <Button
-                      size="sm"
-                      onClick={() => openContactModal(v.contact_email, v.startup_name)}
-                      className="gap-2 gradient-primary text-primary-foreground border-0"
-                    >
-                      <Send className="h-3.5 w-3.5" />
-                      {t("vacancies.contact")}
-                    </Button>
-                  )}
-                </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+          </>
         )}
       </div>
 
