@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Linkedin, Send, Trash2, Loader2, MessageSquare, Globe, ImagePlus, X } from "lucide-react";
+import { Linkedin, Send, Trash2, Loader2, MessageSquare, Globe, ImagePlus, X, Heart, Bookmark, Share2 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -74,11 +74,18 @@ const Community = () => {
   const [replyText, setReplyText] = useState<Record<string, string>>({});
   const [replyBusy, setReplyBusy] = useState<string | null>(null);
 
+  const [likesByPost, setLikesByPost] = useState<Record<string, { count: number; liked: boolean }>>({});
+  const [savedSet, setSavedSet] = useState<Set<string>>(new Set());
+
   const load = async () => {
-    const [postRes, profRes, replyRes] = await Promise.all([
+    const [postRes, profRes, replyRes, likeRes, saveRes] = await Promise.all([
       supabase.from("community_posts").select("*").order("created_at", { ascending: false }).limit(200),
       supabase.from("profiles").select("id, name, surname, avatar_url, linkedin_url, startup_name, current_company, industry"),
       (supabase as any).from("community_post_replies").select("*").order("created_at", { ascending: true }).limit(2000),
+      (supabase as any).from("community_post_likes").select("post_id, user_id").limit(5000),
+      user
+        ? (supabase as any).from("community_post_saves").select("post_id").eq("user_id", user.id).limit(2000)
+        : Promise.resolve({ data: [] }),
     ]);
     const profs = (profRes.data as any[]) ?? [];
     const map: Record<string, Author> = {};
@@ -99,6 +106,19 @@ const Community = () => {
       (grouped[r.post_id] ||= []).push({ ...r, author: map[r.user_id] || {} });
     });
     setRepliesByPost(grouped);
+
+    const likeRows = (likeRes.data as any[]) ?? [];
+    const likeMap: Record<string, { count: number; liked: boolean }> = {};
+    likeRows.forEach((l) => {
+      const entry = (likeMap[l.post_id] ||= { count: 0, liked: false });
+      entry.count += 1;
+      if (user && l.user_id === user.id) entry.liked = true;
+    });
+    setLikesByPost(likeMap);
+
+    const saveRows = (saveRes.data as any[]) ?? [];
+    setSavedSet(new Set(saveRows.map((s) => s.post_id)));
+
     setLoading(false);
   };
 
@@ -106,6 +126,19 @@ const Community = () => {
     load().catch(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // When opened via a shared link (?post=ID), scroll to that post.
+  useEffect(() => {
+    if (loading || posts.length === 0) return;
+    const target = new URLSearchParams(window.location.search).get("post");
+    if (!target) return;
+    const el = document.getElementById(`post-${target}`);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "center" });
+      el.classList.add("ring-2", "ring-primary/60");
+      setTimeout(() => el.classList.remove("ring-2", "ring-primary/60"), 2200);
+    }
+  }, [loading, posts]);
 
   const myAuthor = useMemo<Author>(() => (user ? profilesById[user.id] || {} : {}), [user, profilesById]);
 
@@ -205,6 +238,53 @@ const Community = () => {
     }
   };
 
+  const handleLike = async (postId: string) => {
+    if (!user) return;
+    const cur = likesByPost[postId] || { count: 0, liked: false };
+    const nextLiked = !cur.liked;
+    const optimistic = { count: Math.max(0, cur.count + (nextLiked ? 1 : -1)), liked: nextLiked };
+    setLikesByPost((p) => ({ ...p, [postId]: optimistic }));
+    const q = nextLiked
+      ? (supabase as any).from("community_post_likes").insert({ post_id: postId, user_id: user.id })
+      : (supabase as any).from("community_post_likes").delete().eq("post_id", postId).eq("user_id", user.id);
+    const { error } = await q;
+    if (error) setLikesByPost((p) => ({ ...p, [postId]: cur })); // revert
+  };
+
+  const handleSave = async (postId: string) => {
+    if (!user) return;
+    const wasSaved = savedSet.has(postId);
+    setSavedSet((prev) => {
+      const n = new Set(prev);
+      if (wasSaved) n.delete(postId); else n.add(postId);
+      return n;
+    });
+    const q = wasSaved
+      ? (supabase as any).from("community_post_saves").delete().eq("post_id", postId).eq("user_id", user.id)
+      : (supabase as any).from("community_post_saves").insert({ post_id: postId, user_id: user.id });
+    const { error } = await q;
+    if (error) {
+      setSavedSet((prev) => {
+        const n = new Set(prev);
+        if (wasSaved) n.add(postId); else n.delete(postId);
+        return n;
+      });
+      toast.error("Could not update saved");
+    } else if (!wasSaved) {
+      toast.success("Saved to your profile");
+    }
+  };
+
+  const handleShare = async (postId: string) => {
+    const url = `${window.location.origin}/community?post=${postId}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Link copied — share it anywhere");
+    } catch {
+      toast.error("Could not copy link");
+    }
+  };
+
   return (
     <DashboardLayout title="Community" subtitle="Share updates, wins and ideas with founders & investors">
       <div className="mx-auto max-w-2xl space-y-6">
@@ -285,7 +365,8 @@ const Community = () => {
             return (
               <motion.article
                 key={post.id}
-                className="rounded-3xl border border-white/[0.07] bg-card p-5"
+                id={`post-${post.id}`}
+                className="scroll-mt-24 rounded-3xl border border-white/[0.07] bg-card p-5"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.45 }}
@@ -348,19 +429,46 @@ const Community = () => {
                   </a>
                 )}
 
-                {/* Replies */}
+                {/* Actions + replies */}
                 {(() => {
                   const replies = repliesByPost[post.id] || [];
                   const isOpen = openReplies[post.id] || false;
+                  const like = likesByPost[post.id] || { count: 0, liked: false };
+                  const saved = savedSet.has(post.id);
                   return (
                     <div className="mt-4 border-t border-white/[0.06] pt-3">
-                      <button
-                        onClick={() => setOpenReplies((prev) => ({ ...prev, [post.id]: !isOpen }))}
-                        className="inline-flex items-center gap-1.5 text-xs text-white/45 transition-colors hover:text-white/80"
-                      >
-                        <MessageSquare className="h-3.5 w-3.5" />
-                        {replies.length > 0 ? `${replies.length} ${replies.length === 1 ? "reply" : "replies"}` : "Reply"}
-                      </button>
+                      <div className="flex items-center gap-1 text-white/45">
+                        <button
+                          onClick={() => handleLike(post.id)}
+                          aria-label="Like"
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] ${like.liked ? "text-[#dd90d8]" : "hover:text-white/80"}`}
+                        >
+                          <Heart className={`h-3.5 w-3.5 ${like.liked ? "fill-current" : ""}`} />
+                          {like.count > 0 && <span>{like.count}</span>}
+                        </button>
+                        <button
+                          onClick={() => setOpenReplies((prev) => ({ ...prev, [post.id]: !isOpen }))}
+                          aria-label="Comment"
+                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] hover:text-white/80"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                          {replies.length > 0 && <span>{replies.length}</span>}
+                        </button>
+                        <button
+                          onClick={() => handleSave(post.id)}
+                          aria-label="Save"
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] ${saved ? "text-primary" : "hover:text-white/80"}`}
+                        >
+                          <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-current" : ""}`} />
+                        </button>
+                        <button
+                          onClick={() => handleShare(post.id)}
+                          aria-label="Share"
+                          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] hover:text-white/80"
+                        >
+                          <Share2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
 
                       {isOpen && (
                         <div className="mt-3 space-y-3">

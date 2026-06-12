@@ -538,6 +538,15 @@ export type Database = {
           email: string | null
         }[]
       }
+      get_trending_topics: {
+        Args: { _days?: number; _limit?: number }
+        Returns: {
+          topic: string
+          mentions: number
+          posts: number
+          last_used: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "investor" | "startup"
