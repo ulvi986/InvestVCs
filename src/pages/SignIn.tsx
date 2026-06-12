@@ -75,6 +75,10 @@ const SignIn = () => {
               {t("auth.investor_q")}{" "}
               <Link to="/investor-signup" className="text-primary hover:underline font-medium">{t("auth.investor_reg")}</Link>
             </p>
+            <p className="text-sm text-muted-foreground">
+              {t("auth.jobseeker_q")}{" "}
+              <Link to="/user-signup" className="text-primary hover:underline font-medium">{t("auth.user_reg")}</Link>
+            </p>
           </CardFooter>
         </form>
       </Card>

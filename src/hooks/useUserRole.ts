@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 
-export type AppRole = "admin" | "investor" | "startup";
+export type AppRole = "admin" | "investor" | "startup" | "user";
 
 interface RoleInfo {
   role: AppRole;
@@ -35,6 +35,7 @@ export const useUserRole = () => {
   const isAdmin = roles.some((r) => r.role === "admin" && r.approved);
   const isInvestor = roles.some((r) => r.role === "investor" && r.approved);
   const isInvestorPending = roles.some((r) => r.role === "investor" && !r.approved);
+  const isJobSeeker = roles.some((r) => r.role === "user");
 
-  return { roles, isAdmin, isInvestor, isInvestorPending, loading };
+  return { roles, isAdmin, isInvestor, isInvestorPending, isJobSeeker, loading };
 };

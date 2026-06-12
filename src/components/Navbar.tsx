@@ -37,7 +37,7 @@ const langFull: Record<Language, string> = {
 
 const Navbar = () => {
   const { user, signOut } = useAuth();
-  const { isAdmin, isInvestor, isInvestorPending } = useUserRole();
+  const { isAdmin, isInvestor, isInvestorPending, isJobSeeker } = useUserRole();
   const { t, language, setLanguage } = useLanguage();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -46,7 +46,7 @@ const Navbar = () => {
   const isInvestorUser = isInvestor || isInvestorPending;
 
   // Startup ana başlığı altında açılan altbaşlıqlar
-  const startupSubLinks = user && !isInvestorUser
+  const startupSubLinks = user && !isInvestorUser && !isJobSeeker
     ? [
         { to: "/evaluation", label: t("nav.evaluation") },
         { to: "/preparation", label: t("nav.financial") },
@@ -70,7 +70,14 @@ const Navbar = () => {
               { to: "/profile", label: t("nav.profile") },
             ]
           : []),
-        ...(!isInvestorUser
+        ...(isJobSeeker
+          ? [
+              { to: "/vacancies", label: t("nav.jobs") },
+              { to: "/job-match", label: t("nav.job_match") },
+              { to: "/profile", label: t("nav.profile") },
+            ]
+          : []),
+        ...(!isInvestorUser && !isJobSeeker
           ? [
               { to: "/summary", label: t("nav.summary") },
               { to: "/growth-hub", label: "Growth Hub" },
@@ -245,7 +252,7 @@ const Navbar = () => {
                         💰 {t("nav.investors")}
                       </Link>
                     )}
-                    {(!user || isInvestorUser) && (
+                    {(!user || isInvestorUser || isJobSeeker) && (
                       <Link
                         to="/growth-hub"
                         onClick={() => setOpen(false)}

@@ -16,6 +16,8 @@ import OverallSummary from "./pages/OverallSummary";
 import SignUp from "./pages/SignUp";
 import SignIn from "./pages/SignIn";
 import InvestorSignUp from "./pages/InvestorSignUp";
+import UserSignUp from "./pages/UserSignUp";
+import JobMatch from "./pages/JobMatch";
 import AdminPanel from "./pages/AdminPanel";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import StartupVacancies from "./pages/StartupVacancies";
@@ -63,10 +65,12 @@ const App = () => (
                 <Route path="/signup" element={<AuthRoute><SignUp /></AuthRoute>} />
                 <Route path="/signin" element={<AuthRoute><SignIn /></AuthRoute>} />
                 <Route path="/investor-signup" element={<AuthRoute><InvestorSignUp /></AuthRoute>} />
+                <Route path="/user-signup" element={<AuthRoute><UserSignUp /></AuthRoute>} />
                 <Route path="/" element={<Index />} />
                 <Route path="/growth-hub" element={<GrowthHub />} />
                 <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
                 <Route path="/investors" element={<ProtectedRoute><Investors /></ProtectedRoute>} />
+                <Route path="/job-match" element={<ProtectedRoute><JobMatch /></ProtectedRoute>} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/u/:id" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
