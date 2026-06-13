@@ -226,7 +226,7 @@ const Navbar = () => {
 
                   {/* Always-visible links */}
                   <div className="mt-2 border-t border-border/20 pt-2 space-y-1">
-                    {user && (
+                    {user && !isJobSeeker && (
                       <Link
                         to="/community"
                         onClick={() => setOpen(false)}
@@ -239,7 +239,7 @@ const Navbar = () => {
                         💬 Community
                       </Link>
                     )}
-                    {user && (
+                    {user && !isJobSeeker && (
                       <Link
                         to="/investors"
                         onClick={() => setOpen(false)}
@@ -252,7 +252,7 @@ const Navbar = () => {
                         💰 {t("nav.investors")}
                       </Link>
                     )}
-                    {(!user || isInvestorUser || isJobSeeker) && (
+                    {(!user || isInvestorUser) && (
                       <Link
                         to="/growth-hub"
                         onClick={() => setOpen(false)}
@@ -265,17 +265,19 @@ const Navbar = () => {
                         🚀 Growth Hub
                       </Link>
                     )}
-                    <Link
-                      to="/contact"
-                      onClick={() => setOpen(false)}
-                      className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
-                        location.pathname === "/contact"
-                          ? "bg-primary/10 text-primary"
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      }`}
-                    >
-                      📩 {t("landing.contact_title")}
-                    </Link>
+                    {!isJobSeeker && (
+                      <Link
+                        to="/contact"
+                        onClick={() => setOpen(false)}
+                        className={`flex items-center rounded-xl px-4 py-3 text-sm font-medium transition-all duration-200 ${
+                          location.pathname === "/contact"
+                            ? "bg-primary/10 text-primary"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                        }`}
+                      >
+                        📩 {t("landing.contact_title")}
+                      </Link>
+                    )}
                   </div>
 
                   {user && (

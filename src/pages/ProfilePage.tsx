@@ -7,6 +7,8 @@ import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/context/LanguageContext";
 import DashboardLayout from "@/components/DashboardLayout";
 import SavedPosts from "@/components/SavedPosts";
+import CvCard from "@/components/CvCard";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "@/components/ui/sonner";
 import {
   User, Building2, Mail, CalendarDays, Loader2, Save, Camera,
-  TrendingUp, TrendingDown, Users, DollarSign, BarChart3, Activity
+  TrendingUp, TrendingDown, Users, DollarSign, BarChart3, Activity, Briefcase
 } from "lucide-react";
 
 const COUNTRIES = [
@@ -65,7 +67,7 @@ const AvatarUploader = ({ url, initials, uploading, onPick }: { url?: string; in
 const ProfilePage = () => {
   const { user } = useAuth();
   const { financial, evaluation } = useStartupContext();
-  const { isInvestor, isInvestorPending } = useUserRole();
+  const { isInvestor, isInvestorPending, isJobSeeker } = useUserRole();
   const { t } = useLanguage();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
@@ -177,6 +179,40 @@ const ProfilePage = () => {
             </CardContent>
           </Card>
         </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (isJobSeeker) {
+    return (
+      <DashboardLayout title={t("profile.title")} subtitle={t("profile.personal_info")}>
+        <Card className="mx-auto max-w-lg border-border shadow-card">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 text-lg"><User className="h-5 w-5 text-primary" />{t("profile.personal_info")}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2"><Label>{t("profile.first_name")}</Label><Input value={profile?.name || ""} onChange={e => setProfile(p => p ? { ...p, name: e.target.value } : p)} /></div>
+              <div className="space-y-2"><Label>{t("profile.last_name")}</Label><Input value={profile?.surname || ""} onChange={e => setProfile(p => p ? { ...p, surname: e.target.value } : p)} /></div>
+            </div>
+            <div className="space-y-2"><Label>{t("profile.email")}</Label><div className="flex items-center gap-2 rounded-md border border-input bg-muted/50 px-3 py-2 text-sm text-muted-foreground"><Mail className="h-4 w-4" />{user?.email}</div></div>
+            <div className="space-y-2"><Label>LinkedIn URL</Label><Input value={profile?.linkedin_url || ""} onChange={e => setProfile(p => p ? { ...p, linkedin_url: e.target.value } : p)} placeholder="https://linkedin.com/in/yourprofile" /></div>
+            <div className="space-y-2">
+              <Label>{t("profile.country")}</Label>
+              <Select value={profile?.country || ""} onValueChange={(val) => setProfile(p => p ? { ...p, country: val } : p)}>
+                <SelectTrigger><SelectValue placeholder={t("profile.country")} /></SelectTrigger>
+                <SelectContent>{COUNTRIES.map(c => (<SelectItem key={c} value={c}>{c}</SelectItem>))}</SelectContent>
+              </Select>
+            </div>
+            <CvCard />
+            <Button onClick={handleSave} disabled={saving} className="gradient-primary text-primary-foreground border-0">
+              {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}{t("profile.save")}
+            </Button>
+            <Link to="/job-match" className="block">
+              <Button variant="outline" className="w-full gap-2"><Briefcase className="h-4 w-4" />{t("jobmatch.ai_title")}</Button>
+            </Link>
+          </CardContent>
+        </Card>
       </DashboardLayout>
     );
   }

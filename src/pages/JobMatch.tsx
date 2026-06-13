@@ -7,14 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "@/components/ui/sonner";
-import { Upload, FileText, Loader2, Sparkles, MapPin, Send, CheckCircle2 } from "lucide-react";
+import { Upload, FileText, Loader2, Sparkles, MapPin, Send, CheckCircle2, Check } from "lucide-react";
+import { gmailComposeUrl } from "@/lib/contact";
 
 interface Vacancy {
   id: string; user_id: string; startup_name: string; country: string; job_type: string;
   job_description: string; specialization: string; contact_email: string; approved: boolean;
 }
 
-type Match = { v: Vacancy; score: number; matched: string[] };
+type Match = { v: Vacancy; score: number; matched: string[]; reason?: string };
 
 // Extract plain text from a .docx (Word) or .txt file. Other formats (e.g. PDF)
 // are still uploaded, but the user supplies skills manually.
@@ -43,19 +44,25 @@ const JobMatch = () => {
   const { t } = useLanguage();
   const [vacancies, setVacancies] = useState<Vacancy[]>([]);
   const [skillsText, setSkillsText] = useState("");
+  const [cvText, setCvText] = useState("");
   const [fileName, setFileName] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [matching, setMatching] = useState(false);
   const [matches, setMatches] = useState<Match[] | null>(null);
+  const [applied, setApplied] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     (async () => {
-      const [{ data: vac }, { data: cv }] = await Promise.all([
+      const [{ data: vac }, { data: cv }, { data: apps }] = await Promise.all([
         supabase.from("startup_vacancies").select("*").eq("approved", true),
         (supabase as any).from("user_cvs").select("*").eq("user_id", user?.id).maybeSingle(),
+        (supabase as any).from("job_applications").select("vacancy_id").eq("user_id", user?.id),
       ]);
       setVacancies((vac as any[]) ?? []);
+      setApplied(new Set(((apps as any[]) ?? []).map((a) => a.vacancy_id)));
       if (cv) {
         setFileName((cv as any).file_name || null);
+        if ((cv as any).extracted_text) setCvText((cv as any).extracted_text);
         const skills = (cv as any).skills as string[] | null;
         if (skills?.length) setSkillsText(skills.join(", "));
         else if ((cv as any).extracted_text) setSkillsText((cv as any).extracted_text.slice(0, 1500));
@@ -75,6 +82,7 @@ const JobMatch = () => {
       if (upErr) throw upErr;
 
       const text = await extractText(file);
+      if (text) setCvText(text);
       if (text && !skillsText.trim()) setSkillsText(text.slice(0, 1500));
 
       const skills = tokenize(skillsText || text);
@@ -95,18 +103,9 @@ const JobMatch = () => {
     }
   };
 
-  const runMatch = async () => {
-    const tokens = tokenize(skillsText);
-    if (tokens.length === 0) { toast.error(t("jobmatch.add_skills")); return; }
-
-    // persist the refined skills for later
-    if (user) {
-      await (supabase as any).from("user_cvs")
-        .update({ skills: tokens, updated_at: new Date().toISOString() })
-        .eq("user_id", user.id);
-    }
-
-    const scored: Match[] = vacancies
+  // Local keyword fallback used if the AI matcher is unavailable.
+  const keywordMatch = (tokens: string[]): Match[] =>
+    vacancies
       .map((v) => {
         const hay = `${v.specialization} ${v.job_type} ${v.job_description} ${v.startup_name} ${v.country}`.toLowerCase();
         const matched = tokens.filter((tk) => hay.includes(tk));
@@ -115,13 +114,84 @@ const JobMatch = () => {
       })
       .filter((m) => m.score > 0)
       .sort((a, b) => b.score - a.score);
-    setMatches(scored);
+
+  const runMatch = async () => {
+    const tokens = tokenize(skillsText);
+    if (tokens.length === 0 && !cvText.trim()) { toast.error(t("jobmatch.add_skills")); return; }
+    if (vacancies.length === 0) { setMatches([]); return; }
+
+    // persist the refined skills for later
+    if (user && tokens.length) {
+      await (supabase as any).from("user_cvs")
+        .update({ skills: tokens, updated_at: new Date().toISOString() })
+        .eq("user_id", user.id);
+    }
+
+    setMatching(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("match-jobs", {
+        body: {
+          cv_text: cvText,
+          skills: tokens,
+          vacancies: vacancies.map((v) => ({
+            id: v.id,
+            startup_name: v.startup_name,
+            specialization: v.specialization,
+            job_type: v.job_type,
+            country: v.country,
+            job_description: v.job_description,
+          })),
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const byId = new Map(vacancies.map((v) => [v.id, v]));
+      const aiMatches: Match[] = ((data?.matches as any[]) ?? [])
+        .map((m) => {
+          const v = byId.get(m.id);
+          if (!v) return null;
+          return {
+            v,
+            score: Math.max(0, Math.min(100, Math.round(Number(m.score) || 0))),
+            matched: Array.isArray(m.matched_skills) ? m.matched_skills.slice(0, 8) : [],
+            reason: typeof m.reason === "string" ? m.reason : undefined,
+          } as Match;
+        })
+        .filter((m): m is Match => m !== null)
+        .sort((a, b) => b.score - a.score);
+
+      // If AI returned nothing usable, fall back to keyword scoring.
+      setMatches(aiMatches.length ? aiMatches : keywordMatch(tokens));
+    } catch (err) {
+      console.error("AI match failed, falling back to keyword match:", err);
+      setMatches(keywordMatch(tokens));
+    } finally {
+      setMatching(false);
+    }
+  };
+
+  const apply = async (v: Vacancy) => {
+    if (!user) return;
+    if (!applied.has(v.id)) {
+      setApplied((prev) => new Set(prev).add(v.id));
+      const { error } = await (supabase as any)
+        .from("job_applications")
+        .insert({ user_id: user.id, vacancy_id: v.id });
+      if (error && !String(error.message).includes("duplicate")) {
+        setApplied((prev) => { const n = new Set(prev); n.delete(v.id); return n; });
+        toast.error(t("jobmatch.apply_error"));
+        return;
+      }
+      toast.success(t("jobmatch.applied"));
+    }
+    if (v.contact_email) window.open(gmailComposeUrl(v.contact_email, `Application: ${v.specialization}`), "_blank");
   };
 
   const scoreColor = (s: number) => (s >= 60 ? "#00b3dd" : s >= 30 ? "#847dff" : "#dd90d8");
 
   return (
-    <DashboardLayout title={t("jobmatch.title")} subtitle={t("jobmatch.subtitle")}>
+    <DashboardLayout title={t("jobmatch.ai_title")} subtitle={t("jobmatch.ai_subtitle")}>
       <div className="mx-auto max-w-3xl space-y-6">
         {/* Upload + skills */}
         <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
@@ -156,8 +226,9 @@ const JobMatch = () => {
             <p className="text-xs text-white/40">{t("jobmatch.skills_hint")}</p>
           </div>
 
-          <Button onClick={runMatch} className="mt-4 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold">
-            <Sparkles className="h-4 w-4" /> {t("jobmatch.find")}
+          <Button onClick={runMatch} disabled={matching} className="mt-4 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold">
+            {matching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {matching ? t("jobmatch.matching") : t("jobmatch.find")}
           </Button>
         </div>
 
@@ -170,7 +241,7 @@ const JobMatch = () => {
           ) : (
             <div className="space-y-3">
               <p className="text-sm text-white/55">{matches.length} {t("jobmatch.matches_found")}</p>
-              {matches.map(({ v, score, matched }) => (
+              {matches.map(({ v, score, matched, reason }) => (
                 <div key={v.id} className="rounded-2xl border border-white/[0.07] bg-card p-5">
                   <div className="flex items-start gap-4">
                     <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-2" style={{ borderColor: scoreColor(score) }}>
@@ -183,6 +254,11 @@ const JobMatch = () => {
                       </div>
                       <p className="text-sm text-white/55">{v.startup_name}</p>
                       <p className="mt-0.5 flex items-center gap-1 text-xs text-white/45"><MapPin className="h-3.5 w-3.5" /> {v.country}</p>
+                      {reason && (
+                        <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-white/60">
+                          <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {reason}
+                        </p>
+                      )}
                       {matched.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1.5">
                           {matched.slice(0, 8).map((m) => (
@@ -193,13 +269,14 @@ const JobMatch = () => {
                         </div>
                       )}
                     </div>
-                    {v.contact_email && (
-                      <a href={`mailto:${v.contact_email}`} className="shrink-0">
-                        <Button size="sm" className="h-8 gap-1.5 gradient-primary text-primary-foreground border-0">
-                          <Send className="h-3.5 w-3.5" /> {t("vacancies.contact")}
-                        </Button>
-                      </a>
-                    )}
+                    <Button
+                      size="sm"
+                      onClick={() => apply(v)}
+                      disabled={applied.has(v.id)}
+                      className={`h-8 shrink-0 gap-1.5 border-0 ${applied.has(v.id) ? "bg-green-600/80 text-white" : "gradient-primary text-primary-foreground"}`}
+                    >
+                      {applied.has(v.id) ? <><Check className="h-3.5 w-3.5" /> {t("jobmatch.applied_label")}</> : <><Send className="h-3.5 w-3.5" /> {t("jobmatch.apply")}</>}
+                    </Button>
                   </div>
                 </div>
               ))}
