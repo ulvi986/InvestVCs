@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Linkedin, Send, Trash2, Loader2, MessageSquare, Globe, ImagePlus, X, Heart, Bookmark, Share2 } from "lucide-react";
 import DashboardLayout from "@/components/DashboardLayout";
+import TrendsPanel from "@/components/TrendsPanel";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
@@ -287,7 +288,8 @@ const Community = () => {
 
   return (
     <DashboardLayout title="Community" subtitle="Share updates, wins and ideas with founders & investors">
-      <div className="mx-auto max-w-2xl space-y-6">
+      <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
+        <div className="min-w-0 space-y-6">
         {/* Composer */}
         <div className="rounded-3xl border border-white/[0.07] bg-card p-5">
           <div className="flex gap-3">
@@ -537,6 +539,9 @@ const Community = () => {
         <p className="flex items-center justify-center gap-1.5 pb-4 text-center text-xs text-white/30">
           <Globe className="h-3.5 w-3.5" /> Everyone in the InvestVCs community can see what you share.
         </p>
+        </div>
+
+        <TrendsPanel />
       </div>
     </DashboardLayout>
   );

@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import TrendsPanel from "@/components/TrendsPanel";
 import { useAuth } from "@/context/AuthContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -232,9 +231,8 @@ const GrowthHub = () => {
             </div>
           </div>
 
-          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
-            <div className="min-w-0">
-              <div className="grid gap-5 sm:grid-cols-2">
+          <div className="min-w-0">
+            <div className="grid gap-5 sm:grid-cols-2">
             {filtered.map((s, i) => {
               const pct = s.goal > 0 ? Math.min(100, Math.round((s.raised / s.goal) * 100)) : 0;
               return (
@@ -292,11 +290,9 @@ const GrowthHub = () => {
               );
             })}
               </div>
-              {filtered.length === 0 && (
-                <p className="text-center text-white/40 py-16">No startups match "{search}".</p>
-              )}
-            </div>
-            <TrendsPanel />
+            {filtered.length === 0 && (
+              <p className="text-center text-white/40 py-16">No startups match "{search}".</p>
+            )}
           </div>
         </section>
 
