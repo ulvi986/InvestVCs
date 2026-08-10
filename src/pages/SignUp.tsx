@@ -77,6 +77,7 @@ const SignUp = () => {
           startup_description: form.startup_description,
           country: form.country,
           industry: form.industry,
+          is_startup: "true",
         },
         emailRedirectTo: window.location.origin,
       },

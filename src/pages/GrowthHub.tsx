@@ -13,6 +13,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useLanguage } from "@/context/LanguageContext";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import OriginBackground from "@/components/OriginBackground";
@@ -68,14 +69,15 @@ const fmt = (v: number) => {
 };
 
 const steps = [
-  { icon: Search, title: "Discover", text: "Browse vetted startups across FinTech, HealthTech, AgriTech and more." },
-  { icon: Lightbulb, title: "Analyse", text: "Review team, market, traction and data-backed valuations on every deal." },
-  { icon: Wallet, title: "Back them", text: "Express interest and connect directly with founders raising now." },
-  { icon: LineChart, title: "Grow together", text: "Follow progress and watch your portfolio of ventures compound." },
+  { icon: Search, key: "step1" },
+  { icon: Lightbulb, key: "step2" },
+  { icon: Wallet, key: "step3" },
+  { icon: LineChart, key: "step4" },
 ];
 
 const GrowthHub = () => {
   const { user } = useAuth();
+  const { t } = useLanguage();
   const [startups, setStartups] = useState<Startup[]>(FALLBACK);
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Startup | null>(null);
@@ -140,7 +142,8 @@ const GrowthHub = () => {
   });
 
   const expressInterest = (s: Startup) => {
-    setForm((prev) => ({ ...prev, message: `I'm interested in ${s.name} (${s.category}). Please share more about this opportunity.` }));
+    const msg = t("growth.interest_msg").replace("{name}", s.name).replace("{category}", s.category);
+    setForm((prev) => ({ ...prev, message: msg }));
     setSelected(null);
     setTimeout(() => contactRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   };
@@ -148,7 +151,7 @@ const GrowthHub = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.surname || !form.email || !form.message) {
-      toast.error("Please fill in all fields");
+      toast.error(t("auth.fill_all"));
       return;
     }
     setSending(true);
@@ -163,10 +166,10 @@ const GrowthHub = () => {
         },
       });
       if (error) throw error;
-      toast.success("Message sent successfully!");
+      toast.success(t("landing.contact_success"));
       setForm({ name: "", surname: "", email: "", message: "" });
     } catch {
-      toast.error("Failed to send message");
+      toast.error(t("landing.contact_error"));
     } finally {
       setSending(false);
     }
@@ -182,21 +185,21 @@ const GrowthHub = () => {
         <section className="container pt-24 pb-14 lg:pt-28 text-center">
           <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
             <span className="inline-flex items-center gap-2 rounded-full origin-glass px-4 py-1.5 text-[13px] text-white/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#847dff]" /> Growth Hub
+              <span className="h-1.5 w-1.5 rounded-full bg-[#847dff]" /> {t("growth.badge")}
             </span>
           </motion.div>
           <motion.h1 className="mx-auto mt-7 max-w-3xl font-origin-display font-light text-white text-4xl sm:text-6xl leading-[1.05]"
             initial="hidden" animate="visible" variants={fadeUp} custom={1}>
-            Invest in <span className="italic text-origin-gradient">tomorrow's startups</span> today
+            {t("growth.hero_pre")}<span className="italic text-origin-gradient">{t("growth.hero_em")}</span>{t("growth.hero_post")}
           </motion.h1>
           <motion.p className="mx-auto mt-6 max-w-xl text-base sm:text-lg font-light text-white/55"
             initial="hidden" animate="visible" variants={fadeUp} custom={2}>
-            Discover the ventures growing on InvestVCs — back founders early, follow their traction, and grow together.
+            {t("growth.hero_desc")}
           </motion.p>
           <motion.div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center"
             initial="hidden" animate="visible" variants={fadeUp} custom={3}>
-            <a href="#startups"><Button variant="white" size="lg" className="origin-shimmer px-8">Discover startups <ArrowRight className="ml-1 h-4 w-4" /></Button></a>
-            <Link to={user ? "/profile" : "/signup"}><Button variant="outline" size="lg" className="px-8">Submit your startup</Button></Link>
+            <a href="#startups"><Button variant="white" size="lg" className="origin-shimmer px-8">{t("growth.discover_btn")} <ArrowRight className="ml-1 h-4 w-4" /></Button></a>
+            <Link to={user ? "/profile" : "/signup"}><Button variant="outline" size="lg" className="px-8">{t("growth.submit_btn")}</Button></Link>
           </motion.div>
         </section>
 
@@ -204,9 +207,9 @@ const GrowthHub = () => {
         <section className="container">
           <div className="grid grid-cols-3 gap-4 rounded-3xl border border-white/[0.07] bg-card p-2 sm:p-3">
             {[
-              { icon: Rocket, value: `${stats.projects}+`, label: "Active startups" },
-              { icon: Users, value: stats.investors >= 1000 ? `${(stats.investors / 1000).toFixed(1)}K+` : `${stats.investors}+`, label: "Interested investors" },
-              { icon: TrendingUp, value: `${fmt(stats.raised)}+`, label: "Funds in motion" },
+              { icon: Rocket, value: `${stats.projects}+`, label: t("growth.stat_startups") },
+              { icon: Users, value: stats.investors >= 1000 ? `${(stats.investors / 1000).toFixed(1)}K+` : `${stats.investors}+`, label: t("growth.stat_investors") },
+              { icon: TrendingUp, value: `${fmt(stats.raised)}+`, label: t("growth.stat_funds") },
             ].map((s, i) => (
               <motion.div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-7 text-center"
                 initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
@@ -222,12 +225,12 @@ const GrowthHub = () => {
         <section id="startups" className="container py-20 lg:py-24">
           <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-10">
             <div>
-              <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">Active now</p>
-              <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">Our startups</h2>
+              <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{t("growth.active_now")}</p>
+              <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">{t("growth.our_startups")}</h2>
             </div>
             <div className="relative w-full sm:w-72">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/35" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name or category" className="pl-10 rounded-full" />
+              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("growth.search_ph")} className="pl-10 rounded-full" />
             </div>
           </div>
 
@@ -269,21 +272,21 @@ const GrowthHub = () => {
                       <div className="mt-5">
                         <div className="flex items-baseline justify-between text-sm">
                           <span className="font-origin-display text-lg text-white">{fmt(s.raised)}</span>
-                          <span className="text-xs text-white/40">of {fmt(s.goal)}</span>
+                          <span className="text-xs text-white/40">{t("growth.of")} {fmt(s.goal)}</span>
                         </div>
                         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
                           <motion.div className="h-full rounded-full" style={{ background: s.tint }}
                             initial={{ width: 0 }} animate={{ width: `${pct}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease }} />
                         </div>
                         <div className="mt-2 flex items-center justify-between text-xs text-white/45">
-                          <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {s.investors} interested</span>
-                          <span>{pct}% funded</span>
+                          <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {s.investors} {t("growth.interested")}</span>
+                          <span>{pct}% {t("growth.funded")}</span>
                         </div>
                       </div>
                     )}
 
                     <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition-all group-hover:gap-2.5 group-hover:text-white">
-                      View details <ArrowRight className="h-4 w-4" />
+                      {t("growth.view_details")} <ArrowRight className="h-4 w-4" />
                     </span>
                   </div>
                 </motion.article>
@@ -291,7 +294,7 @@ const GrowthHub = () => {
             })}
               </div>
             {filtered.length === 0 && (
-              <p className="text-center text-white/40 py-16">No startups match "{search}".</p>
+              <p className="text-center text-white/40 py-16">{t("growth.no_match")} "{search}".</p>
             )}
           </div>
         </section>
@@ -299,12 +302,12 @@ const GrowthHub = () => {
         {/* ── How it works ── */}
         <section className="container py-16">
           <div className="text-center mb-12">
-            <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">How it works</p>
-            <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">From discovery to growth</h2>
+            <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{t("growth.how_it_works")}</p>
+            <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">{t("growth.how_subtitle")}</h2>
           </div>
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             {steps.map((step, i) => (
-              <motion.div key={step.title} className="rounded-3xl border border-white/[0.07] bg-card p-7"
+              <motion.div key={step.key} className="rounded-3xl border border-white/[0.07] bg-card p-7"
                 initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}>
                 <div className="flex items-center justify-between">
                   <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#847dff]/15">
@@ -312,8 +315,8 @@ const GrowthHub = () => {
                   </div>
                   <span className="font-origin-display text-2xl font-light text-white/20">0{i + 1}</span>
                 </div>
-                <h3 className="mt-5 text-lg font-medium text-white">{step.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/55 font-light">{step.text}</p>
+                <h3 className="mt-5 text-lg font-medium text-white">{t(`growth.${step.key}_title`)}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-white/55 font-light">{t(`growth.${step.key}_text`)}</p>
               </motion.div>
             ))}
           </div>
@@ -323,36 +326,36 @@ const GrowthHub = () => {
         <section ref={contactRef} id="contact" className="container py-20 lg:py-24">
           <div className="mx-auto max-w-2xl">
             <div className="text-center mb-10">
-              <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">Get in touch</p>
+              <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{t("growth.get_in_touch")}</p>
               <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">
-                Want to <span className="italic text-origin-gradient">connect</span>?
+                {t("growth.connect_pre")}<span className="italic text-origin-gradient">{t("growth.connect_em")}</span>{t("growth.connect_post")}
               </h2>
               <p className="mt-4 text-white/55 font-light">
-                Investing, raising, or partnering — leave a note and our team will reach out.
+                {t("growth.connect_desc")}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="rounded-3xl border border-white/[0.07] bg-card p-7 sm:p-8 space-y-5">
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="gh-name">Name</Label>
-                  <Input id="gh-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name" />
+                  <Label htmlFor="gh-name">{t("landing.contact_name")}</Label>
+                  <Input id="gh-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("landing.contact_name")} />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="gh-surname">Surname</Label>
-                  <Input id="gh-surname" value={form.surname} onChange={(e) => setForm({ ...form, surname: e.target.value })} placeholder="Surname" />
+                  <Label htmlFor="gh-surname">{t("landing.contact_surname")}</Label>
+                  <Input id="gh-surname" value={form.surname} onChange={(e) => setForm({ ...form, surname: e.target.value })} placeholder={t("landing.contact_surname")} />
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gh-email">Email</Label>
+                <Label htmlFor="gh-email">{t("landing.contact_email")}</Label>
                 <Input id="gh-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gh-message">Message</Label>
-                <Textarea id="gh-message" rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder="Tell us what you're looking for…" />
+                <Label htmlFor="gh-message">{t("landing.contact_message")}</Label>
+                <Textarea id="gh-message" rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder={t("growth.msg_ph")} />
               </div>
               <Button type="submit" variant="white" className="w-full origin-shimmer" disabled={sending}>
-                {sending ? "Sending…" : <>Send message <Send className="ml-1.5 h-4 w-4" /></>}
+                {sending ? t("landing.contact_sending") : <>{t("landing.contact_send")} <Send className="ml-1.5 h-4 w-4" /></>}
               </Button>
             </form>
           </div>
@@ -393,25 +396,25 @@ const GrowthHub = () => {
                     <div className="mt-6 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
                       <div className="flex items-baseline justify-between">
                         <span className="font-origin-display text-2xl text-white">{fmt(selected.raised)}</span>
-                        <span className="text-xs text-white/40">raised of {fmt(selected.goal)}</span>
+                        <span className="text-xs text-white/40">{t("growth.raised_of")} {fmt(selected.goal)}</span>
                       </div>
                       <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.06]">
                         <div className="h-full rounded-full" style={{ width: `${pct}%`, background: selected.tint }} />
                       </div>
                       <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                        <div><p className="font-origin-display text-xl text-white">{pct}%</p><p className="text-[11px] uppercase tracking-wider text-white/40">Funded</p></div>
-                        <div><p className="font-origin-display text-xl text-white">{selected.investors}</p><p className="text-[11px] uppercase tracking-wider text-white/40">Investors</p></div>
-                        <div><p className="font-origin-display text-xl text-white">{selected.stage || "—"}</p><p className="text-[11px] uppercase tracking-wider text-white/40">Stage</p></div>
+                        <div><p className="font-origin-display text-xl text-white">{pct}%</p><p className="text-[11px] uppercase tracking-wider text-white/40">{t("growth.modal_funded")}</p></div>
+                        <div><p className="font-origin-display text-xl text-white">{selected.investors}</p><p className="text-[11px] uppercase tracking-wider text-white/40">{t("growth.modal_investors")}</p></div>
+                        <div><p className="font-origin-display text-xl text-white">{selected.stage || "—"}</p><p className="text-[11px] uppercase tracking-wider text-white/40">{t("growth.modal_stage")}</p></div>
                       </div>
                     </div>
                   ) : (
                     <div className="mt-6 flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 text-sm text-white/55">
-                      <Rocket className="h-4 w-4 text-[#847dff]" /> This startup hasn't opened a funding round yet.
+                      <Rocket className="h-4 w-4 text-[#847dff]" /> {t("growth.no_round")}
                     </div>
                   )}
 
                   <Button variant="white" className="mt-6 w-full origin-shimmer" onClick={() => expressInterest(selected)}>
-                    Express interest <ArrowRight className="ml-1 h-4 w-4" />
+                    {t("growth.express_interest")} <ArrowRight className="ml-1 h-4 w-4" />
                   </Button>
                 </div>
               </div>

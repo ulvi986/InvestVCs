@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 
 const factorKeys = ["team", "market", "product", "competitive", "sales", "financing", "other"];
 const weights = [0.30, 0.25, 0.15, 0.10, 0.10, 0.05, 0.05];
-const weightLabels = ["30%", "25%", "15%", "10%", "10%", "5%", "5%"];
 const scoreValues = [60, 80, 100, 120, 150];
 const scoreKeys = ["very_weak", "weak", "average", "strong", "very_strong"];
 const scoreColors = ["#dd90d8", "#e0a36a", "#9aa0ab", "#00b3dd", "#847dff"];
@@ -59,26 +58,10 @@ const ScorecardMethod = ({ scores, medianValuation, onScoresChange, onMedianChan
         </div>
       </div>
 
-      {/* Weights overview */}
-      <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
-        <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{t("scorecard.factor_weights")}</p>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {factorKeys.map((key, i) => (
-            <div key={key} className="rounded-xl bg-white/[0.03] px-3 py-2.5">
-              <p className="text-xs text-white/50">{t(`scorecard.${key}`)}</p>
-              <p className="font-origin-display text-lg text-white">{weightLabels[i]}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {factorKeys.map((key, i) => (
         <motion.div key={key} className="rounded-3xl border border-white/[0.07] bg-card p-6"
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.45 }}>
-          <div className="flex items-center justify-between">
-            <h3 className="font-origin-display text-xl font-medium text-white">{i + 1}. {t(`scorecard.${key}`)}</h3>
-            <span className="rounded-full bg-[#847dff]/15 px-3 py-1 text-xs text-[#b9a7ff]">{t("scorecard.weight")}: {weightLabels[i]}</span>
-          </div>
+          <h3 className="font-origin-display text-xl font-medium text-white">{i + 1}. {t(`scorecard.${key}`)}</h3>
           <p className="mt-3 text-sm text-white/65 font-light">{t(`scorecard.${key}_q`)}</p>
           <div className="mt-4 grid gap-2 sm:grid-cols-5">
             {scoreValues.map((val, si) => {

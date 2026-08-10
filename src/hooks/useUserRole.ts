@@ -36,6 +36,12 @@ export const useUserRole = () => {
   const isInvestor = roles.some((r) => r.role === "investor" && r.approved);
   const isInvestorPending = roles.some((r) => r.role === "investor" && !r.approved);
   const isJobSeeker = roles.some((r) => r.role === "user");
+  // A startup is anyone explicitly assigned the startup role, or — for legacy
+  // accounts created before roles were assigned — anyone who is neither an
+  // investor nor a job seeker.
+  const isStartup =
+    roles.some((r) => r.role === "startup") ||
+    (!isInvestor && !isInvestorPending && !isJobSeeker && !isAdmin);
 
-  return { roles, isAdmin, isInvestor, isInvestorPending, isJobSeeker, loading };
+  return { roles, isAdmin, isInvestor, isInvestorPending, isJobSeeker, isStartup, loading };
 };

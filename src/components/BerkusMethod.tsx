@@ -91,9 +91,6 @@ const BerkusMethod = ({ scores, onScoresChange, onValuationChange }: BerkusMetho
                     {active && <Check className="h-3 w-3 text-white" />}
                   </span>
                   <span className="flex-1 text-sm leading-relaxed text-white/70">{opt.label}</span>
-                  <span className="shrink-0 text-xs font-medium text-white/40">
-                    ${scoreToValue[opt.score].toLocaleString()}
-                  </span>
                 </button>
               );
             })}

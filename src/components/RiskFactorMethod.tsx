@@ -54,18 +54,10 @@ const RiskFactorMethod = ({ scores, onScoresChange, onValuationChange }: RiskFac
       </div>
 
       {riskKeys.map((key, i) => {
-        const adjustment = scores[i] !== null ? scores[i]! * ADJUSTMENT_PER_POINT : 0;
         return (
           <motion.div key={key} className="rounded-3xl border border-white/[0.07] bg-card p-6"
             initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03, duration: 0.4 }}>
-            <div className="flex items-center justify-between">
-              <h3 className="font-origin-display text-xl font-medium text-white">{i + 1}. {t(`risk.${key}`)}</h3>
-              {scores[i] !== null && (
-                <span className="font-origin-display text-lg" style={{ color: adjustment > 0 ? "#00b3dd" : adjustment < 0 ? "#dd90d8" : "#9aa0ab" }}>
-                  {adjustment >= 0 ? "+" : ""}${adjustment.toLocaleString("en-US")}
-                </span>
-              )}
-            </div>
+            <h3 className="font-origin-display text-xl font-medium text-white">{i + 1}. {t(`risk.${key}`)}</h3>
             <p className="mt-3 text-sm text-white/65 font-light">{t(`risk.${key}_q`)}</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-5">
               {scoreValues.map((val, si) => {
