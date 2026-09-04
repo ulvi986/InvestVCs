@@ -1,0 +1,6 @@
+# Pinned to the versions the service is tested against. Unbounded ranges let a
+# breaking upstream release fail a deploy that has no code change in it.
+fastapi~=0.141.1
+uvicorn[standard]~=0.52.4
+httpx~=0.28.1
+pydantic~=2.13.5

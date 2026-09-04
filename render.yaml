@@ -1,0 +1,50 @@
+# Render blueprint for the analyst service.
+#
+# The frontend goes to Vercel; this is the other half. It has to be an
+# always-on web service rather than anything serverless, because a run holds
+# an SSE stream open for minutes and keeps its state in process.
+#
+# Import this file in Render: New -> Blueprint -> point at this repository.
+# The secrets are marked sync:false, so Render prompts for them instead of
+# reading them from the repo.
+
+services:
+  - type: web
+    name: investvcs-analyst
+    runtime: docker
+    dockerfilePath: ./ai/Dockerfile
+    dockerContext: ./ai
+    plan: starter          # Free instances sleep, which drops a running analysis.
+    region: frankfurt
+    healthCheckPath: /health
+
+    # One instance only. Run state is in process, so an approval must reach the
+    # same instance that is streaming the run.
+    numInstances: 1
+
+    envVars:
+      # Azure AI Foundry agent endpoint, ending in /responses.
+      - key: AZURE_AI_FOUNDRY_ENDPOINT
+        sync: false
+      - key: AZURE_AI_API_KEY
+        sync: false
+      # Must equal the model the Foundry agent is pinned to, or the service
+      # replies 400 "Model must match the agent's model".
+      - key: AZURE_AI_MODEL
+        value: gpt-5-mini
+      - key: AZURE_OPENAI_API_VERSION
+        value: 2025-11-15-preview
+
+      # The browser calls this service directly, so the Vercel domain has to be
+      # allowed. Set it once the frontend has a URL; "*" only while testing.
+      - key: CORS_ORIGINS
+        sync: false
+
+      # Real model, not canned output. Fails loudly if credentials are missing
+      # rather than quietly serving illustrative numbers.
+      - key: AI_MOCK
+        value: "0"
+
+      # The deployment's rate limit, not the orchestrator, caps throughput.
+      - key: AGENT_CONCURRENCY
+        value: "3"
