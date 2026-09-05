@@ -2,13 +2,10 @@ import { useEffect } from "react";
 import { useLanguage } from "@/context/LanguageContext";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
-import {
-  BERKUS_COMPONENT_KEYS, BERKUS_SCORE_TO_VALUE, computeBerkus,
-} from "@/lib/analyst/methodologies/berkus";
+import { BERKUS_COMPONENT_KEYS, computeBerkus } from "@/lib/analyst/methodologies/berkus";
 
 // Grid and maths shared with the Berkus agent, so the calculator and the
 // autonomous analysis can never disagree for the same inputs.
-const scoreToValue = BERKUS_SCORE_TO_VALUE;
 const componentKeys = [...BERKUS_COMPONENT_KEYS];
 
 interface BerkusMethodProps {

@@ -155,15 +155,15 @@ const GrowthHub = () => {
   return (
     <PageShell
       wide
-      kicker="Growth Hub"
-      title="Startups raising now"
-      standfirst="Every company on InvestVCS that is open to investment, with what it has raised so far."
+      kicker={t("growth.badge")}
+      title={t("growth.index_title")}
+      standfirst={t("growth.index_standfirst")}
       action={
         <dl className="flex gap-8">
           {[
-            { label: "Projects", value: String(stats.projects) },
-            { label: "Investors", value: stats.investors.toLocaleString() },
-            { label: "Raised", value: fmt(stats.raised) },
+            { label: t("growth.stat_projects"), value: String(stats.projects) },
+            { label: t("growth.modal_investors"), value: stats.investors.toLocaleString() },
+            { label: t("growth.stat_raised"), value: fmt(stats.raised) },
           ].map((stat) => (
             <div key={stat.label}>
               <dt className="kicker">{stat.label}</dt>
@@ -179,8 +179,8 @@ const GrowthHub = () => {
         <input
           value={search}
           onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search by name, sector or description"
-          aria-label="Search startups"
+          placeholder={t("growth.search_placeholder")}
+          aria-label={t("growth.search_aria")}
           className={`${field} pl-9`}
         />
       </div>
@@ -224,7 +224,7 @@ const GrowthHub = () => {
                 </span>
 
                 <span className="text-right text-[12.5px] tabular-nums text-[var(--ink-3)]">
-                  {startup.investors} backers
+                  {t("growth.backers").replace("{count}", String(startup.investors))}
                 </span>
               </button>
 
@@ -235,16 +235,16 @@ const GrowthHub = () => {
                     <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2">
                       {startup.founder && (
                         <div>
-                          <dt className="kicker">Founder</dt>
+                          <dt className="kicker">{t("growth.founder")}</dt>
                           <dd className="mt-1 text-[13px] text-[var(--ink-1)]">{startup.founder}</dd>
                         </div>
                       )}
                       <div>
-                        <dt className="kicker">Goal</dt>
+                        <dt className="kicker">{t("growth.goal")}</dt>
                         <dd className="mt-1 text-[13px] tabular-nums text-[var(--ink-1)]">{fmt(startup.goal)}</dd>
                       </div>
                       <div>
-                        <dt className="kicker">Raised</dt>
+                        <dt className="kicker">{t("growth.stat_raised")}</dt>
                         <dd className="mt-1 text-[13px] tabular-nums text-[var(--ink-1)]">{fmt(startup.raised)}</dd>
                       </div>
                     </dl>
@@ -257,12 +257,12 @@ const GrowthHub = () => {
                       className="rounded-[var(--radius)] bg-[var(--accent-ink)] px-4 py-2 text-[13px]
                                  font-medium text-white transition-opacity hover:opacity-90"
                     >
-                      Express interest
+                      {t("growth.express_interest")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setOpenId(null)}
-                      aria-label="Close"
+                      aria-label={t("growth.close")}
                       className="p-2 text-[var(--ink-3)] transition-colors hover:text-[var(--ink-1)]"
                     >
                       <X className="h-4 w-4" />
@@ -276,20 +276,22 @@ const GrowthHub = () => {
       </ul>
 
       {filtered.length === 0 && (
-        <p className="py-12 text-[13.5px] text-[var(--ink-3)]">No startup matches that search.</p>
+        <p className="py-12 text-[13.5px] text-[var(--ink-3)]">
+          {t("growth.no_matches").replace("{query}", search)}
+        </p>
       )}
 
       {/* Contact */}
       <div ref={contactRef} className="mt-20 scroll-mt-20 border-t border-[var(--rule)] pt-12">
-        <p className="kicker">Get in touch</p>
+        <p className="kicker">{t("growth.contact_eyebrow")}</p>
         <h2 className="mt-2 text-[22px] leading-tight tracking-[-0.022em] text-[var(--ink-1)]">
-          Tell us which company interests you
+          {t("growth.contact_title")}
         </h2>
 
         <form onSubmit={handleSubmit} className="mt-7 max-w-[560px] space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block">
-              <span className="kicker">First name</span>
+              <span className="kicker">{t("landing.contact_name")}</span>
               <input
                 value={form.name}
                 onChange={(event) => setForm({ ...form, name: event.target.value })}
@@ -297,7 +299,7 @@ const GrowthHub = () => {
               />
             </label>
             <label className="block">
-              <span className="kicker">Last name</span>
+              <span className="kicker">{t("landing.contact_surname")}</span>
               <input
                 value={form.surname}
                 onChange={(event) => setForm({ ...form, surname: event.target.value })}
@@ -307,7 +309,7 @@ const GrowthHub = () => {
           </div>
 
           <label className="block">
-            <span className="kicker">Email</span>
+            <span className="kicker">{t("landing.contact_email")}</span>
             <input
               type="email"
               value={form.email}
@@ -317,7 +319,7 @@ const GrowthHub = () => {
           </label>
 
           <label className="block">
-            <span className="kicker">Message</span>
+            <span className="kicker">{t("landing.contact_message")}</span>
             <textarea
               rows={4}
               value={form.message}
@@ -332,7 +334,7 @@ const GrowthHub = () => {
             className="rounded-[var(--radius)] bg-[var(--accent-ink)] px-4 py-2 text-[13.5px] font-medium
                        text-white transition-opacity hover:opacity-90 disabled:opacity-50"
           >
-            {sending ? "Sending" : "Send"}
+            {sending ? t("landing.contact_sending") : t("landing.contact_send")}
           </button>
         </form>
       </div>
