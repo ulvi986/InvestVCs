@@ -5,7 +5,12 @@ run behaves.
 
 ## Frontend -> Vercel
 
-Live: https://investvcs-ulvi986s-projects.vercel.app
+Live: https://investvcs.vercel.app
+
+That is the public alias. The per-deployment host
+(`investvcs-<hash>-ulvi986s-projects.vercel.app`) sits behind Vercel SSO and
+302s anonymous visitors to a login, so it is not the address to hand out —
+and `CORS_ORIGINS` on the analyst service names the alias, not it.
 
 ```
 npx vercel deploy --prod
@@ -25,7 +30,7 @@ they are public by definition.
 | `VITE_SUPABASE_URL` | set |
 | `VITE_SUPABASE_PROJECT_ID` | set |
 | `VITE_SUPABASE_PUBLISHABLE_KEY` | set. Verified `role: anon`, so it is safe to expose; Row Level Security is what protects the data |
-| `VITE_AI_SERVICE_URL` | **not set yet** - needs the analyst service's public URL, then redeploy |
+| `VITE_AI_SERVICE_URL` | set to `https://investvcs-analyst.onrender.com`, and verified present in the production bundle |
 
 Never put `AZURE_AI_API_KEY` or any other secret behind a `VITE_` name. The
 33 non-VITE keys in `.env` stay out of Vercel entirely; `.vercelignore`
@@ -46,6 +51,23 @@ A run would be cut off mid-analysis and human approvals would fail.
 `ai/Dockerfile` builds an image that runs on Render, Fly.io, Railway or a VPS.
 `render.yaml` is a ready blueprint for Render. Run **one instance** for the
 same reason approvals need a sticky target.
+
+### The live service has drifted from the blueprint
+
+`investvcs-analyst` (srv-dadbs0gae00c739kaij0) was created by hand rather than
+imported from `render.yaml`, so the two disagree:
+
+| | `render.yaml` | Live service |
+| --- | --- | --- |
+| Runtime | `docker`, via `ai/Dockerfile` | native `python`, `pip install -r ai/requirements.txt` |
+| Plan | `starter` | **`free`** |
+| Health check | `/health` | not set |
+
+The plan is the one that bites. The blueprint asks for `starter` precisely
+because free instances sleep, and a sleeping instance drops a run that is
+mid-stream along with the in-process state its approval needs. Moving the
+service to `starter` costs money, so it is left as a decision rather than a
+change made in passing.
 
 Required on that host: `AZURE_AI_FOUNDRY_ENDPOINT`, `AZURE_AI_API_KEY`,
 `AZURE_AI_MODEL=gpt-5-mini`, `AZURE_OPENAI_API_VERSION=2025-11-15-preview`,
