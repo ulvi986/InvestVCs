@@ -13,8 +13,6 @@ const LINKS = [
   { to: "/assessment", label: "Assessment" },
   { to: "/financials", label: "Financials" },
   { to: "/growth-hub", label: "Growth Hub" },
-  { to: "/community", label: "Community" },
-  { to: "/investors", label: "Investors" },
   { to: "/pricing", label: "Pricing" },
 ];
 

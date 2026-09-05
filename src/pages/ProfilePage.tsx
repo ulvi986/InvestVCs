@@ -6,7 +6,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useUserRole } from "@/hooks/useUserRole";
 import { useLanguage } from "@/context/LanguageContext";
 import DashboardLayout from "@/components/DashboardLayout";
-import SavedPosts from "@/components/SavedPosts";
 import CvCard from "@/components/CvCard";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -297,10 +296,6 @@ const ProfilePage = () => {
             </Card>
           )}
         </div>
-      </div>
-
-      <div className="mt-6">
-        <SavedPosts />
       </div>
     </DashboardLayout>
   );

@@ -28,8 +28,6 @@ import Workflow from "./pages/Workflow";
 import Financials from "./pages/Financials";
 import ContactPage from "./pages/ContactPage";
 import GrowthHub from "./pages/GrowthHub";
-import Community from "./pages/Community";
-import Investors from "./pages/Investors";
 import PublicProfile from "./pages/PublicProfile";
 import FundingViewPage from "./pages/FundingViewPage";
 import Success from "./pages/Success";
@@ -72,8 +70,6 @@ const App = () => (
                 <Route path="/user-signup" element={<AuthRoute><UserSignUp /></AuthRoute>} />
                 <Route path="/" element={<Index />} />
                 <Route path="/growth-hub" element={<GrowthHub />} />
-                <Route path="/community" element={<ProtectedRoute><Community /></ProtectedRoute>} />
-                <Route path="/investors" element={<ProtectedRoute><Investors /></ProtectedRoute>} />
                 <Route path="/job-match" element={<ProtectedRoute><JobMatch /></ProtectedRoute>} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />

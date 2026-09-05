@@ -211,6 +211,56 @@ export async function* analyze(options: AnalyzeOptions): AsyncGenerator<Analysis
   yield* parseSSE(response, options.signal);
 }
 
+/**
+ * Reattach to a run already in progress on the service.
+ *
+ * `from` is how many events this client already holds, so the service
+ * replays what was missed and nothing that has already been rendered.
+ * Disconnecting no longer cancels a run, so a tab that was backgrounded,
+ * suspended or navigated away from can pick the analysis back up.
+ */
+export async function* attachRun(
+  runId: string,
+  fromIndex: number,
+  signal?: AbortSignal,
+): AsyncGenerator<AnalysisEvent> {
+  const base = requireBase();
+
+  let response: Response;
+  try {
+    response = await fetch(
+      `${base}/runs/${encodeURIComponent(runId)}/stream?from=${Math.max(0, fromIndex)}`,
+      { headers: { Accept: "text/event-stream" }, signal },
+    );
+  } catch (error) {
+    if ((error as Error)?.name === "AbortError") return;
+    throw new ServiceError(`Could not reach the analyst service at ${base}.`);
+  }
+
+  if (response.status === 404) {
+    throw new ServiceError(
+      "That run is no longer available on the service, so it could not be resumed.",
+      404,
+    );
+  }
+  if (!response.ok) {
+    throw new ServiceError(
+      `The analyst service returned ${response.status} when resuming the run.`,
+      response.status,
+    );
+  }
+
+  yield* parseSSE(response, signal);
+}
+
+/** Stop a run for good. Closing the stream no longer does this. */
+export const cancelRun = (runId: string) =>
+  fetch(`${requireBase()}/runs/${encodeURIComponent(runId)}`, { method: "DELETE" }).then(
+    () => undefined,
+    () => undefined,
+  );
+
+
 // ── Plain JSON endpoints ─────────────────────────────────────────────────
 
 export interface MethodologyMeta {

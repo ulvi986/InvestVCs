@@ -9,14 +9,12 @@ const GROUPS = [
       { to: "/workflow", label: "Workflow" },
       { to: "/financials", label: "Financials" },
       { to: "/pricing", label: "Pricing" },
-      { to: "/investors", label: "Investors" },
     ],
   },
   {
-    heading: "Community",
+    heading: "Explore",
     links: [
       { to: "/growth-hub", label: "Growth Hub" },
-      { to: "/community", label: "Community" },
       { to: "/vacancies", label: "Vacancies" },
     ],
   },

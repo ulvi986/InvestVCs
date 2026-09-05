@@ -20,7 +20,7 @@ import logging
 from contextlib import asynccontextmanager
 from typing import Any, AsyncIterator, Optional
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
@@ -276,21 +276,21 @@ async def analyze(request: RunRequest) -> StreamingResponse:
             custom_specs=custom_specs,
         )
 
+    # The run is driven by the registry, not by this response. A client that
+    # goes away - a backgrounded tab, a dropped connection, a navigation -
+    # disconnects a reader and nothing more; the analysis carries on and can
+    # be picked up again at /runs/{id}/stream.
+    session = await runs.register(orchestrator)
+
     async def stream() -> AsyncIterator[str]:
-        await runs.register(orchestrator)
         # An early comment frame defeats proxies that buffer until first byte.
         yield ": stream open\n\n"
         try:
-            async for event in orchestrator.stream():
+            async for event in session.subscribe(0):
                 yield _sse(event)
         except asyncio.CancelledError:
-            log.info("client disconnected mid-analysis (run %s)", orchestrator.run_id)
+            log.info("client disconnected, run continues (%s)", session.run_id)
             raise
-        except Exception as error:  # noqa: BLE001 - the stream must always close cleanly
-            log.exception("analysis stream failed")
-            yield _sse({"type": "error", "payload": {"message": str(error) or "Analysis failed."}})
-        finally:
-            await runs.release(orchestrator.run_id)
 
     return StreamingResponse(
         stream(),
@@ -301,6 +301,53 @@ async def analyze(request: RunRequest) -> StreamingResponse:
             "X-Accel-Buffering": "no",
         },
     )
+
+
+@app.get("/runs/{run_id}/stream")
+async def stream_run(run_id: str, request: Request):
+    """Reattach to a run already in progress.
+
+    `from` is how many events the client already holds, so a reconnecting
+    browser replays what it missed and nothing it has drawn already. A
+    finished run stays replayable for a while, which is what turns a drop
+    near the end from fatal into an inconvenience.
+    """
+    session = runs.session(run_id)
+    if session is None:
+        return JSONResponse({"error": "Unknown or expired run."}, status_code=404)
+
+    try:
+        start_at = int(request.query_params.get("from", "0"))
+    except ValueError:
+        start_at = 0
+
+    async def stream() -> AsyncIterator[str]:
+        yield ": stream open\n\n"
+        async for event in session.subscribe(start_at):
+            yield _sse(event)
+
+    return StreamingResponse(
+        stream(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache, no-transform",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+
+@app.delete("/runs/{run_id}")
+async def cancel_run(run_id: str) -> JSONResponse:
+    """Stop a run for good.
+
+    Disconnecting no longer does this, so abandoning an analysis has to be
+    something the user actually asks for.
+    """
+    if runs.session(run_id) is None:
+        return JSONResponse({"error": "Unknown or expired run."}, status_code=404)
+    await runs.release(run_id)
+    return JSONResponse({"cancelled": True})
 
 
 @app.post("/runs/{run_id}/approve")

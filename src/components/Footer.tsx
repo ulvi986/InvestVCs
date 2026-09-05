@@ -22,8 +22,6 @@ const footerLinks = {
     title: "Resources",
     links: [
       { to: "/growth-hub", label: "Growth Hub" },
-      { to: "/community", label: "Community" },
-      { to: "/investors", label: "Investor Network" },
       { to: "/vacancies", label: "Job Board" },
       { to: "/contact", label: "Contact" },
     ],

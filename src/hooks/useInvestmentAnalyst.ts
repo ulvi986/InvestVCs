@@ -14,7 +14,9 @@ import type {
 } from "@/lib/analyst/graphTypes";
 import { applyNodeUpdate, emptyGraph } from "@/lib/analyst/graphTypes";
 import type { CustomAgent } from "@/lib/analyst/service";
-import { ServiceError, analyze, isServiceConfigured, resolveApproval } from "@/lib/analyst/service";
+import {
+  ServiceError, analyze, attachRun, cancelRun, isServiceConfigured, resolveApproval,
+} from "@/lib/analyst/service";
 import { createSession, loadSession, patchSession, saveEvidence } from "@/lib/analyst/persistence";
 
 export interface AnalystState {
@@ -46,6 +48,26 @@ export interface AnalystState {
   error: string | null;
   persisted: boolean;
 }
+
+/**
+ * Whether a newly streamed result should replace the one already held.
+ *
+ * The critic can ask for a methodology to be re-run, so the same id arrives
+ * twice. The second attempt is not always better: it can fail, decide it has
+ * too little to work with, or come back with no confidence behind it. The
+ * service keeps the stronger of the two for its own reconciliation, so a UI
+ * that takes whichever arrived last ends up showing a blank where the
+ * analysis actually has an answer, and disagreeing with its own report.
+ */
+export const supersedes = (
+  previous: MethodologyResult | undefined,
+  candidate: MethodologyResult,
+): boolean => {
+  if (!previous) return true;
+  if (candidate.status === "failed" || candidate.status === "insufficient_input") return false;
+  if ((candidate.confidence ?? 0) <= 0 && (previous.confidence ?? 0) > 0) return false;
+  return true;
+};
 
 const initialState: AnalystState = {
   sessionId: null,
@@ -93,6 +115,14 @@ export function useInvestmentAnalyst() {
   // every streamed event.
   const stateRef = useRef(state);
   stateRef.current = state;
+  /** Events consumed so far. A reattach replays from here, so nothing is
+   *  applied twice and nothing in the gap is lost. */
+  const seenRef = useRef(0);
+  /** The service-side run id, kept outside state so the reconnect loop can
+   *  read it without waiting for a render. */
+  const runIdRef = useRef<string | null>(null);
+  /** Set when the user cancels, so a deliberate stop is never retried. */
+  const abandonedRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -149,16 +179,54 @@ export function useInvestmentAnalyst() {
       let critique: Critique | null = null;
       let thesis: InvestmentThesis | null = null;
 
+      seenRef.current = 0;
+      runIdRef.current = null;
+      abandonedRef.current = false;
+
+      // The service keeps a run alive when its reader goes away, so a dropped
+      // connection is recoverable: reconnect and replay from `seenRef`. Without
+      // this, backgrounding the tab long enough for the browser to drop the
+      // stream threw away the whole analysis.
+      const source = async function* () {
+        let attempt = 0;
+        while (true) {
+          const first = seenRef.current === 0 && runIdRef.current === null;
+          try {
+            const stream = first
+              ? analyze({
+                  bundle, mode, chosenMethodologyIds, maxIterations, workflow, templateId,
+                  customAgents,
+                  sessionId: sessionId ?? undefined,
+                  signal: controller.signal,
+                })
+              : attachRun(runIdRef.current as string, seenRef.current, controller.signal);
+
+            for await (const event of stream) {
+              attempt = 0;
+              seenRef.current += 1;
+              yield event;
+            }
+            return;
+          } catch (error) {
+            const deliberate = controller.signal.aborted || abandonedRef.current;
+            const resumable = !deliberate && runIdRef.current !== null && attempt < 4;
+            if (!resumable) throw error;
+
+            attempt += 1;
+            update({ statusMessage: `Connection lost - reconnecting (${attempt}/4)` });
+            await new Promise((resolve) => setTimeout(resolve, Math.min(8000, 500 * 2 ** attempt)));
+            if (!mountedRef.current || controller.signal.aborted) return;
+          }
+        }
+      };
+
       try {
-        for await (const event of analyze({
-          bundle, mode, chosenMethodologyIds, maxIterations, workflow, templateId, customAgents,
-          sessionId: sessionId ?? undefined,
-          signal: controller.signal,
-        })) {
+        for await (const event of source()) {
           if (!mountedRef.current) return;
 
           switch (event.type) {
             case "run":
+              runIdRef.current = event.payload.runId;
               update({ runId: event.payload.runId, workflow: event.payload.workflow });
               break;
 
@@ -200,8 +268,10 @@ export function useInvestmentAnalyst() {
               break;
 
             case "result":
-              results[event.payload.methodologyId] = event.payload;
-              update({ results: { ...results } });
+              if (supersedes(results[event.payload.methodologyId], event.payload)) {
+                results[event.payload.methodologyId] = event.payload;
+                update({ results: { ...results } });
+              }
               break;
 
             case "disagreements":
@@ -277,8 +347,18 @@ export function useInvestmentAnalyst() {
     [user, update],
   );
 
+  /**
+   * Stop the analysis.
+   *
+   * Closing the stream no longer ends a run - that is what makes reconnecting
+   * possible - so the service is told explicitly, otherwise the run would carry
+   * on burning model time with nobody reading it.
+   */
   const cancel = useCallback(() => {
+    abandonedRef.current = true;
+    const runId = runIdRef.current;
     abortRef.current?.abort();
+    if (runId) void cancelRun(runId);
     update({ status: "draft", statusMessage: "Cancelled", approval: null });
   }, [update]);
 

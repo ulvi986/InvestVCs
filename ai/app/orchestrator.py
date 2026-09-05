@@ -120,6 +120,25 @@ class Cancelled(RuntimeError):
     pass
 
 
+def _supersedes(previous: Optional[MethodologyResult], candidate: MethodologyResult) -> bool:
+    """Whether a re-run should replace the result already held.
+
+    The critic asks for a re-run to improve an answer, but a second attempt can
+    come back worse than the first: the agent fails, decides it has too little
+    to work with, or returns a judgement it has no confidence in. Taking that
+    over a good first pass loses real analysis and shows the user a blank where
+    a result had already been produced, so a re-run has to earn its place.
+    """
+    if previous is None:
+        return True
+    if candidate.status in ("failed", "insufficient_input"):
+        return False
+    # A confident answer replaced by one with no confidence behind it is a
+    # regression, not a revision.
+    if (candidate.confidence or 0) <= 0 < (previous.confidence or 0):
+        return False
+    return True
+
 class Orchestrator:
     def __init__(
         self,
@@ -866,9 +885,7 @@ class Orchestrator:
                     return await self._run_methodology(spec, profile, results, iterations, instruction)
 
             for result in await asyncio.gather(*(rerun(spec, instruction) for spec, instruction in requests)):
-                # Keep the original if the re-run failed — a failed retry must
-                # not destroy a result we already had.
-                if result.status != "failed":
+                if _supersedes(results.get(result.methodologyId), result):
                     results[result.methodologyId] = result
 
             spread = analyse_valuation_spread(results)
