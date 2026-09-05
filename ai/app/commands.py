@@ -14,7 +14,7 @@ import re
 from dataclasses import dataclass
 from typing import Any, Optional
 
-from . import registry
+from . import custom, registry
 from .jsonspec import array, boolean, enum, obj, string
 from .config import settings
 from .llm import AgentError, llm
@@ -148,6 +148,16 @@ def fallback_plan(command: str) -> CommandPlan:
         if hint in text and registry.get(methodology_id)
     ]
 
+    # A team's own agents have no entry in the static hint table, so match them
+    # by the name the user gave them. Without this the keyword path is the one
+    # place a custom agent cannot be asked for by name - which is also the path
+    # mock mode always takes, and the one a model outage falls back to.
+    named += [
+        spec.id for spec in custom.active().values()
+        if spec.name.strip() and spec.name.strip().lower() in text
+    ]
+    named = list(dict.fromkeys(named))
+
     intent, methodology_ids = "evaluate", []
     for candidate, pattern, ids in _KEYWORDS:
         if re.search(pattern, text):
@@ -156,7 +166,10 @@ def fallback_plan(command: str) -> CommandPlan:
 
     # An explicitly named methodology always wins over the keyword bucket.
     if named:
-        methodology_ids = list(dict.fromkeys(named + ["risk_analysis"]))
+        # Pair a named methodology with the risk screen, unless the user only
+        # named their own agents - in that case run exactly what they asked for.
+        companion = [] if all(custom.is_custom(mid) for mid in named) else ["risk_analysis"]
+        methodology_ids = list(dict.fromkeys(named + companion))
 
     return CommandPlan(
         intent=intent,

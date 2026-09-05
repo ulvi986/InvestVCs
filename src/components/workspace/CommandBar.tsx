@@ -12,7 +12,7 @@
 import { useEffect, useRef, useState } from "react";
 import { ArrowUp, CornerDownLeft, Loader2, X } from "lucide-react";
 import type { WorkflowSpec } from "@/lib/analyst/graphTypes";
-import type { CommandPlan } from "@/lib/analyst/service";
+import type { CommandPlan, CustomAgent } from "@/lib/analyst/service";
 import { ServiceError, compileCommand, isServiceConfigured } from "@/lib/analyst/service";
 import { methodologyName } from "@/lib/analyst/registry";
 
@@ -29,6 +29,8 @@ export interface CommandBarProps {
   startupName: string;
   /** Extra context the compiler can use to decide what is answerable. */
   startupContext?: unknown;
+  /** The team's own agents, so an instruction may name one. */
+  customAgents?: CustomAgent[];
   disabled?: boolean;
   onRun: (workflow: WorkflowSpec, plan: CommandPlan) => void;
   /** Called when a compiled plan needs a company and none is loaded, so the
@@ -37,7 +39,7 @@ export interface CommandBarProps {
 }
 
 export const CommandBar = ({
-  startupName, startupContext, disabled = false, onRun, onNeedStartup,
+  startupName, startupContext, customAgents = [], disabled = false, onRun, onNeedStartup,
 }: CommandBarProps) => {
   const [value, setValue] = useState("");
   const [plan, setPlan] = useState<CommandPlan | null>(null);
@@ -46,6 +48,12 @@ export const CommandBar = ({
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const configured = isServiceConfigured();
+
+  /** Built-in ids resolve from the static registry; the team's own agents only
+   *  exist on this client, so they are resolved here rather than showing a raw
+   *  `custom_…` id back to the person who named them. */
+  const labelFor = (id: string) =>
+    customAgents.find((agent) => agent.id === id)?.name ?? methodologyName(id);
 
   // Cmd/Ctrl-K focuses the bar from anywhere in the workspace.
   useEffect(() => {
@@ -74,7 +82,11 @@ export const CommandBar = ({
     setPlan(null);
 
     try {
-      const compiled = await compileCommand(command, startupContext ?? { name: startupName });
+      const compiled = await compileCommand(
+        command,
+        startupContext ?? { name: startupName },
+        customAgents,
+      );
       setPlan(compiled);
     } catch (caught) {
       setError(
@@ -120,7 +132,7 @@ export const CommandBar = ({
               {!plan.clarification && (
                 <p className="mt-2 text-[12px] leading-relaxed text-[var(--ink-3)]">
                   {plan.methodologyIds.length
-                    ? `${plan.workflow.nodes.length} nodes · ${plan.methodologyIds.map(methodologyName).join(", ")}`
+                    ? `${plan.workflow.nodes.length} nodes · ${plan.methodologyIds.map(labelFor).join(", ")}`
                     : `${plan.workflow.nodes.length} nodes · methodologies chosen per company at plan time`}
                   {plan.approvals.length ? ` · pauses at ${plan.approvals.length} checkpoint${plan.approvals.length > 1 ? "s" : ""}` : ""}
                 </p>

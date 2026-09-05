@@ -13,7 +13,7 @@ from typing import Any
 
 import pytest
 
-from app import custom, registry
+from app import commands, custom, registry
 from app.llm import AgentResponse, llm
 from app.mock import mock_output
 from app.orchestrator import Orchestrator
@@ -164,3 +164,90 @@ def test_the_orchestrator_does_not_depend_on_the_caller_context(monkeypatch):
         return seen
 
     assert spec.id in asyncio.run(run())
+
+
+# ── Reaching a custom agent from an instruction ──────────────────────────
+#
+# Creating an agent is only half of it. Until an instruction can name one, a
+# custom agent runs only when the orchestrator happens to pick it, which is not
+# what "add your own agent to the workflow" means to the person who added it.
+
+
+def test_the_keyword_router_finds_an_agent_by_the_name_it_was_given():
+    """The static hint table only knows the built-ins, so a custom agent has to
+    be matched by its own name or the keyword path can never reach it."""
+    spec = a_spec("Regulatory Exposure")
+
+    with custom.overlay([spec]):
+        plan = commands.fallback_plan("run the Regulatory Exposure agent on this company")
+
+    assert spec.id in plan.methodology_ids
+
+
+def test_matching_is_case_insensitive():
+    spec = a_spec("Supply Chain Fragility")
+    with custom.overlay([spec]):
+        plan = commands.fallback_plan("check supply chain fragility please")
+    assert spec.id in plan.methodology_ids
+
+
+def test_an_agent_that_was_not_named_is_not_pulled_in():
+    spec = a_spec("Regulatory Exposure")
+    with custom.overlay([spec]):
+        plan = commands.fallback_plan("what is this company worth")
+    assert spec.id not in plan.methodology_ids
+
+
+def test_naming_only_your_own_agent_runs_only_that_agent():
+    """A named built-in valuation method is paired with the risk screen to keep
+    it honest. A custom agent asked for by name should not drag that in: the
+    user asked for one thing."""
+    spec = a_spec("Regulatory Exposure")
+    with custom.overlay([spec]):
+        plan = commands.fallback_plan("run Regulatory Exposure")
+    assert plan.methodology_ids == [spec.id]
+
+
+def test_naming_a_built_in_still_pairs_with_the_risk_screen():
+    """The behaviour that existed before custom agents were matched here."""
+    plan = commands.fallback_plan("value it with berkus")
+    assert "berkus" in plan.methodology_ids
+    assert "risk_analysis" in plan.methodology_ids
+
+
+def test_a_named_custom_agent_becomes_a_node_in_the_compiled_workflow():
+    """The plan is only useful if the workflow built from it actually contains
+    the agent: this is the step that was missing end to end."""
+    spec = a_spec("Regulatory Exposure")
+
+    with custom.overlay([spec]):
+        plan = commands.fallback_plan("run the Regulatory Exposure agent")
+        workflow = build_workflow(methodology_ids=plan.methodology_ids, origin="user")
+
+    node_ids = {node.id for node in workflow.nodes}
+    assert methodology_node_id(spec.id) in node_ids
+
+    node = next(n for n in workflow.nodes if n.id == methodology_node_id(spec.id))
+    assert node.label == spec.name
+    assert node.agent == spec.id
+
+
+def test_the_compiler_is_told_which_custom_agents_exist():
+    """The model cannot return an id it was never shown, so the instruction
+    context has to carry the team's agents alongside the built-ins."""
+    spec = a_spec("Regulatory Exposure")
+
+    with custom.overlay([spec]):
+        offered = {s.id for s in registry.active()}
+
+    assert spec.id in offered
+    assert "berkus" in offered, "the built-ins must still be offered"
+
+
+def test_custom_agents_are_invisible_once_the_overlay_is_gone():
+    """One team's agents must not leak into another team's compilation."""
+    spec = a_spec("Regulatory Exposure")
+    with custom.overlay([spec]):
+        pass
+    assert spec.id not in {s.id for s in registry.active()}
+    assert commands.fallback_plan("run Regulatory Exposure").methodology_ids != [spec.id]

@@ -280,8 +280,14 @@ export interface CommandPlan {
   workflow: WorkflowSpec;
 }
 
-export const compileCommand = (command: string, startup?: unknown) =>
-  postJson<CommandPlan>("/command", { command, startup: startup ?? null });
+/** The team's own agents go with the instruction, so the compiler can name
+ *  them in the workflow it returns. Omit them and an instruction that asks for
+ *  one compiles to a workflow that silently leaves it out. */
+export const compileCommand = (
+  command: string,
+  startup?: unknown,
+  customAgents: CustomAgent[] = [],
+) => postJson<CommandPlan>("/command", { command, startup: startup ?? null, customAgents });
 
 // ── Workflows ────────────────────────────────────────────────────────────
 

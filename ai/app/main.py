@@ -65,9 +65,37 @@ app.add_middleware(
 # ── Requests ─────────────────────────────────────────────────────────────
 
 
+class CustomAgentPayload(BaseModel):
+    """An agent the user defined in the UI.
+
+    It becomes a real methodology for the duration of the run: gated, planned,
+    executed and criticised alongside the built-in twelve.
+    """
+
+    id: Optional[str] = None
+    name: str
+    purpose: str = ""
+    instruction: str
+    family: str = "risk"
+    requiredInputs: list[str] = Field(default_factory=list)
+
+    def to_spec(self):
+        return custom.build_spec(
+            agent_id=self.id,
+            name=self.name,
+            purpose=self.purpose,
+            instruction=self.instruction,
+            family=self.family,
+            required_inputs=self.requiredInputs,
+        )
+
+
 class CommandRequest(BaseModel):
     command: str
     startup: Optional[dict[str, Any]] = None
+    #: The team's own agents. The compiler has to see them, or an instruction
+    #: naming one compiles to a workflow that quietly leaves it out.
+    customAgents: list[CustomAgentPayload] = Field(default_factory=list)
 
 
 class ApprovalRequest(BaseModel):
@@ -118,31 +146,6 @@ class WorkflowPayload(BaseModel):
                 for node in self.nodes
             ],
             edges=[WorkflowEdge(edge.source, edge.target, edge.kind) for edge in self.edges],
-        )
-
-
-class CustomAgentPayload(BaseModel):
-    """An agent the user defined in the UI.
-
-    It becomes a real methodology for the duration of the run: gated, planned,
-    executed and criticised alongside the built-in twelve.
-    """
-
-    id: Optional[str] = None
-    name: str
-    purpose: str = ""
-    instruction: str
-    family: str = "risk"
-    requiredInputs: list[str] = Field(default_factory=list)
-
-    def to_spec(self):
-        return custom.build_spec(
-            agent_id=self.id,
-            name=self.name,
-            purpose=self.purpose,
-            instruction=self.instruction,
-            family=self.family,
-            required_inputs=self.requiredInputs,
         )
 
 
@@ -218,8 +221,22 @@ async def command(request: CommandRequest) -> JSONResponse:
     if not request.command.strip():
         return JSONResponse({"error": "Empty command."}, status_code=400)
 
-    plan = await compile_command(request.command, {"startup": request.startup})
-    return JSONResponse(plan.to_dict())
+    # The overlay has to be held across the await: compile_command reads
+    # registry.active() to tell the model which agents exist and again to
+    # validate the ids it returns. Without it a custom agent is invisible to
+    # both, so "run my Regulatory agent" silently compiles without it.
+    #
+    # Unlike /analyze this is safe to scope with a context manager, because the
+    # compilation runs in this task rather than one the HTTP layer hands off.
+    # Serialisation stays inside the overlay: CommandPlan.to_dict() builds the
+    # workflow lazily, and build_workflow() drops any methodology the registry
+    # cannot resolve. Compiling inside and serialising outside returns a plan
+    # that names the agent next to a workflow that does not contain it.
+    with custom.overlay([agent.to_spec() for agent in request.customAgents]):
+        plan = await compile_command(request.command, {"startup": request.startup})
+        payload = plan.to_dict()
+
+    return JSONResponse(payload)
 
 
 # ── Execution ────────────────────────────────────────────────────────────

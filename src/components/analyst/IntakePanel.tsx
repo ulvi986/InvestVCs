@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Check, FileText, Loader2, Play, Upload, X } from "lucide-react";
 import type { InputBundle, SessionMode } from "@/lib/analyst/types";
 import { METHODOLOGY_META } from "@/lib/analyst/registry";
+import type { CustomAgent } from "@/lib/analyst/service";
 import { SUPPORTED_DECK_EXTENSIONS, describeBundle, extractDeckText, hasMinimumInput } from "@/lib/analyst/intake";
 import { Empty, Eyebrow, Panel, Tag } from "./primitives";
 
@@ -36,6 +37,7 @@ const MODES: { id: SessionMode; label: string; description: string }[] = [
 
 export const IntakePanel = ({
   bundle, onBundleChange, mode, onModeChange, chosenIds, onChosenIdsChange, onStart, onCancel, isRunning,
+  customAgents = [],
 }: {
   bundle: InputBundle;
   onBundleChange: (patch: Partial<InputBundle>) => void;
@@ -46,6 +48,8 @@ export const IntakePanel = ({
   onStart: () => void;
   onCancel: () => void;
   isRunning: boolean;
+  /** The team's own agents, offered for selection beside the built-ins. */
+  customAgents?: CustomAgent[];
 }) => {
   const fileInput = useRef<HTMLInputElement>(null);
   const [deckError, setDeckError] = useState<string | null>(null);
@@ -69,6 +73,20 @@ export const IntakePanel = ({
       setDeckLoading(false);
     }
   };
+
+  /** Built-ins first, then the team's own, so the numbering people are used to
+   *  does not shift when someone adds an agent. */
+  const selectable = [
+    ...METHODOLOGY_META.map((spec) => ({
+      id: spec.id, name: spec.name, purpose: spec.purpose, own: false,
+    })),
+    ...customAgents.map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      purpose: agent.purpose || "Added by your team.",
+      own: true,
+    })),
+  ];
 
   const toggleMethodology = (id: string) => {
     onChosenIdsChange(chosenIds.includes(id) ? chosenIds.filter((item) => item !== id) : [...chosenIds, id]);
@@ -222,13 +240,11 @@ export const IntakePanel = ({
                 className="text-[11px] text-muted-foreground hover:text-foreground"
                 onClick={() =>
                   onChosenIdsChange(
-                    chosenIds.length === METHODOLOGY_META.length
-                      ? []
-                      : METHODOLOGY_META.map((spec) => spec.id),
+                    chosenIds.length === selectable.length ? [] : selectable.map((spec) => spec.id),
                   )
                 }
               >
-                {chosenIds.length === METHODOLOGY_META.length ? "Clear all" : "Select all"}
+                {chosenIds.length === selectable.length ? "Clear all" : "Select all"}
               </button>
             </div>
             <p className="mt-1.5 text-[11px] font-light leading-relaxed text-muted-foreground/70">
@@ -236,7 +252,7 @@ export const IntakePanel = ({
               skipped and the reason is recorded.
             </p>
             <ul className="mt-3 space-y-1">
-              {METHODOLOGY_META.map((spec) => (
+              {selectable.map((spec) => (
                 <li key={spec.id}>
                   <label className="flex cursor-pointer items-start gap-2.5 rounded-lg px-2 py-1.5 hover:bg-[var(--band)]">
                     <Checkbox
@@ -246,7 +262,14 @@ export const IntakePanel = ({
                       className="mt-0.5"
                     />
                     <span className="min-w-0">
-                      <span className="block text-sm text-foreground/85">{spec.name}</span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-sm text-foreground/85">{spec.name}</span>
+                        {spec.own && (
+                          <span className="shrink-0 rounded-full border border-[var(--rule)] px-1.5 py-px text-[10px] uppercase tracking-[0.08em] text-[var(--ink-3)]">
+                            Yours
+                          </span>
+                        )}
+                      </span>
                       <span className="block text-[11px] font-light leading-relaxed text-muted-foreground">
                         {spec.purpose}
                       </span>

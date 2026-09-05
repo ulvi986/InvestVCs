@@ -95,6 +95,17 @@ const Workflow = () => {
   const [pendingWorkflow, setPendingWorkflow] = useState<WorkflowSpec | null>(null);
   const [customAgents, setCustomAgents] = useState<CustomAgent[]>(() => loadCustomAgents());
   const [panel, setPanel] = useState("ask");
+
+  // Deleting an agent must also unselect it. The service skips a methodology id
+  // it cannot resolve, so a stale selection would not fail - it would quietly
+  // run one agent fewer than the ticked list claims.
+  useEffect(() => {
+    const live = new Set(customAgents.map((agent) => agent.id));
+    setChosenIds((prev) => {
+      const kept = prev.filter((id) => !id.startsWith("custom_") || live.has(id));
+      return kept.length === prev.length ? prev : kept;
+    });
+  }, [customAgents]);
   /** Which methodology a one-off re-run is for. Kept out of `mode`/`chosenIds`
    *  so re-running one agent never changes what the Run button does. */
   const [rerunningId, setRerunningId] = useState<string | null>(null);
@@ -401,6 +412,7 @@ const Workflow = () => {
           <CommandBar
             startupName={startupName}
             startupContext={state.profile ?? { name: startupName, narrative: bundle.narrative }}
+            customAgents={customAgents}
             disabled={isRunning}
             onNeedStartup={() => setPanel("company")}
             onRun={(workflow) => {
@@ -476,6 +488,7 @@ const Workflow = () => {
             onModeChange={setMode}
             chosenIds={chosenIds}
             onChosenIdsChange={setChosenIds}
+            customAgents={customAgents}
             onStart={() => runAnalysis()}
             onCancel={cancel}
             isRunning={isRunning}
