@@ -9,10 +9,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, within, fireEvent } from "@testing-library/react";
 
+import AgentInspector from "@/components/analyst/AgentInspector";
 import IntakePanel from "@/components/analyst/IntakePanel";
 import { METHODOLOGY_META } from "@/lib/analyst/registry";
 import type { CustomAgent } from "@/lib/analyst/service";
-import { makeBundle } from "./helpers";
+import type { GraphNode } from "@/lib/analyst/graphTypes";
+import { makeBundle, makeResult } from "./helpers";
 
 const ownAgent: CustomAgent = {
   id: "custom_regulatory_exposure",
@@ -101,5 +103,81 @@ describe("choosing your own agent", () => {
   it("hides the roster entirely in autonomous mode, where the analyst chooses", () => {
     renderPanel({ mode: "autonomous" });
     expect(screen.queryByText("Regulatory Exposure")).not.toBeInTheDocument();
+  });
+});
+
+
+// The written answer is the whole point of a user-defined agent: it has no
+// deterministic figures to fall back on, so if the inspector does not show
+// findings, concerns and unknowns, the agent has effectively run in silence.
+// The payload here is the shape a live run actually returned.
+describe("reading what your agent found", () => {
+  const result = makeResult("custom_regulatory_exposure", {
+    name: "Regulatory Exposure",
+    family: "risk",
+    headline: "Confirmed: no in-house payment institution licence.",
+    score10: 2,
+    confidence: 0.21,
+    inputs: {
+      assessment: "Material states the company holds no payment institution licence and relies on a partner BIN sponsor.",
+      score10: 2,
+      findings: ["The narrative states it does not hold a payment institution licence."],
+      concerns: ["Reliance on a BIN sponsor creates regulatory concentration risk."],
+      unknowns: ["Whether it holds an EMI licence in any member state."],
+    },
+    computed: { score10: 2 },
+  });
+
+  const node = {
+    id: "methodology:custom_regulatory_exposure",
+    label: "Regulatory Exposure",
+    kind: "methodology",
+    layer: 3,
+    status: "completed",
+    agent: "custom_regulatory_exposure",
+    headline: result.headline,
+    confidence: 0.21,
+    toolLabels: [],
+    summary: null,
+  } as unknown as GraphNode;
+
+  const show = () => render(<AgentInspector node={node} result={result} onClose={() => {}} />);
+
+  it("shows the assessment it wrote", () => {
+    show();
+    expect(screen.getByText(/relies on a partner BIN sponsor/)).toBeInTheDocument();
+  });
+
+  it("shows what it established", () => {
+    show();
+    expect(screen.getByText(/does not hold a payment institution licence/)).toBeInTheDocument();
+  });
+
+  it("shows what worries it", () => {
+    show();
+    expect(screen.getByText(/regulatory concentration risk/)).toBeInTheDocument();
+  });
+
+  it("shows what it could not establish, so a gap is not read as a clean bill", () => {
+    show();
+    expect(screen.getByText(/EMI licence in any member state/)).toBeInTheDocument();
+  });
+
+  it("omits a section the agent left empty rather than showing an empty heading", () => {
+    const bare = makeResult("custom_regulatory_exposure", {
+      inputs: { assessment: "", findings: [], concerns: [], unknowns: [] },
+    });
+    render(<AgentInspector node={node} result={bare} onClose={() => {}} />);
+    expect(screen.queryByText("What worries it")).not.toBeInTheDocument();
+    expect(screen.queryByText("Assessment")).not.toBeInTheDocument();
+  });
+
+  it("ignores a non-list value instead of crashing the panel", () => {
+    const odd = makeResult("custom_regulatory_exposure", {
+      inputs: { findings: "not a list", concerns: [123, "", "  "], unknowns: null },
+    });
+    render(<AgentInspector node={node} result={odd} onClose={() => {}} />);
+    expect(screen.queryByText("What it established")).not.toBeInTheDocument();
+    expect(screen.queryByText("What worries it")).not.toBeInTheDocument();
   });
 });

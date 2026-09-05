@@ -32,6 +32,24 @@ const KIND_TEXT: Record<string, string> = {
   approval: "Human checkpoint",
 };
 
+/** Written output an agent produced, in the order a reader wants it: what it
+ *  concluded, what it established, what worries it, what it could not settle.
+ *
+ *  A user-defined agent has no deterministic figures to show, so without this
+ *  its entire answer would be reduced to a headline and a score. Built-ins that
+ *  fill the same keys - risk analysis writes unknowns, the canvas writes an
+ *  assessment - get the same treatment rather than a special case. */
+const NARRATIVE_FIELDS: { key: string; label: string }[] = [
+  { key: "findings", label: "What it established" },
+  { key: "concerns", label: "What worries it" },
+  { key: "unknowns", label: "What it could not establish" },
+];
+
+const asStringList = (value: unknown): string[] =>
+  Array.isArray(value)
+    ? value.map((item) => (typeof item === "string" ? item.trim() : "")).filter(Boolean)
+    : [];
+
 /** Values the orchestrator attached to the node, rendered as they arrive. */
 const SUMMARY_LABEL: Record<string, string> = {
   sources: "Sources",
@@ -167,6 +185,32 @@ export const AgentInspector = ({ node, result, onClose, onRerun }: AgentInspecto
             </div>
           </section>
         )}
+
+        {typeof result?.inputs?.assessment === "string" && result.inputs.assessment.trim() && (
+          <section>
+            <Eyebrow>Assessment</Eyebrow>
+            <p className="mt-2 text-[13px] leading-relaxed text-[var(--ink-2)]">
+              {(result.inputs.assessment as string).trim()}
+            </p>
+          </section>
+        )}
+
+        {NARRATIVE_FIELDS.map(({ key, label }) => {
+          const items = asStringList(result?.inputs?.[key]);
+          if (!items.length) return null;
+          return (
+            <section key={key}>
+              <Eyebrow>{label}</Eyebrow>
+              <ul className="mt-2 space-y-2">
+                {items.map((item, index) => (
+                  <li key={index} className="text-[12.5px] leading-relaxed text-[var(--ink-2)]">
+                    {item}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          );
+        })}
 
         {summaryRows.length > 0 && (
           <section>
