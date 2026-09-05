@@ -59,11 +59,11 @@ const fmtDate = (s?: string | null) => {
 const Detail = ({ icon: Icon, label, value }: { icon: any; label: string; value?: string }) => {
   if (!value) return null;
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4">
+    <div className="flex items-start gap-3 rounded-2xl border border-[var(--rule)] bg-[var(--band)] p-4">
       <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
       <div className="min-w-0">
-        <p className="text-[11px] uppercase tracking-wide text-white/35">{label}</p>
-        <p className="truncate text-sm text-white/85">{value}</p>
+        <p className="text-[11px] uppercase tracking-wide text-[var(--ink-3)]">{label}</p>
+        <p className="truncate text-sm text-[var(--ink-1)]">{value}</p>
       </div>
     </div>
   );
@@ -75,10 +75,10 @@ const AllocationBar = ({ label, pct }: { label: string; pct?: number | null }) =
   return (
     <div>
       <div className="mb-1 flex items-center justify-between text-xs">
-        <span className="text-white/55">{label}</span>
-        <span className="text-white/85">{v}%</span>
+        <span className="text-[var(--ink-2)]">{label}</span>
+        <span className="text-[var(--ink-1)]">{v}%</span>
       </div>
-      <div className="h-2 overflow-hidden rounded-full bg-white/[0.06]">
+      <div className="h-2 overflow-hidden rounded-full bg-[var(--band)]">
         <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent" style={{ width: `${v}%` }} />
       </div>
     </div>
@@ -137,7 +137,7 @@ const PublicProfile = () => {
         <Button
           variant="ghost"
           size="sm"
-          className="text-white/60 hover:text-white"
+          className="text-[var(--ink-2)] hover:text-[var(--ink-1)]"
           onClick={() => navigate(-1)}
         >
           <ArrowLeft className="mr-1.5 h-4 w-4" /> Back
@@ -146,10 +146,10 @@ const PublicProfile = () => {
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>
         ) : !profile ? (
-          <div className="rounded-3xl border border-white/[0.07] bg-card p-12 text-center">
-            <UserX className="mx-auto mb-3 h-10 w-10 text-white/20" />
-            <p className="font-origin-display text-xl font-light text-white">Profile not found</p>
-            <p className="mt-1 text-sm text-white/45">This member doesn't exist or is no longer available.</p>
+          <div className="rounded-3xl border border-[var(--rule)] bg-card p-12 text-center">
+            <UserX className="mx-auto mb-3 h-10 w-10 text-[var(--ink-3)]" />
+            <p className="font-origin-display text-xl font-light text-[var(--ink-1)]">Profile not found</p>
+            <p className="mt-1 text-sm text-[var(--ink-3)]">This member doesn't exist or is no longer available.</p>
           </div>
         ) : (
           <motion.div
@@ -159,10 +159,10 @@ const PublicProfile = () => {
             className="space-y-6"
           >
             {/* Header card */}
-            <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+            <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
               <div className="flex items-start gap-5">
                 <div
-                  className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-3xl font-semibold text-white"
+                  className="h-24 w-24 shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-3xl font-semibold text-[var(--ink-1)]"
                 >
                   {profile.avatar_url ? (
                     <img src={profile.avatar_url} alt="" className="h-full w-full object-cover" />
@@ -171,9 +171,9 @@ const PublicProfile = () => {
                   )}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <h2 className="font-origin-display text-2xl font-light text-white">{fullName}</h2>
+                  <h2 className="font-origin-display text-2xl font-light text-[var(--ink-1)]">{fullName}</h2>
                   {(profile.startup_name || profile.current_company) && (
-                    <p className="mt-1 text-sm text-white/55">
+                    <p className="mt-1 text-sm text-[var(--ink-2)]">
                       {[profile.startup_name || profile.current_company, profile.industry].filter(Boolean).join(" · ")}
                     </p>
                   )}
@@ -183,7 +183,7 @@ const PublicProfile = () => {
                         href={gmailComposeUrl(profile.email)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--rule)] bg-[var(--band)] px-3 py-1.5 text-xs text-[var(--ink-2)] transition-colors hover:bg-[var(--band)]"
                       >
                         <Mail className="h-3.5 w-3.5 text-primary" /> {profile.email}
                       </a>
@@ -193,7 +193,7 @@ const PublicProfile = () => {
                         href={profile.linkedin_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07]"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--rule)] bg-[var(--band)] px-3 py-1.5 text-xs text-[var(--ink-2)] transition-colors hover:bg-[var(--band)]"
                       >
                         <Linkedin className="h-3.5 w-3.5 text-[#90b8f0]" /> Connect on LinkedIn
                       </a>
@@ -205,12 +205,12 @@ const PublicProfile = () => {
 
             {/* Startup description */}
             {profile.startup_description && (
-              <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
-                <div className="mb-3 flex items-center gap-2 text-white/70">
+              <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
+                <div className="mb-3 flex items-center gap-2 text-[var(--ink-2)]">
                   <Rocket className="h-4 w-4 text-primary" />
                   <h3 className="text-sm font-medium">About the startup</h3>
                 </div>
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-white/75">
+                <p className="whitespace-pre-wrap text-sm leading-relaxed text-[var(--ink-1)]">
                   {profile.startup_description}
                 </p>
               </div>
@@ -226,12 +226,12 @@ const PublicProfile = () => {
 
             {/* Funding overview */}
             {hasFunding && (
-              <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
-                <div className="mb-4 flex items-center gap-2 text-white/70">
+              <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
+                <div className="mb-4 flex items-center gap-2 text-[var(--ink-2)]">
                   <TrendingUp className="h-4 w-4 text-primary" />
                   <h3 className="text-sm font-medium">Funding</h3>
                   {funding?.funding_stage && (
-                    <span className="ml-auto rounded-full border border-white/10 bg-white/[0.03] px-2.5 py-1 text-[11px] text-white/70">
+                    <span className="ml-auto rounded-full border border-[var(--rule)] bg-[var(--band)] px-2.5 py-1 text-[11px] text-[var(--ink-2)]">
                       {funding.funding_stage}
                     </span>
                   )}
@@ -240,10 +240,10 @@ const PublicProfile = () => {
                 {goal > 0 && (
                   <div className="mb-5">
                     <div className="mb-1.5 flex items-end justify-between">
-                      <span className="text-lg font-medium text-white">{fmtMoney(raised) ?? "$0"}</span>
-                      <span className="text-xs text-white/45">of {fmtMoney(goal)} goal · {progress}%</span>
+                      <span className="text-lg font-medium text-[var(--ink-1)]">{fmtMoney(raised) ?? "$0"}</span>
+                      <span className="text-xs text-[var(--ink-3)]">of {fmtMoney(goal)} goal · {progress}%</span>
                     </div>
-                    <div className="h-2.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div className="h-2.5 overflow-hidden rounded-full bg-[var(--band)]">
                       <div className="h-full rounded-full bg-gradient-to-r from-primary to-accent" style={{ width: `${progress}%` }} />
                     </div>
                   </div>
@@ -262,7 +262,7 @@ const PublicProfile = () => {
 
                 {hasAllocation && (
                   <div className="mt-6">
-                    <div className="mb-3 flex items-center gap-2 text-white/70">
+                    <div className="mb-3 flex items-center gap-2 text-[var(--ink-2)]">
                       <PieChart className="h-4 w-4 text-primary" />
                       <h4 className="text-sm font-medium">Use of funds</h4>
                     </div>

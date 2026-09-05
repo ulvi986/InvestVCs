@@ -44,7 +44,7 @@ interface Profile {
 const AvatarUploader = ({ url, initials, uploading, onPick }: { url?: string; initials: string; uploading: boolean; onPick: () => void }) => (
   <div className="flex items-center gap-4">
     <div className="relative">
-      <div className="h-20 w-20 overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl font-semibold text-white">
+      <div className="h-20 w-20 overflow-hidden rounded-2xl bg-gradient-to-br from-primary to-accent flex items-center justify-center text-2xl font-semibold text-[var(--ink-1)]">
         {url ? <img src={url} alt="Profile" className="h-full w-full object-cover" /> : initials}
       </div>
       <button

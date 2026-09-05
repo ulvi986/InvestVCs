@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { toast } from "@/components/ui/sonner";
 import { Loader2, UserRound } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import OriginBackground from "@/components/OriginBackground";
 import logoImg from "@/assets/logo.jpeg";
 
 const UserSignUp = () => {
@@ -66,7 +65,6 @@ const UserSignUp = () => {
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center px-4 py-12">
-      <OriginBackground />
       <Card className="w-full max-w-md origin-glass">
         <CardHeader className="text-center space-y-2">
           <Link to="/" className="mx-auto flex items-center gap-2 font-display text-xl font-bold text-foreground">

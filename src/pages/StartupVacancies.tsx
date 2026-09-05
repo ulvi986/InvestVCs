@@ -204,7 +204,7 @@ const StartupVacancies = () => {
 
         {/* Search + filters */}
         {!loading && visibleVacancies.length > 0 && (
-          <div className="rounded-2xl border border-white/[0.07] bg-card p-4">
+          <div className="rounded-2xl border border-[var(--rule)] bg-card p-4">
             <div className="relative">
               <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
@@ -268,10 +268,10 @@ const StartupVacancies = () => {
                 {filteredVacancies.map((v) => (
                   <div
                     key={v.id}
-                    className={`group flex flex-col rounded-2xl border p-5 transition-all hover:-translate-y-0.5 hover:border-white/15 ${!v.approved ? "border-amber-500/30 bg-amber-500/[0.04]" : "border-white/[0.07] bg-card"}`}
+                    className={`group flex flex-col rounded-2xl border p-5 transition-all hover:-translate-y-0.5 hover:border-[var(--rule)] ${!v.approved ? "border-amber-500/30 bg-amber-500/[0.04]" : "border-[var(--rule)] bg-card"}`}
                   >
                     <div className="flex items-start gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-lg font-bold text-white">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-accent text-lg font-bold text-[var(--ink-1)]">
                         {(v.startup_name?.[0] || "?").toUpperCase()}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -300,7 +300,7 @@ const StartupVacancies = () => {
 
                     <p className="mt-3 line-clamp-3 flex-1 text-sm leading-relaxed text-muted-foreground">{v.job_description}</p>
 
-                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-white/[0.06] pt-3">
+                    <div className="mt-4 flex items-center justify-between gap-3 border-t border-[var(--rule)] pt-3">
                       <span className="text-xs text-muted-foreground">{new Date(v.created_at).toLocaleDateString()}</span>
                       {v.contact_email && user && user.id !== v.user_id ? (
                         <Button

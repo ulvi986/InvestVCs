@@ -13,8 +13,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMemo, useCallback } from "react";
 
 import { renderMarkdown } from "@/lib/markdown";
+import { extractPptxText } from "@/lib/analyst/intake";
 import { toast } from "@/hooks/use-toast";
-import { Loader2, Upload, FileText, Sparkles, KeyRound, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, Upload, FileText, Sparkles, KeyRound, CheckCircle2, AlertCircle, Brain, ArrowRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const BMC_BLOCKS = [
   { key: "key_partners", color: "from-blue-500/10 to-blue-600/10" },
@@ -213,35 +215,6 @@ const VentureAnalysis = () => {
     setVoucherDialogOpen(true);
   };
 
-  const extractPptxText = async (file: File): Promise<string> => {
-    const JSZip = (await import("jszip")).default;
-    const zip = await JSZip.loadAsync(file);
-    const slideFiles = Object.keys(zip.files)
-      .filter(name => /^ppt\/slides\/slide\d+\.xml$/.test(name))
-      .sort((a, b) => {
-        const numA = parseInt(a.match(/slide(\d+)/)?.[1] || "0");
-        const numB = parseInt(b.match(/slide(\d+)/)?.[1] || "0");
-        return numA - numB;
-      });
-
-    const slides: string[] = [];
-    for (const slidePath of slideFiles) {
-      const xml = await zip.files[slidePath].async("text");
-      // Extract text from XML tags
-      const texts: string[] = [];
-      const regex = /<a:t>(.*?)<\/a:t>/g;
-      let match;
-      while ((match = regex.exec(xml)) !== null) {
-        if (match[1].trim()) texts.push(match[1].trim());
-      }
-      if (texts.length > 0) {
-        const slideNum = slidePath.match(/slide(\d+)/)?.[1] || "?";
-        slides.push(`--- Slide ${slideNum} ---\n${texts.join("\n")}`);
-      }
-    }
-    return slides.length > 0 ? slides.join("\n\n") : "No text content found in the presentation.";
-  };
-
   // Upload + analyze the pitch deck. Returns true only on success.
   const uploadAndAnalyzePD = async (): Promise<boolean> => {
     if (!pdFile || !user) return false;
@@ -256,8 +229,10 @@ const VentureAnalysis = () => {
 
       if (uploadError) throw uploadError;
 
-      // Extract actual text content from PPTX
-      const textContent = await extractPptxText(pdFile);
+      // Deck text extraction is shared with the autonomous analyst so both
+      // read a deck identically — see `src/lib/analyst/intake.ts`.
+      const extracted = await extractPptxText(pdFile);
+      const textContent = extracted || "No text content found in the presentation.";
 
       const { data, error } = await supabase.functions.invoke("analyze-venture", {
         body: { type: "pitch_deck", data: textContent },
@@ -287,6 +262,17 @@ const VentureAnalysis = () => {
 
   return (
     <DashboardLayout title={t("venture.title")} subtitle={t("venture.subtitle")}>
+      {/* The canvas and deck below feed the autonomous analyst, which applies
+          them alongside every other methodology rather than one at a time. */}
+      <Link
+        to="/analyst"
+        className="mb-6 flex items-center gap-3 rounded-xl border border-[color-mix(in_srgb,var(--accent-ink)_25%,transparent)] bg-[var(--accent-ink)]/[0.05] px-4 py-3 transition-colors hover:border-[color-mix(in_srgb,var(--accent-ink)_45%,transparent)]"
+      >
+        <Brain className="h-4 w-4 shrink-0 text-[var(--accent-ink)]" />
+        <span className="min-w-0 flex-1 text-sm text-foreground/85">{t("venture.analyst_cta")}</span>
+        <ArrowRight className="h-4 w-4 shrink-0 text-[var(--accent-ink)]" />
+      </Link>
+
       <Tabs value={tab} onValueChange={setTab} className="space-y-6">
         <TabsList className="bg-muted p-1 rounded-xl h-auto gap-1">
           <TabsTrigger value="bmc" className="rounded-lg data-[state=active]:bg-card data-[state=active]:shadow-card">
@@ -409,7 +395,7 @@ const VentureAnalysis = () => {
               <CardContent>
                 <div className="space-y-3">
                   {pdHistory.map((pd) => (
-                    <div key={pd.id} className="flex items-center justify-between p-3 rounded-lg bg-white/[0.03] border border-border/40">
+                    <div key={pd.id} className="flex items-center justify-between p-3 rounded-lg bg-[var(--band)] border border-border/40">
                       <div className="flex items-center gap-3">
                         <FileText className="h-4 w-4 text-muted-foreground" />
                         <div>

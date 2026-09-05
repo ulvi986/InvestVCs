@@ -369,7 +369,7 @@ const FundingOverview = () => {
 };
 
 const DetailItem = ({ label, value }: { label: string; value: string }) => (
-  <div className="rounded-lg border border-border p-2.5 bg-white/[0.03]">
+  <div className="rounded-lg border border-border p-2.5 bg-[var(--band)]">
     <p className="text-[10px] text-muted-foreground">{label}</p>
     <p className="text-sm font-semibold text-foreground capitalize">{value}</p>
   </div>

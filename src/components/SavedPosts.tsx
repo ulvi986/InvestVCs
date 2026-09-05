@@ -77,12 +77,12 @@ const SavedPosts = () => {
   };
 
   return (
-    <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
-      <div className="mb-4 flex items-center gap-2 text-white/80">
+    <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
+      <div className="mb-4 flex items-center gap-2 text-[var(--ink-1)]">
         <Bookmark className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-medium">{t("profile.saved_title")}</h3>
         {!loading && posts.length > 0 && (
-          <span className="ml-auto rounded-full border border-white/10 bg-white/[0.03] px-2 py-0.5 text-[11px] text-white/55">
+          <span className="ml-auto rounded-full border border-[var(--rule)] bg-[var(--band)] px-2 py-0.5 text-[11px] text-[var(--ink-2)]">
             {posts.length}
           </span>
         )}
@@ -91,35 +91,35 @@ const SavedPosts = () => {
       {loading ? (
         <div className="flex justify-center py-8"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
       ) : posts.length === 0 ? (
-        <p className="py-4 text-center text-xs text-white/40">{t("profile.saved_empty")}</p>
+        <p className="py-4 text-center text-xs text-[var(--ink-3)]">{t("profile.saved_empty")}</p>
       ) : (
         <div className="space-y-3">
           {posts.map((p) => (
-            <div key={p.id} className="rounded-2xl border border-white/[0.06] bg-white/[0.02] p-4">
+            <div key={p.id} className="rounded-2xl border border-[var(--rule)] bg-[var(--band)] p-4">
               <div className="flex items-center gap-2.5">
-                <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[11px] font-semibold text-white">
+                <div className="h-7 w-7 shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-[11px] font-semibold text-[var(--ink-1)]">
                   {p.authorAvatar ? <img src={p.authorAvatar} alt="" className="h-full w-full object-cover" /> : (p.authorName[0] || "U").toUpperCase()}
                 </div>
-                <span className="truncate text-xs font-medium text-white">{p.authorName}</span>
-                <span className="text-[10px] text-white/30">
+                <span className="truncate text-xs font-medium text-[var(--ink-1)]">{p.authorName}</span>
+                <span className="text-[10px] text-[var(--ink-3)]">
                   {(() => { try { return formatDistanceToNow(new Date(p.created_at), { addSuffix: true }); } catch { return ""; } })()}
                 </span>
                 <button onClick={() => unsave(p.id)} aria-label="Remove from saved"
-                  className="ml-auto text-white/30 transition-colors hover:text-[#dd90d8]">
+                  className="ml-auto text-[var(--ink-3)] transition-colors hover:text-[var(--negative)]">
                   <BookmarkX className="h-4 w-4" />
                 </button>
               </div>
 
               {p.content && (
-                <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm text-white/75">{p.content}</p>
+                <p className="mt-2 line-clamp-3 whitespace-pre-wrap text-sm text-[var(--ink-1)]">{p.content}</p>
               )}
               {p.image_url && (
-                <img src={p.image_url} alt="" loading="lazy" className="mt-2 max-h-40 w-full rounded-xl border border-white/[0.07] object-cover" />
+                <img src={p.image_url} alt="" loading="lazy" className="mt-2 max-h-40 w-full rounded-xl border border-[var(--rule)] object-cover" />
               )}
 
               <button
                 onClick={() => navigate(`/community?post=${p.id}`)}
-                className="mt-3 inline-flex items-center gap-1 text-xs text-white/55 transition-colors hover:text-primary"
+                className="mt-3 inline-flex items-center gap-1 text-xs text-[var(--ink-2)] transition-colors hover:text-primary"
               >
                 {t("profile.saved_view")} <ArrowUpRight className="h-3.5 w-3.5" />
               </button>

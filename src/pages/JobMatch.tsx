@@ -188,26 +188,26 @@ const JobMatch = () => {
     if (v.contact_email) window.open(gmailComposeUrl(v.contact_email, `Application: ${v.specialization}`), "_blank");
   };
 
-  const scoreColor = (s: number) => (s >= 60 ? "#00b3dd" : s >= 30 ? "#847dff" : "#dd90d8");
+  const scoreColor = (s: number) => (s >= 60 ? "var(--positive)" : s >= 30 ? "var(--accent-ink)" : "var(--negative)");
 
   return (
     <DashboardLayout title={t("jobmatch.ai_title")} subtitle={t("jobmatch.ai_subtitle")}>
       <div className="mx-auto max-w-3xl space-y-6">
         {/* Upload + skills */}
-        <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+        <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-xl" style={{ background: "rgba(132,125,255,0.14)" }}>
                 <FileText className="h-5 w-5 text-primary" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-medium text-white">{fileName || t("jobmatch.no_cv")}</p>
-                <p className="text-xs text-white/45">{t("jobmatch.formats")}</p>
+                <p className="text-sm font-medium text-[var(--ink-1)]">{fileName || t("jobmatch.no_cv")}</p>
+                <p className="text-xs text-[var(--ink-3)]">{t("jobmatch.formats")}</p>
               </div>
             </div>
             <label className="shrink-0">
               <input type="file" accept=".pdf,.doc,.docx,.txt" className="hidden" onChange={handleUpload} disabled={uploading} />
-              <span className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-4 py-2 text-sm text-white/80 transition-colors hover:bg-white/[0.07]">
+              <span className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-[var(--rule)] bg-[var(--band)] px-4 py-2 text-sm text-[var(--ink-1)] transition-colors hover:bg-[var(--band)]">
                 {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
                 {fileName ? t("jobmatch.replace") : t("jobmatch.upload")}
               </span>
@@ -221,9 +221,9 @@ const JobMatch = () => {
               onChange={(e) => setSkillsText(e.target.value)}
               placeholder={t("jobmatch.skills_placeholder")}
               rows={3}
-              className="resize-none border-white/[0.07] bg-white/[0.02]"
+              className="resize-none border-[var(--rule)] bg-[var(--band)]"
             />
-            <p className="text-xs text-white/40">{t("jobmatch.skills_hint")}</p>
+            <p className="text-xs text-[var(--ink-3)]">{t("jobmatch.skills_hint")}</p>
           </div>
 
           <Button onClick={runMatch} disabled={matching} className="mt-4 gap-2 rounded-xl bg-gradient-to-r from-primary to-accent text-primary-foreground border-0 font-semibold">
@@ -235,27 +235,27 @@ const JobMatch = () => {
         {/* Results */}
         {matches && (
           matches.length === 0 ? (
-            <div className="rounded-3xl border border-white/[0.07] bg-card p-10 text-center">
-              <p className="text-white/55">{t("jobmatch.no_matches")}</p>
+            <div className="rounded-3xl border border-[var(--rule)] bg-card p-10 text-center">
+              <p className="text-[var(--ink-2)]">{t("jobmatch.no_matches")}</p>
             </div>
           ) : (
             <div className="space-y-3">
-              <p className="text-sm text-white/55">{matches.length} {t("jobmatch.matches_found")}</p>
+              <p className="text-sm text-[var(--ink-2)]">{matches.length} {t("jobmatch.matches_found")}</p>
               {matches.map(({ v, score, matched, reason }) => (
-                <div key={v.id} className="rounded-2xl border border-white/[0.07] bg-card p-5">
+                <div key={v.id} className="rounded-2xl border border-[var(--rule)] bg-card p-5">
                   <div className="flex items-start gap-4">
                     <div className="relative flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border-2" style={{ borderColor: scoreColor(score) }}>
                       <span className="font-origin-display text-lg font-medium" style={{ color: scoreColor(score) }}>{score}%</span>
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
-                        <h3 className="truncate font-semibold text-white">{v.specialization}</h3>
+                        <h3 className="truncate font-semibold text-[var(--ink-1)]">{v.specialization}</h3>
                         <span className="shrink-0 rounded-full bg-accent/10 px-2 py-0.5 text-[11px] text-accent">{v.job_type}</span>
                       </div>
-                      <p className="text-sm text-white/55">{v.startup_name}</p>
-                      <p className="mt-0.5 flex items-center gap-1 text-xs text-white/45"><MapPin className="h-3.5 w-3.5" /> {v.country}</p>
+                      <p className="text-sm text-[var(--ink-2)]">{v.startup_name}</p>
+                      <p className="mt-0.5 flex items-center gap-1 text-xs text-[var(--ink-3)]"><MapPin className="h-3.5 w-3.5" /> {v.country}</p>
                       {reason && (
-                        <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-white/60">
+                        <p className="mt-2 flex items-start gap-1.5 text-xs leading-relaxed text-[var(--ink-2)]">
                           <Sparkles className="mt-0.5 h-3 w-3 shrink-0 text-primary" /> {reason}
                         </p>
                       )}
@@ -273,7 +273,7 @@ const JobMatch = () => {
                       size="sm"
                       onClick={() => apply(v)}
                       disabled={applied.has(v.id)}
-                      className={`h-8 shrink-0 gap-1.5 border-0 ${applied.has(v.id) ? "bg-green-600/80 text-white" : "gradient-primary text-primary-foreground"}`}
+                      className={`h-8 shrink-0 gap-1.5 border-0 ${applied.has(v.id) ? "bg-green-600/80 text-[var(--ink-1)]" : "gradient-primary text-primary-foreground"}`}
                     >
                       {applied.has(v.id) ? <><Check className="h-3.5 w-3.5" /> {t("jobmatch.applied_label")}</> : <><Send className="h-3.5 w-3.5" /> {t("jobmatch.apply")}</>}
                     </Button>

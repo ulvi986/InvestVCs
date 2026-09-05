@@ -47,7 +47,7 @@ const headlineOf = (a: Author) =>
 
 const Avatar = ({ author, size = 44 }: { author: Author; size?: number }) => (
   <div
-    className="shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-semibold text-white"
+    className="shrink-0 overflow-hidden rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center font-semibold text-[var(--ink-1)]"
     style={{ width: size, height: size, fontSize: size * 0.4 }}
   >
     {author.avatar_url ? (
@@ -291,7 +291,7 @@ const Community = () => {
       <div className="mx-auto grid max-w-5xl gap-8 lg:grid-cols-[minmax(0,1fr)_300px]">
         <div className="min-w-0 space-y-6">
         {/* Composer */}
-        <div className="rounded-3xl border border-white/[0.07] bg-card p-5">
+        <div className="rounded-3xl border border-[var(--rule)] bg-card p-5">
           <div className="flex gap-3">
             <Avatar author={myAuthor} />
             <div className="flex-1">
@@ -300,16 +300,16 @@ const Community = () => {
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Share something with the community…"
                 rows={3}
-                className="resize-none border-white/[0.07] bg-white/[0.02]"
+                className="resize-none border-[var(--rule)] bg-[var(--band)]"
               />
 
               {imagePreview && (
                 <div className="relative mt-3 inline-block">
-                  <img src={imagePreview} alt="" className="max-h-64 rounded-2xl border border-white/[0.07] object-cover" />
+                  <img src={imagePreview} alt="" className="max-h-64 rounded-2xl border border-[var(--rule)] object-cover" />
                   <button
                     onClick={clearImage}
                     aria-label="Remove image"
-                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-white/80 backdrop-blur transition-colors hover:bg-black/80 hover:text-white"
+                    className="absolute right-2 top-2 rounded-full bg-black/60 p-1.5 text-[var(--ink-1)] backdrop-blur transition-colors hover:bg-black/80 hover:text-[var(--ink-1)]"
                   >
                     <X className="h-4 w-4" />
                   </button>
@@ -330,11 +330,11 @@ const Community = () => {
                     onClick={() => fileInputRef.current?.click()}
                     disabled={posting}
                     aria-label="Add image"
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07] disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--rule)] bg-[var(--band)] px-3 py-1.5 text-xs text-[var(--ink-2)] transition-colors hover:bg-[var(--band)] disabled:opacity-50"
                   >
                     <ImagePlus className="h-3.5 w-3.5" /> Photo
                   </button>
-                  <span className="text-xs text-white/35">{content.length}/2000</span>
+                  <span className="text-xs text-[var(--ink-3)]">{content.length}/2000</span>
                 </div>
                 <Button
                   variant="white"
@@ -354,10 +354,10 @@ const Community = () => {
         {loading ? (
           <div className="flex justify-center py-16"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>
         ) : posts.length === 0 ? (
-          <div className="rounded-3xl border border-white/[0.07] bg-card p-12 text-center">
-            <MessageSquare className="mx-auto mb-3 h-10 w-10 text-white/20" />
-            <p className="font-origin-display text-xl font-light text-white">No posts yet</p>
-            <p className="mt-1 text-sm text-white/45">Be the first to share something with the community.</p>
+          <div className="rounded-3xl border border-[var(--rule)] bg-card p-12 text-center">
+            <MessageSquare className="mx-auto mb-3 h-10 w-10 text-[var(--ink-3)]" />
+            <p className="font-origin-display text-xl font-light text-[var(--ink-1)]">No posts yet</p>
+            <p className="mt-1 text-sm text-[var(--ink-3)]">Be the first to share something with the community.</p>
           </div>
         ) : (
           posts.map((post, i) => {
@@ -368,7 +368,7 @@ const Community = () => {
               <motion.article
                 key={post.id}
                 id={`post-${post.id}`}
-                className="scroll-mt-24 rounded-3xl border border-white/[0.07] bg-card p-5"
+                className="scroll-mt-24 rounded-3xl border border-[var(--rule)] bg-card p-5"
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: Math.min(i * 0.04, 0.3), duration: 0.45 }}
@@ -385,32 +385,32 @@ const Community = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => navigate(`/u/${post.user_id}`)}
-                        className="truncate font-medium text-white transition-colors hover:text-primary"
+                        className="truncate font-medium text-[var(--ink-1)] transition-colors hover:text-primary"
                       >
                         {fullName}
                       </button>
                       {a.linkedin_url && (
                         <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"
-                          className="text-[#90b8f0] hover:text-white transition-colors">
+                          className="text-[#90b8f0] hover:text-[var(--ink-1)] transition-colors">
                           <Linkedin className="h-4 w-4" />
                         </a>
                       )}
                     </div>
-                    {headline && <p className="truncate text-xs text-white/45">{headline}</p>}
-                    <p className="text-[11px] text-white/30">
+                    {headline && <p className="truncate text-xs text-[var(--ink-3)]">{headline}</p>}
+                    <p className="text-[11px] text-[var(--ink-3)]">
                       {(() => { try { return formatDistanceToNow(new Date(post.created_at), { addSuffix: true }); } catch { return ""; } })()}
                     </p>
                   </div>
                   {user?.id === post.user_id && (
                     <button onClick={() => handleDelete(post.id)} aria-label="Delete"
-                      className="text-white/30 transition-colors hover:text-[#dd90d8]">
+                      className="text-[var(--ink-3)] transition-colors hover:text-[var(--negative)]">
                       <Trash2 className="h-4 w-4" />
                     </button>
                   )}
                 </div>
 
                 {post.content && (
-                  <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-white/75">{post.content}</p>
+                  <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-[var(--ink-1)]">{post.content}</p>
                 )}
 
                 {post.image_url && (
@@ -419,14 +419,14 @@ const Community = () => {
                       src={post.image_url}
                       alt=""
                       loading="lazy"
-                      className="max-h-[28rem] w-full rounded-2xl border border-white/[0.07] object-cover"
+                      className="max-h-[28rem] w-full rounded-2xl border border-[var(--rule)] object-cover"
                     />
                   </a>
                 )}
 
                 {a.linkedin_url && (
                   <a href={a.linkedin_url} target="_blank" rel="noopener noreferrer"
-                    className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/[0.03] px-3 py-1.5 text-xs text-white/70 transition-colors hover:bg-white/[0.07]">
+                    className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-[var(--rule)] bg-[var(--band)] px-3 py-1.5 text-xs text-[var(--ink-2)] transition-colors hover:bg-[var(--band)]">
                     <Linkedin className="h-3.5 w-3.5 text-[#90b8f0]" /> Connect on LinkedIn
                   </a>
                 )}
@@ -438,12 +438,12 @@ const Community = () => {
                   const like = likesByPost[post.id] || { count: 0, liked: false };
                   const saved = savedSet.has(post.id);
                   return (
-                    <div className="mt-4 border-t border-white/[0.06] pt-3">
-                      <div className="flex items-center gap-1 text-white/45">
+                    <div className="mt-4 border-t border-[var(--rule)] pt-3">
+                      <div className="flex items-center gap-1 text-[var(--ink-3)]">
                         <button
                           onClick={() => handleLike(post.id)}
                           aria-label="Like"
-                          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] ${like.liked ? "text-[#dd90d8]" : "hover:text-white/80"}`}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-[var(--band)] ${like.liked ? "text-[var(--negative)]" : "hover:text-[var(--ink-1)]"}`}
                         >
                           <Heart className={`h-3.5 w-3.5 ${like.liked ? "fill-current" : ""}`} />
                           {like.count > 0 && <span>{like.count}</span>}
@@ -451,7 +451,7 @@ const Community = () => {
                         <button
                           onClick={() => setOpenReplies((prev) => ({ ...prev, [post.id]: !isOpen }))}
                           aria-label="Comment"
-                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] hover:text-white/80"
+                          className="inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-[var(--band)] hover:text-[var(--ink-1)]"
                         >
                           <MessageSquare className="h-3.5 w-3.5" />
                           {replies.length > 0 && <span>{replies.length}</span>}
@@ -459,14 +459,14 @@ const Community = () => {
                         <button
                           onClick={() => handleSave(post.id)}
                           aria-label="Save"
-                          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] ${saved ? "text-primary" : "hover:text-white/80"}`}
+                          className={`inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-[var(--band)] ${saved ? "text-primary" : "hover:text-[var(--ink-1)]"}`}
                         >
                           <Bookmark className={`h-3.5 w-3.5 ${saved ? "fill-current" : ""}`} />
                         </button>
                         <button
                           onClick={() => handleShare(post.id)}
                           aria-label="Share"
-                          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-white/[0.04] hover:text-white/80"
+                          className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2 py-1 text-xs transition-colors hover:bg-[var(--band)] hover:text-[var(--ink-1)]"
                         >
                           <Share2 className="h-3.5 w-3.5" />
                         </button>
@@ -482,22 +482,22 @@ const Community = () => {
                                 <button onClick={() => navigate(`/u/${r.user_id}`)} className="transition-opacity hover:opacity-80">
                                   <Avatar author={ra} size={30} />
                                 </button>
-                                <div className="min-w-0 flex-1 rounded-2xl bg-white/[0.03] px-3 py-2">
+                                <div className="min-w-0 flex-1 rounded-2xl bg-[var(--band)] px-3 py-2">
                                   <div className="flex items-center gap-2">
-                                    <button onClick={() => navigate(`/u/${r.user_id}`)} className="truncate text-xs font-medium text-white hover:text-primary">
+                                    <button onClick={() => navigate(`/u/${r.user_id}`)} className="truncate text-xs font-medium text-[var(--ink-1)] hover:text-primary">
                                       {rName}
                                     </button>
-                                    <span className="text-[10px] text-white/30">
+                                    <span className="text-[10px] text-[var(--ink-3)]">
                                       {(() => { try { return formatDistanceToNow(new Date(r.created_at), { addSuffix: true }); } catch { return ""; } })()}
                                     </span>
                                     {user?.id === r.user_id && (
                                       <button onClick={() => handleDeleteReply(post.id, r.id)} aria-label="Delete reply"
-                                        className="ml-auto text-white/25 transition-colors hover:text-[#dd90d8]">
+                                        className="ml-auto text-[var(--ink-3)] transition-colors hover:text-[var(--negative)]">
                                         <Trash2 className="h-3.5 w-3.5" />
                                       </button>
                                     )}
                                   </div>
-                                  <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-white/75">{r.content}</p>
+                                  <p className="mt-0.5 whitespace-pre-wrap break-words text-sm text-[var(--ink-1)]">{r.content}</p>
                                 </div>
                               </div>
                             );
@@ -515,7 +515,7 @@ const Community = () => {
                                 placeholder="Write a reply…"
                                 rows={1}
                                 maxLength={1000}
-                                className="min-h-[40px] resize-none border-white/[0.07] bg-white/[0.02] text-sm"
+                                className="min-h-[40px] resize-none border-[var(--rule)] bg-[var(--band)] text-sm"
                               />
                               <Button
                                 variant="white" size="sm"
@@ -536,7 +536,7 @@ const Community = () => {
           })
         )}
 
-        <p className="flex items-center justify-center gap-1.5 pb-4 text-center text-xs text-white/30">
+        <p className="flex items-center justify-center gap-1.5 pb-4 text-center text-xs text-[var(--ink-3)]">
           <Globe className="h-3.5 w-3.5" /> Everyone in the InvestVCs community can see what you share.
         </p>
         </div>

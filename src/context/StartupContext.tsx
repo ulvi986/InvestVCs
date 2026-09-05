@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
-import type { FinancialSnapshot } from "@/pages/PreparationPhase";
+import type { FinancialSnapshot } from "@/lib/financialTypes";
+import type { VCAnswers } from "@/lib/analyst/methodologies/vcMethod";
+import type { ChicagoAnswers } from "@/lib/analyst/methodologies/firstChicago";
 
 type Answers = Record<string, boolean>;
 
@@ -14,26 +16,10 @@ interface ReadinessData {
   setFrlAnswers: React.Dispatch<React.SetStateAction<Answers>>;
 }
 
-export interface VCAnswers {
-  revenue: number;
-  netIncomeMargin: number;
-  exitMultiple: number;
-  customMultiple: number;
-  isOther: boolean;
-  exitYears: number;
-  requiredIRR: number;
-  investmentAmount: number;
-}
-
-export interface ChicagoAnswers {
-  revenue: number;
-  exitMultiple: number;
-  customMultiple: number;
-  isOther: boolean;
-  yearsToExit: number;
-  discountRates: { worst: number; base: number; best: number };
-  probabilities: { worst: number; base: number; best: number };
-}
+// The answer shapes are owned by the methodology modules so the manual
+// calculators and the autonomous agents share one definition.
+export type { VCAnswers } from "@/lib/analyst/methodologies/vcMethod";
+export type { ChicagoAnswers } from "@/lib/analyst/methodologies/firstChicago";
 
 interface EvaluationData {
   berkus: number;

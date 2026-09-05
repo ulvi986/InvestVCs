@@ -14,6 +14,171 @@ export type Database = {
   }
   public: {
     Tables: {
+      analysis_sessions: {
+        Row: {
+          analysis_plan: Json | null
+          completed_at: string | null
+          created_at: string
+          critique: Json | null
+          degradations: Json
+          disagreements: Json
+          error: string | null
+          final_thesis: Json | null
+          id: string
+          input_bundle: Json
+          iteration: number
+          methodology_results: Json
+          mode: string
+          reconciled_valuation: Json | null
+          startup_name: string
+          startup_profile: Json | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          analysis_plan?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          critique?: Json | null
+          degradations?: Json
+          disagreements?: Json
+          error?: string | null
+          final_thesis?: Json | null
+          id?: string
+          input_bundle?: Json
+          iteration?: number
+          methodology_results?: Json
+          mode?: string
+          reconciled_valuation?: Json | null
+          startup_name?: string
+          startup_profile?: Json | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          analysis_plan?: Json | null
+          completed_at?: string | null
+          created_at?: string
+          critique?: Json | null
+          degradations?: Json
+          disagreements?: Json
+          error?: string | null
+          final_thesis?: Json | null
+          id?: string
+          input_bundle?: Json
+          iteration?: number
+          methodology_results?: Json
+          mode?: string
+          reconciled_valuation?: Json | null
+          startup_name?: string
+          startup_profile?: Json | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      analysis_agent_runs: {
+        Row: {
+          agent: string
+          confidence: number | null
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          input: Json | null
+          iteration: number
+          label: string
+          methodology_id: string | null
+          output: Json | null
+          session_id: string
+          started_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json | null
+          iteration?: number
+          label?: string
+          methodology_id?: string | null
+          output?: Json | null
+          session_id: string
+          started_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json | null
+          iteration?: number
+          label?: string
+          methodology_id?: string | null
+          output?: Json | null
+          session_id?: string
+          started_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      analysis_evidence: {
+        Row: {
+          claim: string
+          confidence: number
+          created_at: string
+          evidence: string
+          id: string
+          methodology: string
+          reasoning: string
+          session_id: string
+          source: string
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          claim: string
+          confidence?: number
+          created_at?: string
+          evidence?: string
+          id?: string
+          methodology?: string
+          reasoning?: string
+          session_id: string
+          source?: string
+          source_type?: string
+          user_id: string
+        }
+        Update: {
+          claim?: string
+          confidence?: number
+          created_at?: string
+          evidence?: string
+          id?: string
+          methodology?: string
+          reasoning?: string
+          session_id?: string
+          source?: string
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       business_model_canvas: {
         Row: {
           analysis_result: string | null

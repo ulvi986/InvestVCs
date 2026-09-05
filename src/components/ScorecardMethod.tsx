@@ -3,12 +3,17 @@ import { Input } from "@/components/ui/input";
 import { useLanguage } from "@/context/LanguageContext";
 import { Check } from "lucide-react";
 import { motion } from "framer-motion";
+import {
+  SCORECARD_FACTOR_KEYS, SCORECARD_SCORE_KEYS, SCORECARD_SCORE_VALUES,
+  SCORECARD_WEIGHTS, computeScorecard, computeScorecardWeight,
+} from "@/lib/analyst/methodologies/scorecard";
 
-const factorKeys = ["team", "market", "product", "competitive", "sales", "financing", "other"];
-const weights = [0.30, 0.25, 0.15, 0.10, 0.10, 0.05, 0.05];
-const scoreValues = [60, 80, 100, 120, 150];
-const scoreKeys = ["very_weak", "weak", "average", "strong", "very_strong"];
-const scoreColors = ["#dd90d8", "#e0a36a", "#9aa0ab", "#00b3dd", "#847dff"];
+// Factors, weights and the score grid are shared with the Scorecard agent.
+const factorKeys = [...SCORECARD_FACTOR_KEYS];
+const weights = SCORECARD_WEIGHTS;
+const scoreValues = SCORECARD_SCORE_VALUES;
+const scoreKeys = SCORECARD_SCORE_KEYS;
+const scoreColors = ["var(--negative)", "var(--caution)", "#9aa0ab", "var(--positive)", "var(--accent-ink)"];
 
 interface ScorecardMethodProps {
   scores: (number | null)[];
@@ -22,11 +27,8 @@ const ScorecardMethod = ({ scores, medianValuation, onScoresChange, onMedianChan
   const { t } = useLanguage();
 
   const median = medianValuation || 0;
-  const weightedScore = factorKeys.reduce((sum, _, i) => {
-    const score = scores[i] !== null ? scores[i]! / 100 : 0;
-    return sum + score * weights[i];
-  }, 0);
-  const finalValuation = Math.round(median * weightedScore);
+  const weightedScore = computeScorecardWeight(scores);
+  const finalValuation = computeScorecard(scores, median);
 
   useEffect(() => { onValuationChange?.(finalValuation); }, [finalValuation, onValuationChange]);
 
@@ -41,38 +43,38 @@ const ScorecardMethod = ({ scores, medianValuation, onScoresChange, onMedianChan
       {/* Live valuation header */}
       <div className="flex flex-col gap-4 rounded-3xl p-7 card-ocean sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-[12px] uppercase tracking-[0.25em] text-white/70">{t("eval.scorecard_tab")}</p>
-          <p className="mt-3 font-origin-display text-4xl font-medium text-white">${finalValuation.toLocaleString()}</p>
+          <p className="text-[12px] uppercase tracking-[0.25em] text-[var(--ink-2)]">{t("eval.scorecard_tab")}</p>
+          <p className="mt-3 font-origin-display text-4xl font-medium text-[var(--ink-1)]">${finalValuation.toLocaleString()}</p>
         </div>
-        <p className="text-sm text-white/70">{Math.round(weightedScore * 100)}% weighted</p>
+        <p className="text-sm text-[var(--ink-2)]">{Math.round(weightedScore * 100)}% weighted</p>
       </div>
 
       {/* Base value */}
-      <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
-        <h3 className="font-origin-display text-lg font-medium text-white">{t("scorecard.base_val")}</h3>
-        <p className="mt-1 text-sm text-white/55 font-light">{t("scorecard.base_val_desc")}</p>
+      <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
+        <h3 className="font-origin-display text-lg font-medium text-[var(--ink-1)]">{t("scorecard.base_val")}</h3>
+        <p className="mt-1 text-sm text-[var(--ink-2)] font-light">{t("scorecard.base_val_desc")}</p>
         <div className="mt-4 flex items-center gap-2">
-          <span className="text-lg text-white/60">$</span>
+          <span className="text-lg text-[var(--ink-2)]">$</span>
           <Input type="number" placeholder="e.g. 3000000" value={medianValuation || ""} onChange={(e) => onMedianChange(parseFloat(e.target.value) || 0)} className="max-w-xs text-lg" />
-          <span className="text-sm text-white/45">USD</span>
+          <span className="text-sm text-[var(--ink-3)]">USD</span>
         </div>
       </div>
 
       {factorKeys.map((key, i) => (
-        <motion.div key={key} className="rounded-3xl border border-white/[0.07] bg-card p-6"
+        <motion.div key={key} className="rounded-3xl border border-[var(--rule)] bg-card p-6"
           initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04, duration: 0.45 }}>
-          <h3 className="font-origin-display text-xl font-medium text-white">{i + 1}. {t(`scorecard.${key}`)}</h3>
-          <p className="mt-3 text-sm text-white/65 font-light">{t(`scorecard.${key}_q`)}</p>
+          <h3 className="font-origin-display text-xl font-medium text-[var(--ink-1)]">{i + 1}. {t(`scorecard.${key}`)}</h3>
+          <p className="mt-3 text-sm text-[var(--ink-2)] font-light">{t(`scorecard.${key}_q`)}</p>
           <div className="mt-4 grid gap-2 sm:grid-cols-5">
             {scoreValues.map((val, si) => {
               const active = scores[i] === val;
               return (
                 <button key={val} type="button" onClick={() => updateScore(i, val)}
                   className={`flex flex-col items-center gap-1.5 rounded-2xl border p-3 transition-all ${
-                    active ? "border-[#847dff]/60 bg-[#847dff]/10" : "border-white/[0.07] hover:border-white/20"
+                    active ? "border-[color-mix(in_srgb,var(--accent-ink)_60%,transparent)] bg-[color-mix(in_srgb,var(--accent-ink)_10%,transparent)]" : "border-[var(--rule)] hover:border-[var(--rule)]"
                   }`}>
-                  <span className={`flex h-5 w-5 items-center justify-center rounded-full border ${active ? "border-[#847dff] bg-[#847dff]" : "border-white/25"}`}>
-                    {active && <Check className="h-3 w-3 text-white" />}
+                  <span className={`flex h-5 w-5 items-center justify-center rounded-full border ${active ? "border-[var(--accent-ink)] bg-[var(--accent-ink)]" : "border-[var(--rule)]"}`}>
+                    {active && <Check className="h-3 w-3 text-[var(--ink-1)]" />}
                   </span>
                   <span className="text-center text-xs font-medium" style={{ color: scoreColors[si] }}>{t(`scorecard.${scoreKeys[si]}`)}</span>
                 </button>

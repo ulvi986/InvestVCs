@@ -8,7 +8,7 @@ interface SeedEvaluationSummaryProps {
   chicagoMethod: number;
 }
 
-const colors = ["hsl(244, 100%, 76%)", "hsl(191, 100%, 44%)", "hsl(244, 100%, 76%)"];
+const colors = ["hsl(228, 63%, 44%)", "hsl(160, 63%, 30%)", "hsl(228, 63%, 44%)"];
 
 const SeedEvaluationSummary = ({ vcMethod, chicagoMethod }: SeedEvaluationSummaryProps) => {
   const { t } = useLanguage();

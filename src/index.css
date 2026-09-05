@@ -1,79 +1,157 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* ═══════════════════════════════════════════════════════════════
-   Origin Financial — "Dark Canvas, Subtle Glow"
-   Elegant, premium, restrained. Deep ink canvas, light serif display,
-   soft pastel themed cards, ghost / white-filled buttons.
-   ═══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════
+   InvestVCS design system — "Signal"
+
+   One token source. Every page reads from it.
+
+   Drawn from how agent and workflow products actually present themselves
+   (LangGraph, Inngest, Braintrust): a near-neutral ground, one saturated
+   signal colour used sparingly, monospace for labels, and type contrast
+   rather than decoration doing the work. Inverted to a light ground.
+
+   Depth comes from rules and whitespace. No cards by default, no shadows
+   by default, no gradients.
+
+   Contrast, verified against the page ground #FBFBF9:
+     ink 17.79:1   ink-2 6.49:1   ink-3 4.74:1   accent 6.77:1
+     positive 6.42:1   caution 5.72:1   negative 6.72:1
+     white on accent 7.01:1
+   ═══════════════════════════════════════════════════════════════════════ */
 
 @layer base {
   :root {
-    /* Light fallback (app defaults to dark) */
-    --background: 40 30% 98%;
-    --foreground: 220 15% 12%;
-    --card: 0 0% 100%;
-    --card-foreground: 220 15% 12%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 15% 12%;
-    --primary: 243 70% 64%;
+    /* ── Tier 1: primitives ─────────────────────────────────────────── */
+    --paper:        60 20% 98%;    /* #FBFBF9  page ground, warm near-white */
+    --paper-raised:  0 0%  100%;   /* #FFFFFF  lifted surface               */
+    --paper-sunk:   48 14% 96%;    /* #F7F6F2  recessed band                */
+    --ink:          60  3%  8%;    /* #141413  near-black                   */
+    --ink-mid:      60  3% 35%;    /* #5C5C57                               */
+    --ink-soft:     60  4% 43%;    /* #71716A  lowest passing muted         */
+    --line:         40 14% 89%;    /* #E7E5DF  hairline                     */
+    --line-firm:    40 13% 82%;    /* #D6D3CA                               */
+    --blue:        249 74% 55%;    /* #4F39E0  the one signal colour        */
+    --green:       160 64% 25%;    /* #17694A                               */
+    --amber:        39 100% 27%;   /* #8A5A00                               */
+    --red:           4 67% 40%;    /* #A82A21                               */
+
+    /* ── Tier 2: semantic, shadcn contract ──────────────────────────── */
+    --background: var(--paper);
+    --foreground: var(--ink);
+    --card: var(--paper-raised);
+    --card-foreground: var(--ink);
+    --popover: var(--paper-raised);
+    --popover-foreground: var(--ink);
+    --primary: var(--blue);
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 20% 96%;
-    --secondary-foreground: 220 15% 12%;
-    --muted: 240 20% 95%;
-    --muted-foreground: 220 8% 46%;
-    --accent: 243 70% 64%;
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 72% 51%;
+    --secondary: var(--paper-sunk);
+    --secondary-foreground: var(--ink);
+    --muted: var(--paper-sunk);
+    --muted-foreground: var(--ink-soft);
+    --accent: var(--paper-sunk);
+    --accent-foreground: var(--ink);
+    --destructive: var(--red);
     --destructive-foreground: 0 0% 100%;
-    --border: 240 15% 90%;
-    --input: 240 15% 90%;
-    --ring: 243 70% 64%;
+    --border: var(--line);
+    --input: var(--line-firm);
+    --ring: var(--blue);
 
-    --radius: 0.875rem;
+    /* Enterprise geometry: near-square. Roundness reads as consumer. */
+    --radius: 0.375rem;
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 243 70% 64%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 243 70% 64%;
+    --sidebar-background: var(--paper);
+    --sidebar-foreground: var(--ink-mid);
+    --sidebar-primary: var(--blue);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--paper-sunk);
+    --sidebar-accent-foreground: var(--ink);
+    --sidebar-border: var(--line);
+    --sidebar-ring: var(--blue);
+
+    /* ── Tier 2b: the workspace surface ─────────────────────────────────
+       Direct colour values, because these are read by inline SVG and by
+       component styles that cannot go through Tailwind's hsl() wrapper.
+       Formerly scoped to `.analyst`; now global so one theme covers the
+       whole product.                                                     */
+    --ink-1: hsl(var(--ink));
+    --ink-2: hsl(var(--ink-mid));
+    --ink-3: hsl(var(--ink-soft));
+    --rule: hsl(var(--line));
+    --rule-strong: hsl(var(--line-firm));
+    --band: hsl(var(--paper-sunk));
+    --surface: hsl(var(--paper-raised));
+    --page: hsl(var(--paper));
+
+    --accent-ink: hsl(var(--blue));
+    --accent-wash: hsl(var(--blue) / 0.06);
+    --positive: hsl(var(--green));
+    --caution: hsl(var(--amber));
+    --negative: hsl(var(--red));
+
+    /* Agent graph. Status is always paired with an icon and a label in the
+       markup, so colour is reinforcement and never the sole signal.       */
+    --graph-node: hsl(0 0% 100%);
+    --graph-node-selected: hsl(var(--blue) / 0.045);
+    --graph-border: hsl(var(--line-firm));
+    --graph-border-dim: hsl(var(--line));
+    --graph-edge: hsl(60 8% 84%);
+    --graph-edge-done: hsl(var(--green) / 0.45);
+    --graph-text: hsl(var(--ink));
+    --graph-text-dim: hsl(var(--ink-soft));
+    --graph-idle: hsl(60 8% 78%);
+    --graph-queued: hsl(220 7% 62%);
+    --graph-running: hsl(var(--blue));
+    --graph-done: hsl(var(--green));
+    --graph-failed: hsl(var(--red));
+    --graph-approval: hsl(var(--amber));
+
+    /* ── Tier 2c: motion vocabulary ─────────────────────────────────── */
+    --dur-fast: 120ms;
+    --dur-base: 200ms;
+    --dur-moderate: 320ms;
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+
+    /* Elevation, used sparingly. Most surfaces are flat with a hairline. */
+    --shadow-sm: 0 1px 2px hsl(var(--ink) / 0.04);
+    --shadow-md: 0 1px 2px hsl(var(--ink) / 0.04), 0 8px 24px -12px hsl(var(--ink) / 0.10);
+    --shadow-lg: 0 1px 2px hsl(var(--ink) / 0.05), 0 24px 48px -24px hsl(var(--ink) / 0.18);
   }
 
+  /* Dark variant. Neutral, not a glow theme. Kept so the toggle has
+     somewhere to go; the product ships light. */
   .dark {
-    --background: 216 12% 6%;          /* Midnight Ink */
-    --foreground: 0 0% 98%;            /* Ghost White */
-    --card: 220 9% 11%;               /* Elevated charcoal */
-    --card-foreground: 0 0% 98%;
-    --popover: 220 10% 9%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 244 100% 76%;          /* Violet Haze #847dff */
-    --primary-foreground: 245 40% 10%;
-    --secondary: 220 8% 15%;
-    --secondary-foreground: 0 0% 92%;
-    --muted: 220 7% 15%;
-    --muted-foreground: 220 7% 62%;   /* Subtle Ash */
-    --accent: 191 100% 44%;           /* Ocean Glimmer #00b3dd */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62% 47%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 220 8% 17%;
-    --input: 220 8% 15%;
-    --ring: 244 100% 76%;
+    --paper:       220 14%  7%;
+    --paper-raised:220 12% 10%;
+    --paper-sunk:  220 12% 12%;
+    --ink:           0  0% 96%;
+    --ink-mid:     220  7% 68%;
+    --ink-soft:    220  7% 54%;
+    --line:        220  8% 18%;
+    --line-firm:   220  8% 26%;
+    --blue:        249 90% 76%;
+    --green:       160 55% 52%;
+    --amber:        36 78% 60%;
+    --red:           0 70% 66%;
 
-    --sidebar-background: 220 11% 8%;
-    --sidebar-foreground: 0 0% 80%;
-    --sidebar-primary: 244 100% 76%;
-    --sidebar-primary-foreground: 245 40% 10%;
-    --sidebar-accent: 220 8% 14%;
-    --sidebar-accent-foreground: 0 0% 92%;
-    --sidebar-border: 220 8% 16%;
-    --sidebar-ring: 244 100% 76%;
+    --primary-foreground: 220 14% 7%;
+    --destructive-foreground: 220 14% 7%;
+
+    --accent-wash: hsl(var(--blue) / 0.12);
+    --graph-node: hsl(220 12% 11%);
+    --graph-node-selected: hsl(var(--blue) / 0.12);
+    --graph-edge: hsl(220 8% 24%);
+    --graph-edge-done: hsl(var(--green) / 0.40);
+    --graph-idle: hsl(220 8% 28%);
+    --graph-queued: hsl(220 7% 44%);
+
+    --shadow-sm: 0 1px 2px hsl(0 0% 0% / 0.4);
+    --shadow-md: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -12px hsl(0 0% 0% / 0.6);
+    --shadow-lg: 0 1px 2px hsl(0 0% 0% / 0.5), 0 24px 48px -24px hsl(0 0% 0% / 0.7);
   }
 }
 
@@ -93,125 +171,384 @@
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    @apply font-display;
+    letter-spacing: -0.021em;
+    font-weight: 550;
+  }
+
+  /* Figures line up in columns wherever they appear. */
+  table, .tabular, [data-numeric] {
+    font-variant-numeric: tabular-nums;
   }
 
   ::selection {
-    background: hsl(244 100% 76% / 0.3);
-    color: #fff;
+    background: hsl(var(--blue) / 0.16);
   }
 
-  /* Slim, quiet scrollbar */
-  .dark ::-webkit-scrollbar { width: 10px; height: 10px; }
-  .dark ::-webkit-scrollbar-track { background: transparent; }
-  .dark ::-webkit-scrollbar-thumb {
-    background: hsl(220 6% 24%);
+  :focus-visible {
+    outline: 2px solid hsl(var(--blue));
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--line-firm));
     border-radius: 9999px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
-  .dark ::-webkit-scrollbar-thumb:hover { background: hsl(244 50% 55%); background-clip: content-box; }
-  .dark * { scrollbar-color: hsl(220 6% 24%) transparent; scrollbar-width: thin; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--ink-soft)); background-clip: content-box; }
+  * { scrollbar-color: hsl(var(--line-firm)) transparent; scrollbar-width: thin; }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Surface primitives
+
+   Sections are separated by rules and space. Cards are the exception,
+   not the container of everything.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  .rule {
+    border-top: 1px solid var(--rule);
+  }
+
+  .section {
+    border-top: 1px solid var(--rule);
+    padding-top: 2.25rem;
+    padding-bottom: 2.25rem;
+  }
+
+  .section:first-child {
+    border-top: 0;
+    padding-top: 0;
+  }
+
+  .band {
+    background: var(--band);
+  }
+
+  /* Mono kicker for labels above a block. Real text only, never filler. */
+  .kicker {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  /* Body prose stays inside a readable measure. */
+  .measure {
+    max-width: 68ch;
+  }
+
+  /* Hairline-bounded surface. Flat by default. */
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+  }
+
+  .panel-raised {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Agent graph and workflow motion
+
+   Every animation below reports system state: a node is working, data is
+   moving along an edge, a run is waiting on a person. Nothing here is
+   decorative, and all of it stops under prefers-reduced-motion.
+   ═══════════════════════════════════════════════════════════════════════ */
 
 @layer utilities {
-  /* Elegant serif display (Lyondisplay substitute) */
-  .font-origin-display {
-    font-family: "Playfair Display", Georgia, "Times New Roman", serif;
-    letter-spacing: -0.015em;
+  .graph-surface {
+    background-color: var(--page);
+    background-image:
+      radial-gradient(circle at 1px 1px, hsl(var(--line-firm) / 0.9) 1px, transparent 0);
+    background-size: 22px 22px;
   }
 
-  /* Soft, slow accent gradient text */
-  .text-origin-gradient {
-    background: linear-gradient(100deg, #b8c6ff 0%, #847dff 45%, #d1c9ff 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: origin-pan 9s linear infinite;
-  }
-  .text-warm-gradient {
-    background: linear-gradient(100deg, #c2b6ff 0%, #dd90d8 55%, #f0c0b0 100%);
-    background-size: 200% auto;
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: origin-pan 10s linear infinite;
+  /* A node that is currently executing. */
+  .node-running {
+    animation: node-breathe 1.9s var(--ease-out) infinite;
+    transform-box: fill-box;
+    transform-origin: center;
   }
 
-  /* Subtle elevated glass surface */
-  .origin-glass {
-    background: rgba(255, 255, 255, 0.035);
-    border: 1px solid rgba(255, 255, 255, 0.07);
-    backdrop-filter: blur(16px);
+  @keyframes node-breathe {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
   }
 
-  /* Vivid themed decorative cards (Origin "Themed Content Card") */
-  .card-ocean    { background: linear-gradient(165deg, #0bbfe6, #008fb8); }
-  .card-violet   { background: linear-gradient(165deg, #8f88ff, #6a62e8); }
-  .card-rose     { background: linear-gradient(165deg, #e29fdd, #c878c2); }
-  .card-sky      { background: linear-gradient(165deg, #9cc0f4, #6f9ee0); }
-  .card-indigo   { background: linear-gradient(165deg, #5b59c4, #403e96); }
-  .card-lavender { background: linear-gradient(165deg, #ddd6ff, #c3b9ff); }
-
-  /* Soft tinted glass cards — pastel hint over charcoal (elegant, quiet) */
-  .tint-ocean    { background: linear-gradient(165deg, rgba(0,179,221,0.14), rgba(0,179,221,0.04)); border: 1px solid rgba(0,179,221,0.18); }
-  .tint-violet   { background: linear-gradient(165deg, rgba(132,125,255,0.16), rgba(132,125,255,0.04)); border: 1px solid rgba(132,125,255,0.20); }
-  .tint-rose     { background: linear-gradient(165deg, rgba(221,144,216,0.14), rgba(221,144,216,0.04)); border: 1px solid rgba(221,144,216,0.18); }
-  .tint-sky      { background: linear-gradient(165deg, rgba(144,184,240,0.14), rgba(144,184,240,0.04)); border: 1px solid rgba(144,184,240,0.18); }
-
-  /* Gentle, slow micro-motions only */
-  .animate-origin-float { animation: origin-float 9s ease-in-out infinite; }
-  .animate-origin-pulse { animation: origin-pulse 5s ease-in-out infinite; }
-
-  /* Quiet sheen on white CTAs (very subtle, slow) */
-  .origin-shimmer { position: relative; overflow: hidden; }
-  .origin-shimmer::after {
-    content: "";
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(110deg, transparent 35%, rgba(255,255,255,0.18) 50%, transparent 65%);
-    transform: translateX(-130%);
-    animation: origin-sheen 5s ease-in-out infinite;
+  /* An edge carrying data right now. */
+  .edge-active {
+    animation: edge-march 0.9s linear infinite;
   }
 
-  /* ── Legacy class names, remapped to elegant Origin equivalents ──
-     (kept so existing pages/components inherit the new look) */
-  .gradient-primary { background: linear-gradient(135deg, #7d75f0 0%, #5b53c8 100%); }
-  .gradient-hero { background: linear-gradient(180deg, hsl(216 12% 6%) 0%, hsl(214 18% 9%) 100%); }
-  .gradient-card { background: linear-gradient(160deg, hsl(220 9% 13%), hsl(220 10% 10%)); }
-  .shadow-card { box-shadow: 0 1px 2px rgba(0,0,0,0.3), 0 14px 32px -20px rgba(0,0,0,0.65); }
-  .shadow-elevated { box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 28px 56px -30px rgba(0,0,0,0.75); }
-  .text-gradient {
-    background: linear-gradient(100deg, #b8c6ff 0%, #847dff 50%, #d1c9ff 100%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    -webkit-text-fill-color: transparent;
+  @keyframes edge-march {
+    to { stroke-dashoffset: -12; }
   }
-}
 
-@keyframes origin-pan {
-  to { background-position: 200% center; }
-}
-@keyframes origin-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
-@keyframes origin-pulse {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.04); }
-}
-@keyframes origin-sheen {
-  0% { transform: translateX(-130%); }
-  55%, 100% { transform: translateX(130%); }
+  /* The particle travelling an active edge. One signature motion per view. */
+  .edge-particle {
+    animation: edge-travel 1.35s var(--ease-out) infinite;
+  }
+
+  @keyframes edge-travel {
+    0%   { offset-distance: 0%;   opacity: 0; }
+    12%  { opacity: 1; }
+    88%  { opacity: 1; }
+    100% { offset-distance: 100%; opacity: 0; }
+  }
+
+  /* A run paused on a human checkpoint. */
+  .node-awaiting {
+    animation: awaiting-pulse 2.4s var(--ease-out) infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @keyframes awaiting-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50%      { opacity: 0.9;  transform: scale(1.06); }
+  }
+
+  /* A node that just settled. Fires once, then holds. */
+  .node-settled {
+    animation: node-settle var(--dur-moderate) var(--ease-out) both;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @keyframes node-settle {
+    from { transform: scale(0.97); opacity: 0.6; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+
+  /* Entrance for streamed content: results land as the agents finish. */
+  .enter-up {
+    animation: enter-up var(--dur-moderate) var(--ease-out) both;
+  }
+
+  @keyframes enter-up {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Determinate progress rail. */
+  .bar {
+    height: 2px;
+    background: var(--rule);
+    overflow: hidden;
+  }
+
+  .bar > span {
+    display: block;
+    height: 100%;
+    background: var(--accent-ink);
+    transition: width var(--dur-moderate) var(--ease-out);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .text-origin-gradient,
-  .text-warm-gradient,
-  .animate-origin-float,
-  .animate-origin-pulse,
-  .origin-shimmer::after {
+  .node-running,
+  .edge-active,
+  .edge-particle,
+  .node-awaiting,
+  .node-settled,
+  .enter-up {
     animation: none !important;
   }
+
+  .edge-particle {
+    opacity: 1;
+    offset-distance: 50%;
+  }
+
+  .bar > span {
+    transition: none;
+  }
+
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Marketing surface
+
+   The landing page carries more expression than the workspace, but draws
+   from the same tokens. No glass, no gradient text, no gradient cards.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@layer utilities {
+  /* Blueprint grid backdrop, tuned for a light ground. */
+  .bg-grid-lines {
+    background-image:
+      linear-gradient(to right, hsl(var(--line) / 0.85) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--line) / 0.85) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+
+  .mask-fade-edges {
+    -webkit-mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, black 30%, transparent 78%);
+    mask-image: radial-gradient(ellipse 70% 65% at 50% 40%, black 30%, transparent 78%);
+  }
+
+  .eyebrow {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+
+  .animate-marquee {
+    animation: marquee 42s linear infinite;
+  }
+
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+    mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0); }
+    to   { transform: translateX(-50%); }
+  }
+
+  /* Scroll reveal. Transform and opacity only. */
+  .section-reveal {
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 640ms var(--ease-out), transform 640ms var(--ease-out);
+  }
+
+  .section-reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .clip-reveal {
+    opacity: 0;
+    transform: translateY(14px);
+    transition: opacity 560ms var(--ease-out), transform 560ms var(--ease-out);
+  }
+
+  .clip-reveal.revealed {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .perspective-container {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+  }
+
+  /* Pointer-tracked surface lift. Set --mx / --my from JS. */
+  .card-spotlight {
+    position: relative;
+    overflow: hidden;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    transition: border-color var(--dur-base) var(--ease-out),
+                box-shadow var(--dur-base) var(--ease-out);
+  }
+
+  .card-spotlight:hover {
+    border-color: var(--rule-strong);
+    box-shadow: var(--shadow-md);
+  }
+
+  /* ── Compatibility aliases ──────────────────────────────────────────
+     Names the existing landing and dashboard components already use.
+     Retuned to the light system rather than removed, so no page loses a
+     working surface during the migration.                               */
+
+  .origin-glass      { background: var(--surface); border: 1px solid var(--rule); }
+  .aurora-gradient   { background: none; }
+  .bg-noise::after   { content: none; }
+  .text-glow         { filter: none; }
+  .animated-border,
+  .animated-border-thick { position: relative; border: 1px solid var(--rule-strong); border-radius: inherit; }
+
+  .text-origin-gradient,
+  .text-warm-gradient,
+  .text-gradient     { color: var(--ink-1); }
+
+  .font-origin-display { font-family: "Inter", system-ui, sans-serif; letter-spacing: -0.024em; }
+
+  .card-ocean, .card-violet, .card-rose,
+  .card-sky, .card-indigo, .card-lavender,
+  .tint-ocean, .tint-violet, .tint-rose, .tint-sky {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+  }
+
+  .gradient-primary { background: hsl(var(--blue)); }
+  .gradient-hero    { background: var(--page); }
+  .gradient-card    { background: var(--surface); }
+  .shadow-card      { box-shadow: var(--shadow-sm); }
+  .shadow-elevated  { box-shadow: var(--shadow-md); }
+
+  .animate-origin-float,
+  .animate-origin-pulse,
+  .animate-float-particle,
+  .animate-blob-morph,
+  .animate-blob-morph-reverse,
+  .animate-blob-morph-slow { animation: none; }
+
+  .origin-shimmer::after { content: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee,
+  .section-reveal,
+  .clip-reveal {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   `.analyst` is no longer a separate theme. It stays as a no-op scope so
+   existing components keep compiling while they migrate to the globals.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.analyst {
+  font-feature-settings: "tnum" 1, "cv05" 1;
+  color: var(--ink-2);
+}
+
+.analyst h1,
+.analyst h2,
+.analyst h3,
+.analyst h4 {
+  color: var(--ink-1);
+}
+
+.analyst-rule    { border-top: 1px solid var(--rule); }
+.analyst-section { border-top: 1px solid var(--rule); padding-top: 2.25rem; padding-bottom: 2.25rem; }
+.analyst-section:first-child { border-top: 0; padding-top: 0; }
+.analyst-band    { background: var(--band); }
+.analyst-graph   { border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); padding: 1.75rem 0; }
+.analyst-node-pulse { animation: node-breathe 1.9s var(--ease-out) infinite; transform-box: fill-box; transform-origin: center; }
+.analyst-edge-flow  { animation: edge-march 0.9s linear infinite; }
+.analyst-bar        { height: 2px; background: var(--rule); overflow: hidden; }
+.analyst-bar > span { display: block; height: 100%; background: var(--accent-ink); transition: width var(--dur-moderate) var(--ease-out); }
+
+@media (prefers-reduced-motion: reduce) {
+  .analyst-node-pulse,
+  .analyst-edge-flow { animation: none !important; }
+  .analyst-bar > span { transition: none; }
 }

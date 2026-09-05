@@ -4,30 +4,21 @@ import { useLanguage } from "@/context/LanguageContext";
 import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { computeVCValuation, computeChicagoValuation } from "@/lib/valuationUtils";
+import { READINESS_MAX_LEVEL, computeReadinessLevel } from "@/lib/analyst/methodologies/readiness";
+import { computeFinancialHealthScore } from "@/lib/analyst/methodologies/financial";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { renderMarkdown } from "@/lib/markdown";
 import { Button } from "@/components/ui/button";
 import {
   TrendingUp, TrendingDown, Lightbulb, AlertTriangle, CheckCircle,
-  DollarSign, Users, Wallet, Target, Sparkles, Loader2,
+  DollarSign, Users, Wallet, Target, Sparkles, Loader2, ArrowRight,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
-const TRL_COUNT = 9, CRL_COUNT = 9, FRL_COUNT = 9;
-const TRL_CRITERIA = [[1, 2], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1]];
-const CRL_CRITERIA = [[1, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1]];
-const FRL_CRITERIA = [[1, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1], [2, 1]];
-
-function getFinalLevelFromAnswers(answers: Record<string, boolean>, prefix: string, levelCount: number, criteriaCounts: number[][]): number {
-  let finalLevel = 0;
-  for (let lvl = 1; lvl <= levelCount; lvl++) {
-    const [mCount] = criteriaCounts[lvl - 1] || [2, 1];
-    const allM = Array.from({ length: mCount }, (_, i) => answers[`${prefix}-${lvl}-M-${i}`] === true).every(Boolean);
-    if (allM) finalLevel = lvl;
-    else break;
-  }
-  return finalLevel;
-}
+// Readiness levels and the financial health score are computed by the shared
+// methodology modules, so this page and the autonomous analyst always agree.
+const TRL_COUNT = READINESS_MAX_LEVEL, CRL_COUNT = READINESS_MAX_LEVEL, FRL_COUNT = READINESS_MAX_LEVEL;
 
 type Tip = { icon: typeof Lightbulb; title: string; text: string; type: "info" | "success" | "warning" };
 
@@ -37,7 +28,7 @@ const numFmt = (v: number | null | undefined) => {
 };
 
 const scoreHue = (s: number) =>
-  s >= 70 ? "#00b3dd" : s >= 40 ? "#847dff" : s > 0 ? "#dd90d8" : "#3a3a42";
+  s >= 70 ? "var(--positive)" : s >= 40 ? "var(--accent-ink)" : s > 0 ? "var(--negative)" : "#3a3a42";
 
 /* Large hero score ring */
 const ScoreRing = ({ score, size = 200 }: { score: number; size?: number }) => {
@@ -51,8 +42,8 @@ const ScoreRing = ({ score, size = 200 }: { score: number; size?: number }) => {
       <svg width={size} height={size} className="-rotate-90">
         <defs>
           <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#847dff" />
-            <stop offset="100%" stopColor="#00b3dd" />
+            <stop offset="0%" stopColor="var(--accent-ink)" />
+            <stop offset="100%" stopColor="var(--positive)" />
           </linearGradient>
         </defs>
         <circle cx={center} cy={center} r={r} fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={stroke} />
@@ -65,8 +56,8 @@ const ScoreRing = ({ score, size = 200 }: { score: number; size?: number }) => {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="font-origin-display text-6xl font-light text-white leading-none">{Math.round(score)}</span>
-        <span className="mt-1 text-xs uppercase tracking-[0.2em] text-white/40">/ 100</span>
+        <span className="font-origin-display text-6xl font-light text-[var(--ink-1)] leading-none">{Math.round(score)}</span>
+        <span className="mt-1 text-xs uppercase tracking-[0.2em] text-[var(--ink-3)]">/ 100</span>
       </div>
     </div>
   );
@@ -81,8 +72,8 @@ const Meter = ({ name, score, i }: { name: string; score: number; i: number }) =
     viewport={{ once: true }}
     transition={{ delay: i * 0.06, duration: 0.5 }}
   >
-    <span className="w-32 shrink-0 text-sm text-white/60">{name}</span>
-    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-white/[0.05]">
+    <span className="w-32 shrink-0 text-sm text-[var(--ink-2)]">{name}</span>
+    <div className="relative h-2 flex-1 overflow-hidden rounded-full bg-[var(--band)]">
       <motion.div
         className="absolute inset-y-0 left-0 rounded-full"
         style={{ background: scoreHue(score) }}
@@ -92,12 +83,12 @@ const Meter = ({ name, score, i }: { name: string; score: number; i: number }) =
         transition={{ delay: 0.2 + i * 0.06, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
       />
     </div>
-    <span className="w-10 shrink-0 text-right font-origin-display text-lg text-white">{Math.round(score)}</span>
+    <span className="w-10 shrink-0 text-right font-origin-display text-lg text-[var(--ink-1)]">{Math.round(score)}</span>
   </motion.div>
 );
 
 const Eyebrow = ({ children }: { children: React.ReactNode }) => (
-  <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{children}</p>
+  <p className="text-[12px] uppercase tracking-[0.25em] text-[var(--ink-3)]">{children}</p>
 );
 
 const OverallSummary = () => {
@@ -107,9 +98,9 @@ const OverallSummary = () => {
   const { trlAnswers, crlAnswers, frlAnswers } = readiness;
   const { t } = useLanguage();
 
-  const trlLevel = useMemo(() => getFinalLevelFromAnswers(trlAnswers, "TRL", TRL_COUNT, TRL_CRITERIA), [trlAnswers]);
-  const crlLevel = useMemo(() => getFinalLevelFromAnswers(crlAnswers, "CRL", CRL_COUNT, CRL_CRITERIA), [crlAnswers]);
-  const frlLevel = useMemo(() => getFinalLevelFromAnswers(frlAnswers, "FRL", FRL_COUNT, FRL_CRITERIA), [frlAnswers]);
+  const trlLevel = useMemo(() => computeReadinessLevel(trlAnswers, "TRL"), [trlAnswers]);
+  const crlLevel = useMemo(() => computeReadinessLevel(crlAnswers, "CRL"), [crlAnswers]);
+  const frlLevel = useMemo(() => computeReadinessLevel(frlAnswers, "FRL"), [frlAnswers]);
 
   const latestSnapshot = snapshots.length > 0 ? snapshots[snapshots.length - 1] : null;
 
@@ -131,21 +122,7 @@ const OverallSummary = () => {
   const hasReadiness = trlLevel > 0 || crlLevel > 0 || frlLevel > 0;
   const hasAnyData = hasEvaluation || hasFinancial || hasReadiness;
 
-  const financialScore = useMemo(() => {
-    if (!latestSnapshot) return 0;
-    let s = 0;
-    if (latestSnapshot.revenue.total > latestSnapshot.expenses.total) s += 30;
-    else if (latestSnapshot.revenue.total > 0) s += 15;
-    if (latestSnapshot.cashFlow.runway > 12) s += 25;
-    else if (latestSnapshot.cashFlow.runway > 6) s += 15;
-    else if (latestSnapshot.cashFlow.runway > 0) s += 5;
-    if (latestSnapshot.customerMetrics.churnRate < 0.05) s += 20;
-    else if (latestSnapshot.customerMetrics.churnRate < 0.1) s += 10;
-    if (latestSnapshot.customerMetrics.grossMargin > 0.6) s += 25;
-    else if (latestSnapshot.customerMetrics.grossMargin > 0.3) s += 15;
-    else if (latestSnapshot.customerMetrics.grossMargin > 0) s += 5;
-    return Math.min(s, 100);
-  }, [latestSnapshot]);
+  const financialScore = useMemo(() => computeFinancialHealthScore(latestSnapshot), [latestSnapshot]);
 
   const riskScore = useMemo(() => (!hasEvaluation ? 0 : Math.min(Math.round((avgValuation / 2500000) * 100), 100)), [hasEvaluation, avgValuation]);
   const trlScore = Math.round((trlLevel / TRL_COUNT) * 100);
@@ -208,12 +185,12 @@ const OverallSummary = () => {
     return tips;
   }, [hasAnyData, hasEvaluation, hasFinancial, hasReadiness, avgValuation, latestSnapshot, trlLevel, crlLevel, frlLevel, globalScore, t]);
 
-  const tipAccent = { info: "#847dff", success: "#00b3dd", warning: "#dd90d8" };
+  const tipAccent = { info: "var(--accent-ink)", success: "var(--positive)", warning: "var(--negative)" };
 
   const readinessRows = [
-    { label: t("summary.technology_trl"), level: trlLevel, max: TRL_COUNT, labels: trlLabels, color: "#847dff" },
-    { label: t("summary.commercial_crl"), level: crlLevel, max: CRL_COUNT, labels: crlLabels, color: "#00b3dd" },
-    { label: t("summary.funding_frl"), level: frlLevel, max: FRL_COUNT, labels: frlLabels, color: "#dd90d8" },
+    { label: t("summary.technology_trl"), level: trlLevel, max: TRL_COUNT, labels: trlLabels, color: "var(--accent-ink)" },
+    { label: t("summary.commercial_crl"), level: crlLevel, max: CRL_COUNT, labels: crlLabels, color: "var(--positive)" },
+    { label: t("summary.funding_frl"), level: frlLevel, max: FRL_COUNT, labels: frlLabels, color: "var(--negative)" },
   ];
 
   // ── AI-generated investment-readiness analysis (grounded in the real metrics) ──
@@ -285,7 +262,7 @@ const OverallSummary = () => {
     <DashboardLayout title={t("summary.title")} subtitle={t("summary.subtitle")}>
       {/* ── Hero: global health ── */}
       <motion.section
-        className="relative overflow-hidden rounded-[28px] border border-white/[0.07] p-8 sm:p-12 mb-6"
+        className="relative overflow-hidden rounded-[28px] border border-[var(--rule)] p-8 sm:p-12 mb-6"
         style={{ background: "linear-gradient(140deg, hsl(220 9% 12%), hsl(220 11% 9%))" }}
         initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       >
@@ -295,14 +272,14 @@ const OverallSummary = () => {
           <ScoreRing score={globalScore} />
           <div className="text-center md:text-left">
             <Eyebrow>{t("summary.global_health")}</Eyebrow>
-            <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl leading-tight max-w-md">
+            <h2 className="mt-3 font-origin-display font-light text-[var(--ink-1)] text-3xl sm:text-4xl leading-tight max-w-md">
               {t("summary.maturity")}:{" "}
               <span className="italic text-origin-gradient">{getMaturityLabel(globalScore)}</span>
             </h2>
             <div className="mt-6 flex flex-wrap justify-center gap-2 md:justify-start">
-              {hasEvaluation && <span className="rounded-full tint-violet px-4 py-1.5 text-xs text-white/80">Valuation ✓</span>}
-              {hasFinancial && <span className="rounded-full tint-ocean px-4 py-1.5 text-xs text-white/80">Financials ✓</span>}
-              {hasReadiness && <span className="rounded-full tint-rose px-4 py-1.5 text-xs text-white/80">Readiness ✓</span>}
+              {hasEvaluation && <span className="rounded-full tint-violet px-4 py-1.5 text-xs text-[var(--ink-1)]">Valuation ✓</span>}
+              {hasFinancial && <span className="rounded-full tint-ocean px-4 py-1.5 text-xs text-[var(--ink-1)]">Financials ✓</span>}
+              {hasReadiness && <span className="rounded-full tint-rose px-4 py-1.5 text-xs text-[var(--ink-1)]">Readiness ✓</span>}
             </div>
           </div>
         </div>
@@ -318,15 +295,15 @@ const OverallSummary = () => {
           <motion.div key={c.label} className={`${c.cls} rounded-3xl p-7`}
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }}
             transition={{ delay: i * 0.1, duration: 0.6 }}>
-            <p className="text-[13px] font-medium text-white/75">{c.label}</p>
-            <p className="mt-3 font-origin-display text-3xl font-medium text-white">{c.value}</p>
-            <p className="mt-3 text-[13px] leading-relaxed text-white/65">{c.note}</p>
+            <p className="text-[13px] font-medium text-[var(--ink-1)]">{c.label}</p>
+            <p className="mt-3 font-origin-display text-3xl font-medium text-[var(--ink-1)]">{c.value}</p>
+            <p className="mt-3 text-[13px] leading-relaxed text-[var(--ink-2)]">{c.note}</p>
           </motion.div>
         ))}
       </div>
 
       {/* ── Module breakdown (meters) ── */}
-      <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+      <motion.section className="rounded-3xl border border-[var(--rule)] bg-card p-8 mb-6"
         initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
         <Eyebrow>{t("summary.module_comparison")}</Eyebrow>
         <div className="mt-7 space-y-5">
@@ -338,14 +315,14 @@ const OverallSummary = () => {
       {hasReadiness && (
         <div className="grid gap-5 sm:grid-cols-3 mb-6">
           {readinessRows.map((r, i) => (
-            <motion.div key={r.label} className="rounded-3xl border border-white/[0.07] bg-card p-6"
+            <motion.div key={r.label} className="rounded-3xl border border-[var(--rule)] bg-card p-6"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08, duration: 0.5 }}>
-              <p className="text-xs text-white/45">{r.label}</p>
-              <p className="mt-2 font-origin-display text-3xl font-light text-white">
-                {r.level} <span className="text-white/35 text-xl">/ {r.max}</span>
+              <p className="text-xs text-[var(--ink-3)]">{r.label}</p>
+              <p className="mt-2 font-origin-display text-3xl font-light text-[var(--ink-1)]">
+                {r.level} <span className="text-[var(--ink-3)] text-xl">/ {r.max}</span>
               </p>
-              <p className="mt-1 text-xs text-white/55">{r.level > 0 ? r.labels[r.level - 1] : t("summary.not_started")}</p>
-              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+              <p className="mt-1 text-xs text-[var(--ink-2)]">{r.level > 0 ? r.labels[r.level - 1] : t("summary.not_started")}</p>
+              <div className="mt-4 h-1.5 overflow-hidden rounded-full bg-[var(--band)]">
                 <motion.div className="h-full rounded-full" style={{ background: r.color }}
                   initial={{ width: 0 }} animate={{ width: `${(r.level / r.max) * 100}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }} />
               </div>
@@ -356,10 +333,10 @@ const OverallSummary = () => {
 
       {/* ── Financial report tiles ── */}
       {hasFinancial && latestSnapshot && (
-        <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+        <motion.section className="rounded-3xl border border-[var(--rule)] bg-card p-8 mb-6"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <Eyebrow>{t("summary.financial_report")}</Eyebrow>
-          <div className="mt-7 grid gap-px overflow-hidden rounded-2xl bg-white/[0.06] sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-7 grid gap-px overflow-hidden rounded-2xl bg-[var(--band)] sm:grid-cols-2 lg:grid-cols-4">
             {[
               { label: t("summary.total_revenue"), value: `$${numFmt(latestSnapshot.revenue.total)}`, icon: TrendingUp, up: true },
               { label: t("summary.total_expenses"), value: `$${numFmt(latestSnapshot.expenses.total)}`, icon: TrendingDown, up: false },
@@ -371,11 +348,11 @@ const OverallSummary = () => {
               { label: "CLTV", value: `$${numFmt(latestSnapshot.customerMetrics.cltv)}`, icon: Target, up: true },
             ].map((m) => (
               <div key={m.label} className="bg-card p-5">
-                <div className="flex items-center gap-2 text-white/45">
-                  <m.icon className="h-4 w-4" style={{ color: m.up ? "#00b3dd" : "#dd90d8" }} />
+                <div className="flex items-center gap-2 text-[var(--ink-3)]">
+                  <m.icon className="h-4 w-4" style={{ color: m.up ? "var(--positive)" : "var(--negative)" }} />
                   <span className="text-xs">{m.label}</span>
                 </div>
-                <p className="mt-2 font-origin-display text-xl text-white">{m.value}</p>
+                <p className="mt-2 font-origin-display text-xl text-[var(--ink-1)]">{m.value}</p>
               </div>
             ))}
           </div>
@@ -384,17 +361,17 @@ const OverallSummary = () => {
 
       {/* ── Valuation results ── */}
       {hasEvaluation && (
-        <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+        <motion.section className="rounded-3xl border border-[var(--rule)] bg-card p-8 mb-6"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <Eyebrow>{t("summary.valuation_results")}</Eyebrow>
           <div className="mt-7 grid gap-4 sm:grid-cols-3">
             {[
-              { method: t("eval_summary.berkus"), value: berkus, color: "#847dff" },
-              { method: t("eval_summary.scorecard"), value: scorecard, color: "#00b3dd" },
-              { method: t("eval_summary.risk_factor"), value: riskFactor, color: "#dd90d8" },
+              { method: t("eval_summary.berkus"), value: berkus, color: "var(--accent-ink)" },
+              { method: t("eval_summary.scorecard"), value: scorecard, color: "var(--positive)" },
+              { method: t("eval_summary.risk_factor"), value: riskFactor, color: "var(--negative)" },
             ].map((v) => (
-              <div key={v.method} className="rounded-2xl bg-white/[0.03] p-5 text-center">
-                <p className="text-xs text-white/45">{v.method}</p>
+              <div key={v.method} className="rounded-2xl bg-[var(--band)] p-5 text-center">
+                <p className="text-xs text-[var(--ink-3)]">{v.method}</p>
                 <p className="mt-2 font-origin-display text-2xl" style={{ color: v.color }}>${v.value.toLocaleString()}</p>
               </div>
             ))}
@@ -404,25 +381,25 @@ const OverallSummary = () => {
 
       {/* ── Seed valuation ── */}
       {hasSeedEvaluation && (
-        <motion.section className="rounded-3xl border border-white/[0.07] bg-card p-8 mb-6"
+        <motion.section className="rounded-3xl border border-[var(--rule)] bg-card p-8 mb-6"
           initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
           <Eyebrow>{t("summary.seed_valuation_results")}</Eyebrow>
           <div className="mt-7 grid gap-4 sm:grid-cols-3">
             {vcValuation > 0 && (
-              <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
-                <p className="text-xs text-white/45">{t("seed_summary.vc_method")}</p>
-                <p className="mt-2 font-origin-display text-2xl text-[#847dff]">${vcValuation.toLocaleString()}</p>
+              <div className="rounded-2xl bg-[var(--band)] p-5 text-center">
+                <p className="text-xs text-[var(--ink-3)]">{t("seed_summary.vc_method")}</p>
+                <p className="mt-2 font-origin-display text-2xl text-[var(--accent-ink)]">${vcValuation.toLocaleString()}</p>
               </div>
             )}
             {chicagoValuation > 0 && (
-              <div className="rounded-2xl bg-white/[0.03] p-5 text-center">
-                <p className="text-xs text-white/45">{t("seed_summary.chicago_method")}</p>
-                <p className="mt-2 font-origin-display text-2xl text-[#00b3dd]">${chicagoValuation.toLocaleString()}</p>
+              <div className="rounded-2xl bg-[var(--band)] p-5 text-center">
+                <p className="text-xs text-[var(--ink-3)]">{t("seed_summary.chicago_method")}</p>
+                <p className="mt-2 font-origin-display text-2xl text-[var(--positive)]">${chicagoValuation.toLocaleString()}</p>
               </div>
             )}
             <div className="rounded-2xl tint-ocean p-5 text-center">
-              <p className="text-xs text-white/70">{t("summary.avg_valuation")} (Seed)</p>
-              <p className="mt-2 font-origin-display text-2xl text-white">${seedAvg.toLocaleString()}</p>
+              <p className="text-xs text-[var(--ink-2)]">{t("summary.avg_valuation")} (Seed)</p>
+              <p className="mt-2 font-origin-display text-2xl text-[var(--ink-1)]">${seedAvg.toLocaleString()}</p>
             </div>
           </div>
         </motion.section>
@@ -430,19 +407,19 @@ const OverallSummary = () => {
 
       {/* ── Recommendations ── */}
       <section>
-        <h3 className="font-origin-display text-2xl font-light text-white mb-5">{t("summary.recommendations")}</h3>
+        <h3 className="font-origin-display text-2xl font-light text-[var(--ink-1)] mb-5">{t("summary.recommendations")}</h3>
         <div className="grid gap-4 md:grid-cols-2">
           {advice.map((tip, i) => (
             <motion.div key={i}
-              className="flex items-start gap-4 rounded-2xl border border-white/[0.07] bg-card p-5"
+              className="flex items-start gap-4 rounded-2xl border border-[var(--rule)] bg-card p-5"
               style={{ borderLeft: `2px solid ${tipAccent[tip.type]}` }}
               initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05, duration: 0.5 }}>
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl" style={{ background: `${tipAccent[tip.type]}1f` }}>
                 <tip.icon className="h-4 w-4" style={{ color: tipAccent[tip.type] }} />
               </div>
               <div>
-                <h4 className="text-sm font-medium text-white">{tip.title}</h4>
-                <p className="mt-1 text-sm leading-relaxed text-white/55 font-light">{tip.text}</p>
+                <h4 className="text-sm font-medium text-[var(--ink-1)]">{tip.title}</h4>
+                <p className="mt-1 text-sm leading-relaxed text-[var(--ink-2)] font-light">{tip.text}</p>
               </div>
             </motion.div>
           ))}
@@ -451,15 +428,21 @@ const OverallSummary = () => {
 
       {/* ── AI investment-readiness analysis ── */}
       <section className="mt-6">
-        <div className="rounded-3xl border border-white/[0.07] bg-card p-6 sm:p-8">
+        <div className="rounded-3xl border border-[var(--rule)] bg-card p-6 sm:p-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-start gap-3">
               <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={{ background: "rgba(132,125,255,0.14)" }}>
-                <Sparkles className="h-5 w-5 text-[#847dff]" />
+                <Sparkles className="h-5 w-5 text-[var(--accent-ink)]" />
               </div>
               <div>
-                <h3 className="font-origin-display text-xl font-light text-white">{t("summary.ai_title")}</h3>
-                <p className="mt-1 text-sm text-white/55 font-light">{t("summary.ai_desc")}</p>
+                <h3 className="font-origin-display text-xl font-light text-[var(--ink-1)]">{t("summary.ai_title")}</h3>
+                <p className="mt-1 text-sm text-[var(--ink-2)] font-light">{t("summary.ai_desc")}</p>
+                <Link
+                  to="/analyst"
+                  className="mt-2 inline-flex items-center gap-1.5 text-sm text-[var(--accent-ink)] transition-colors hover:text-[#a49dff]"
+                >
+                  {t("summary.ai_analyst_cta")} <ArrowRight className="h-3.5 w-3.5" />
+                </Link>
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
@@ -484,12 +467,12 @@ const OverallSummary = () => {
           </div>
 
           {!hasAnyData && (
-            <p className="mt-5 text-sm text-white/40">{t("summary.no_data_desc")}</p>
+            <p className="mt-5 text-sm text-[var(--ink-3)]">{t("summary.no_data_desc")}</p>
           )}
 
           {aiAnalysis && (
             <div
-              className="prose prose-sm prose-invert max-w-none mt-6 border-t border-white/[0.07] pt-6 text-white/85"
+              className="prose prose-sm prose-invert max-w-none mt-6 border-t border-[var(--rule)] pt-6 text-[var(--ink-1)]"
               dangerouslySetInnerHTML={{ __html: renderMarkdown(aiAnalysis) }}
             />
           )}

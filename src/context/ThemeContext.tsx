@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, ReactNode } from "react";
 
 type Theme = "light" | "dark";
 
@@ -7,19 +7,21 @@ interface ThemeContextType {
   toggleTheme: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType>({ theme: "dark", toggleTheme: () => {} });
+const ThemeContext = createContext<ThemeContextType>({ theme: "light", toggleTheme: () => {} });
 
 export const useTheme = () => useContext(ThemeContext);
 
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
-  // Origin Financial is a dark-only design system — light mode is disabled.
-  const theme: Theme = "dark";
+  // The workspace is a light enterprise surface. A neutral dark variant is
+  // defined in the token layer, but the product ships light and the toggle
+  // stays inert until there is a reason to expose it.
+  const theme: Theme = "light";
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("light");
-    root.classList.add("dark");
-    localStorage.setItem("theme", "dark");
+    root.classList.remove("dark");
+    root.classList.add("light");
+    localStorage.setItem("theme", "light");
   }, []);
 
   const toggleTheme = () => {};

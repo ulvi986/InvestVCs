@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
-import type { FinancialSnapshot } from "@/pages/PreparationPhase";
+import type { FinancialSnapshot } from "@/lib/financialTypes";
 
 const numFmt = (v: number) => {
   if (!isFinite(v) || isNaN(v)) return "—";
@@ -18,15 +18,15 @@ const numFmt = (v: number) => {
 const MetricCard = ({ icon: Icon, title, value, subtitle, tint }: {
   icon: React.ElementType; title: string; value: string; subtitle?: string; tint: string;
 }) => (
-  <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+  <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
     <div className="flex items-center gap-3 mb-4">
       <div className="flex h-10 w-10 items-center justify-center rounded-xl" style={{ background: `${tint}1f` }}>
         <Icon className="h-5 w-5" style={{ color: tint }} />
       </div>
-      <span className="text-xs uppercase tracking-wider text-white/45">{title}</span>
+      <span className="text-xs uppercase tracking-wider text-[var(--ink-3)]">{title}</span>
     </div>
-    <p className="font-origin-display text-3xl font-light text-white">{value}</p>
-    {subtitle && <p className="text-xs text-white/45 mt-1.5">{subtitle}</p>}
+    <p className="font-origin-display text-3xl font-light text-[var(--ink-1)]">{value}</p>
+    {subtitle && <p className="text-xs text-[var(--ink-3)] mt-1.5">{subtitle}</p>}
   </div>
 );
 
@@ -189,21 +189,21 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
 
       {/* Summary Cards - Cumulative */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard icon={TrendingUp} title={t("financial.cumulative_revenue")} value={numFmt(cumulative.totalRevenue)} subtitle={`${t("financial.latest")}: ${format(latest.date, "dd MMM yyyy")}`} tint="#847dff" />
-        <MetricCard icon={TrendingDown} title={t("financial.cumulative_expenses")} value={numFmt(cumulative.totalExpenses)} subtitle={`${t("financial.burn_rate_mo")}: ${numFmt(latest.cashFlow.monthlyBurnRate)}`} tint="#dd90d8" />
-        <MetricCard icon={Wallet} title={t("financial.ending_cash")} value={numFmt(latest.cashFlow.endingCash)} subtitle={safe(latest.cashFlow.runway) > 0 ? `${t("financial.runway")}: ${latest.cashFlow.runway.toFixed(1)} ${t("financial.months")}` : `${t("financial.runway")}: —`} tint="#00b3dd" />
+        <MetricCard icon={TrendingUp} title={t("financial.cumulative_revenue")} value={numFmt(cumulative.totalRevenue)} subtitle={`${t("financial.latest")}: ${format(latest.date, "dd MMM yyyy")}`} tint="var(--accent-ink)" />
+        <MetricCard icon={TrendingDown} title={t("financial.cumulative_expenses")} value={numFmt(cumulative.totalExpenses)} subtitle={`${t("financial.burn_rate_mo")}: ${numFmt(latest.cashFlow.monthlyBurnRate)}`} tint="var(--negative)" />
+        <MetricCard icon={Wallet} title={t("financial.ending_cash")} value={numFmt(latest.cashFlow.endingCash)} subtitle={safe(latest.cashFlow.runway) > 0 ? `${t("financial.runway")}: ${latest.cashFlow.runway.toFixed(1)} ${t("financial.months")}` : `${t("financial.runway")}: —`} tint="var(--positive)" />
         <MetricCard icon={Users} title={t("financial.active_users")} value={safe(latest.customerMetrics.activeUsers).toLocaleString()} subtitle={`${t("financial.churn_rate")}: ${safe(latest.customerMetrics.churnRate * 100).toFixed(1)}%`} tint="#90b8f0" />
       </div>
 
       {/* Revenue vs Expenses Chart */}
-      <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+      <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
         <h3 className="font-origin-display text-xl font-medium text-foreground mb-5">{t("financial.revenue_vs_expenses")}</h3>
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={chartData}>
             <defs>
               <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(244, 100%, 76%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(244, 100%, 76%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="hsl(228, 63%, 44%)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(228, 63%, 44%)" stopOpacity={0} />
               </linearGradient>
               <linearGradient id="expGrad" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="hsl(305, 60%, 70%)" stopOpacity={0.3} />
@@ -215,7 +215,7 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
             <YAxis tick={{ fontSize: 12 }} stroke="hsl(220, 10%, 46%)" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
             <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, undefined]} />
             <Legend />
-            <Area type="monotone" dataKey={t("financial.total_revenue")} stroke="hsl(244, 100%, 76%)" fill="url(#revGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey={t("financial.total_revenue")} stroke="hsl(228, 63%, 44%)" fill="url(#revGrad)" strokeWidth={2} />
             <Area type="monotone" dataKey={t("financial.total_expenses")} stroke="hsl(305, 60%, 70%)" fill="url(#expGrad)" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
@@ -223,7 +223,7 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Cash Flow Chart */}
-        <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+        <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
           <h3 className="font-origin-display text-xl font-medium text-foreground mb-5">{t("financial.cash_flow_chart")}</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={cashFlowData}>
@@ -232,14 +232,14 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" tickFormatter={(v) => `$${(v / 1000).toFixed(0)}K`} />
               <Tooltip formatter={(value: number) => [`$${value.toLocaleString()}`, undefined]} />
               <Legend />
-              <Bar dataKey={t("financial.starting_cash")} fill="hsl(244, 100%, 76%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey={t("financial.ending_cash")} fill="hsl(191, 100%, 44%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey={t("financial.starting_cash")} fill="hsl(228, 63%, 44%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey={t("financial.ending_cash")} fill="hsl(160, 63%, 30%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
 
         {/* Customer Chart */}
-        <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+        <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
           <h3 className="font-origin-display text-xl font-medium text-foreground mb-5">{t("financial.customer_metrics_chart")}</h3>
           <ResponsiveContainer width="100%" height={250}>
             <BarChart data={customerData}>
@@ -248,8 +248,8 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
               <YAxis tick={{ fontSize: 11 }} stroke="hsl(220, 10%, 46%)" />
               <Tooltip />
               <Legend />
-              <Bar dataKey={t("financial.active_users")} fill="hsl(244, 100%, 76%)" radius={[4, 4, 0, 0]} />
-              <Bar dataKey={t("financial.new_customers")} fill="hsl(191, 100%, 44%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey={t("financial.active_users")} fill="hsl(228, 63%, 44%)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey={t("financial.new_customers")} fill="hsl(160, 63%, 30%)" radius={[4, 4, 0, 0]} />
               <Bar dataKey={t("financial.lost_customers")} fill="hsl(305, 60%, 70%)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -257,14 +257,14 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
       </div>
 
       {/* ARPU / CAC / CLTV Chart */}
-      <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+      <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
         <h3 className="font-origin-display text-xl font-medium text-foreground mb-5">{t("financial.key_economics")}</h3>
         <ResponsiveContainer width="100%" height={280}>
           <AreaChart data={metricsData}>
             <defs>
               <linearGradient id="cltvGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(191, 100%, 44%)" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="hsl(191, 100%, 44%)" stopOpacity={0} />
+                <stop offset="5%" stopColor="hsl(160, 63%, 30%)" stopOpacity={0.3} />
+                <stop offset="95%" stopColor="hsl(160, 63%, 30%)" stopOpacity={0} />
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(220, 8%, 18%)" />
@@ -272,15 +272,15 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
             <YAxis tick={{ fontSize: 12 }} stroke="hsl(220, 10%, 46%)" tickFormatter={(v) => `$${v}`} />
             <Tooltip formatter={(value: number) => [`$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, undefined]} />
             <Legend />
-            <Area type="monotone" dataKey="CLTV" stroke="hsl(191, 100%, 44%)" fill="url(#cltvGrad)" strokeWidth={2} />
-            <Area type="monotone" dataKey="ARPU" stroke="hsl(244, 100%, 76%)" fill="none" strokeWidth={2} />
+            <Area type="monotone" dataKey="CLTV" stroke="hsl(160, 63%, 30%)" fill="url(#cltvGrad)" strokeWidth={2} />
+            <Area type="monotone" dataKey="ARPU" stroke="hsl(228, 63%, 44%)" fill="none" strokeWidth={2} />
             <Area type="monotone" dataKey="CAC" stroke="hsl(305, 60%, 70%)" fill="none" strokeWidth={2} />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
       {/* Saved Entries Table */}
-      <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+      <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
         <h3 className="font-origin-display text-xl font-medium text-foreground mb-5">{t("financial.saved_entries")}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -297,7 +297,7 @@ const FinancialDashboard = ({ snapshots, onRemove }: FinancialDashboardProps) =>
             </thead>
             <tbody>
               {snapshots.map((s) => (
-                <tr key={s.id} className="border-b border-border/50 hover:bg-white/[0.03] transition-colors">
+                <tr key={s.id} className="border-b border-border/50 hover:bg-[var(--band)] transition-colors">
                   <td className="py-2.5 px-3 font-medium text-foreground">{format(s.date, "dd MMM yyyy")}</td>
                   <td className="py-2.5 px-3 text-right text-foreground">{numFmt(s.revenue.total)}</td>
                   <td className="py-2.5 px-3 text-right text-foreground">{numFmt(s.expenses.total)}</td>

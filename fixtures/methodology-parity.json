@@ -1,0 +1,115 @@
+{
+  "_comment": [
+    "Canonical methodology inputs and their expected outputs.",
+    "",
+    "The Python agent service (ai/) and the TypeScript manual calculators (src/)",
+    "each implement the same published formulas. Both test suites assert against",
+    "this file, so the two implementations cannot drift apart without a test",
+    "failing. Values here were derived by hand from the published methods, not",
+    "generated from either implementation."
+  ],
+
+  "berkus": [
+    { "case": "all components at 3", "scores": [3, 3, 3, 3, 3], "expected": 1250000 },
+    { "case": "all components maxed", "scores": [5, 5, 5, 5, 5], "expected": 2500000 },
+    { "case": "nothing evidenced", "scores": [0, 0, 0, 0, 0], "expected": 0 },
+    { "case": "ascending grid", "scores": [1, 2, 3, 4, 5], "expected": 1370000 },
+    { "case": "unanswered counts as zero", "scores": [3, null, null, null, null], "expected": 250000 }
+  ],
+
+  "scorecard": [
+    { "case": "exactly the median company", "scores": [100, 100, 100, 100, 100, 100, 100], "median": 3000000, "expected": 3000000 },
+    { "case": "strong team only", "scores": [150, 100, 100, 100, 100, 100, 100], "median": 3000000, "expected": 3450000 },
+    { "case": "weak across the board", "scores": [60, 60, 60, 60, 60, 60, 60], "median": 3000000, "expected": 1800000 },
+    { "case": "no comparables anchor", "scores": [100, 100, 100, 100, 100, 100, 100], "median": 0, "expected": 0 }
+  ],
+
+  "scorecardWeight": [
+    { "case": "median company", "scores": [100, 100, 100, 100, 100, 100, 100], "expected": 1.0 },
+    { "case": "all very strong", "scores": [150, 150, 150, 150, 150, 150, 150], "expected": 1.5 }
+  ],
+
+  "riskFactor": [
+    { "case": "neutral risk on the default base", "scores": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "base": 250000, "expected": 250000 },
+    { "case": "one category very low risk", "scores": [2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "base": 250000, "expected": 750000 },
+    { "case": "every category very high risk floors at zero", "scores": [-2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2, -2], "base": 250000, "expected": 0 },
+    { "case": "comparables-derived base", "scores": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "base": 2000000, "expected": 2000000 }
+  ],
+
+  "vcMethod": [
+    {
+      "case": "10M revenue, 5x exit, 30% IRR over 5 years, 1M invested",
+      "revenue": 10000000, "exitMultiple": 5, "exitYears": 5, "requiredIrr": 30, "investmentAmount": 1000000,
+      "expectedExitValue": 50000000, "expected": 12466454
+    },
+    {
+      "case": "no revenue basis",
+      "revenue": 0, "exitMultiple": 5, "exitYears": 5, "requiredIrr": 30, "investmentAmount": 0,
+      "expectedExitValue": 0, "expected": 0
+    },
+    {
+      "case": "investment exceeds post-money, floors at zero",
+      "revenue": 1000000, "exitMultiple": 2, "exitYears": 5, "requiredIrr": 40, "investmentAmount": 99000000,
+      "expectedExitValue": 2000000, "expected": 0
+    }
+  ],
+
+  "firstChicago": [
+    {
+      "case": "20/70/10 across 50/30/20 discount rates",
+      "revenue": 10000000, "exitMultiple": 5, "yearsToExit": 5,
+      "discountRates": { "worst": 50, "base": 30, "best": 20 },
+      "probabilities": { "worst": 20, "base": 70, "best": 10 },
+      "expected": 12752778
+    },
+    {
+      "case": "no revenue basis",
+      "revenue": 0, "exitMultiple": 5, "yearsToExit": 5,
+      "discountRates": { "worst": 50, "base": 30, "best": 20 },
+      "probabilities": { "worst": 20, "base": 70, "best": 10 },
+      "expected": 0
+    }
+  ],
+
+  "probabilityNormalisation": [
+    { "case": "sums above 100", "input": { "worst": 50, "base": 50, "best": 50 }, "expected": { "worst": 33, "base": 34, "best": 33 } },
+    { "case": "all zero falls back", "input": { "worst": 0, "base": 0, "best": 0 }, "expected": { "worst": 20, "base": 70, "best": 10 } }
+  ],
+
+  "readiness": [
+    { "case": "TRL complete through level 4", "prefix": "TRL", "completeThrough": 4, "expected": 4 },
+    { "case": "nothing answered", "prefix": "TRL", "completeThrough": 0, "expected": 0 },
+    { "case": "CRL complete through level 9", "prefix": "CRL", "completeThrough": 9, "expected": 9 },
+    { "case": "gap at level 3 stops progression", "prefix": "TRL", "completeThrough": 5, "removeMandatoryAtLevel": 3, "expected": 2 }
+  ],
+
+  "financialHealth": [
+    {
+      "case": "profitable, long runway, low churn, high margin",
+      "snapshot": {
+        "revenue": { "total": 100000 },
+        "expenses": { "total": 60000 },
+        "cashFlow": { "runway": 18 },
+        "customerMetrics": { "churnRate": 0.02, "grossMargin": 0.75 }
+      },
+      "expected": 100
+    },
+    { "case": "no snapshot", "snapshot": null, "expected": 0 },
+    { "case": "empty snapshot", "snapshot": {}, "expected": 0 },
+    {
+      "case": "profitable only",
+      "snapshot": { "revenue": { "total": 100000 }, "expenses": { "total": 60000 } },
+      "expected": 30
+    },
+    {
+      "case": "revenue but loss-making, short runway",
+      "snapshot": {
+        "revenue": { "total": 10000 },
+        "expenses": { "total": 60000 },
+        "cashFlow": { "runway": 4 },
+        "customerMetrics": { "churnRate": 0.15, "grossMargin": 0.2 }
+      },
+      "expected": 25
+    }
+  ]
+}

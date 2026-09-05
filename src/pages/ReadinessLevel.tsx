@@ -6,6 +6,10 @@ import { Progress } from "@/components/ui/progress";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useStartupContext } from "@/context/StartupContext";
 import { useLanguage } from "@/context/LanguageContext";
+import {
+  READINESS_CRITERIA, computeMaxUnlockedLevel, computeReadinessLevel,
+  type ReadinessAnswers, type ReadinessPrefix,
+} from "@/lib/analyst/methodologies/readiness";
 
 type CriterionType = "M" | "S";
 
@@ -20,74 +24,33 @@ interface Level {
   criteria: Criterion[];
 }
 
-function buildLevels(prefix: string, t: (k: string) => string): Level[] {
+// Criteria counts and the level-progression rules are shared with the
+// readiness agent and the overall summary — see
+// `src/lib/analyst/methodologies/readiness.ts`.
+function buildLevels(prefix: ReadinessPrefix, t: (k: string) => string): Level[] {
   const p = prefix.toLowerCase();
-  const configs: Record<string, { m: number; s: number }[]> = {
-    trl: [
-      { m: 1, s: 2 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 },
-      { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 },
-    ],
-    crl: [
-      { m: 1, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 },
-      { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 },
-    ],
-    frl: [
-      { m: 1, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 },
-      { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 }, { m: 2, s: 1 },
-    ],
-  };
-
-  const cfg = configs[p] || [];
-  return cfg.map((c, i) => {
+  return READINESS_CRITERIA[prefix].map(([mandatory, supportive], i) => {
     const lvl = i + 1;
     const criteria: Criterion[] = [];
-    for (let j = 0; j < c.m; j++) criteria.push({ type: "M", text: t(`${p}.${lvl}.m${j}`) });
-    for (let j = 0; j < c.s; j++) criteria.push({ type: "S", text: t(`${p}.${lvl}.s${j}`) });
+    for (let j = 0; j < mandatory; j++) criteria.push({ type: "M", text: t(`${p}.${lvl}.m${j}`) });
+    for (let j = 0; j < supportive; j++) criteria.push({ type: "S", text: t(`${p}.${lvl}.s${j}`) });
     return { level: lvl, title: t(`${p}.${lvl}.title`), criteria };
   });
 }
 
-type Answers = Record<string, boolean>;
-
-function isLevelCompleted(level: Level, answers: Answers, prefix: string): boolean {
-  const mandatory = level.criteria.filter(c => c.type === "M");
-  return mandatory.every((_, i) => answers[`${prefix}-${level.level}-M-${i}`] === true);
-}
-
-function allMandatoryMet(level: Level, answers: Answers, prefix: string): boolean {
-  const mandatory = level.criteria.filter(c => c.type === "M");
-  return mandatory.every((_, i) => answers[`${prefix}-${level.level}-M-${i}`] === true);
-}
-
-function getFinalLevel(levels: Level[], answers: Answers, prefix: string): number {
-  let finalLevel = 0;
-  for (const level of levels) {
-    if (isLevelCompleted(level, answers, prefix)) finalLevel = level.level;
-    else break;
-  }
-  return finalLevel;
-}
-
-function getMaxUnlockedLevel(levels: Level[], answers: Answers, prefix: string, finalLevel: number): number {
-  let maxUnlocked = finalLevel;
-  for (let i = finalLevel; i < levels.length; i++) {
-    maxUnlocked = i;
-    if (!allMandatoryMet(levels[i], answers, prefix)) break;
-  }
-  return Math.min(maxUnlocked, levels.length - 1);
-}
+type Answers = ReadinessAnswers;
 
 const ReadinessAssessment = ({
   levels, prefix, icon: Icon, color, answers, setAnswers,
 }: {
-  levels: Level[]; prefix: string; icon: React.ElementType; color: string;
+  levels: Level[]; prefix: ReadinessPrefix; icon: React.ElementType; color: string;
   answers: Answers; setAnswers: React.Dispatch<React.SetStateAction<Answers>>;
 }) => {
   const { t } = useLanguage();
   const toggle = (key: string) => setAnswers(prev => ({ ...prev, [key]: !prev[key] }));
 
-  const finalLevel = useMemo(() => getFinalLevel(levels, answers, prefix), [levels, answers, prefix]);
-  const maxUnlocked = useMemo(() => getMaxUnlockedLevel(levels, answers, prefix, finalLevel), [levels, answers, prefix, finalLevel]);
+  const finalLevel = useMemo(() => computeReadinessLevel(answers, prefix), [answers, prefix]);
+  const maxUnlocked = useMemo(() => computeMaxUnlockedLevel(answers, prefix, finalLevel), [answers, prefix, finalLevel]);
   const maxLevel = levels.length;
   const progressPercent = (finalLevel / maxLevel) * 100;
 

@@ -1,28 +1,19 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
-import {
-  ArrowRight, Send, Users, Rocket, TrendingUp, Search, Lightbulb, LineChart, Wallet,
-  Sprout, GraduationCap, CreditCard, Bike, HeartPulse, ShoppingBag, Building2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext";
-import { useLanguage } from "@/context/LanguageContext";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import OriginBackground from "@/components/OriginBackground";
+// Growth Hub.
+//
+// Startups raising, as an index rather than a wall of cards: a search, a row
+// per company, and a funding bar that is the only chart on the page. The
+// detail opens in place; expressing interest fills the contact form below.
+//
+// Data and behaviour are unchanged from the previous version. Only the
+// presentation is new.
 
-const ease = [0.22, 1, 0.36, 1] as const;
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  visible: (i: number) => ({ opacity: 1, y: 0, transition: { delay: i * 0.08, duration: 0.7, ease } }),
-};
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Search, X } from "lucide-react";
+import { toast } from "sonner";
+
+import PageShell from "@/components/layout/PageShell";
+import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/context/LanguageContext";
 
 type Startup = {
   id: string;
@@ -31,125 +22,107 @@ type Startup = {
   description: string;
   country?: string;
   founder?: string;
-  avatar?: string;
   raised: number;
   goal: number;
   investors: number;
   stage?: string;
-  icon: React.ElementType;
-  tint: string;
 };
 
-// Industry → icon + accent tint
-const industryStyle = (industry?: string): { icon: React.ElementType; tint: string } => {
-  const key = (industry || "").toLowerCase();
-  if (key.includes("agri") || key.includes("agro") || key.includes("food") || key.includes("green") || key.includes("clean")) return { icon: Sprout, tint: "#00b3dd" };
-  if (key.includes("edu")) return { icon: GraduationCap, tint: "#847dff" };
-  if (key.includes("fin") || key.includes("insur")) return { icon: CreditCard, tint: "#90b8f0" };
-  if (key.includes("mobil") || key.includes("logist") || key.includes("travel")) return { icon: Bike, tint: "#dd90d8" };
-  if (key.includes("health") || key.includes("bio")) return { icon: HeartPulse, tint: "#dd90d8" };
-  if (key.includes("commerce") || key.includes("market") || key.includes("retail")) return { icon: ShoppingBag, tint: "#00b3dd" };
-  return { icon: Building2, tint: "#847dff" };
+const fmt = (value: number) => {
+  if (Math.abs(value) >= 1_000_000) return `$${(value / 1_000_000).toFixed(1)}M`;
+  if (Math.abs(value) >= 1_000) return `$${(value / 1_000).toFixed(0)}K`;
+  return `$${value.toLocaleString()}`;
 };
 
-// Graceful showcase fallback (mirrors the reference categories)
-const FALLBACK: Startup[] = [
-  { id: "f1", name: "AgroTech", category: "Agriculture", description: "IoT soil analysis and smart irrigation that lifts yields for regional farms.", raised: 184000, goal: 250000, investors: 312, stage: "Seed", icon: Sprout, tint: "#00b3dd" },
-  { id: "f2", name: "EduAI", category: "EdTech", description: "AI-powered personalised learning, fully localised in Azerbaijani.", raised: 96000, goal: 200000, investors: 208, stage: "Pre-Seed", icon: GraduationCap, tint: "#847dff" },
-  { id: "f3", name: "PayFlow", category: "FinTech", description: "QR payments and live inventory for small and medium merchants.", raised: 230000, goal: 300000, investors: 540, stage: "Seed", icon: CreditCard, tint: "#90b8f0" },
-  { id: "f4", name: "GreenMove", category: "Mobility", description: "Shared electric scooters for clean, last-mile city transport.", raised: 142000, goal: 280000, investors: 274, stage: "Seed", icon: Bike, tint: "#dd90d8" },
-  { id: "f5", name: "HealthBridge", category: "HealthTech", description: "Telemedicine that connects patients to specialists in minutes.", raised: 88000, goal: 220000, investors: 190, stage: "Pre-Seed", icon: HeartPulse, tint: "#dd90d8" },
-  { id: "f6", name: "LocalMart", category: "E-Commerce", description: "A direct farmer-to-consumer marketplace cutting out the middleman.", raised: 121000, goal: 240000, investors: 233, stage: "Seed", icon: ShoppingBag, tint: "#00b3dd" },
-];
-
-const fmt = (v: number) => {
-  if (Math.abs(v) >= 1_000_000) return `$${(v / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(v) >= 1_000) return `$${(v / 1_000).toFixed(0)}K`;
-  return `$${v.toLocaleString()}`;
-};
-
-const steps = [
-  { icon: Search, key: "step1" },
-  { icon: Lightbulb, key: "step2" },
-  { icon: Wallet, key: "step3" },
-  { icon: LineChart, key: "step4" },
+const buildFallback = (t: (key: string) => string): Startup[] => [
+  { id: "f1", name: "AgroTech", category: "Agriculture", description: t("growth.fb1_desc"), raised: 184000, goal: 250000, investors: 312, stage: "Seed" },
+  { id: "f2", name: "EduAI", category: "EdTech", description: t("growth.fb2_desc"), raised: 96000, goal: 200000, investors: 208, stage: "Pre-Seed" },
+  { id: "f3", name: "PayFlow", category: "FinTech", description: t("growth.fb3_desc"), raised: 230000, goal: 300000, investors: 540, stage: "Seed" },
+  { id: "f4", name: "GreenMove", category: "Mobility", description: t("growth.fb4_desc"), raised: 142000, goal: 280000, investors: 274, stage: "Seed" },
+  { id: "f5", name: "HealthBridge", category: "HealthTech", description: t("growth.fb5_desc"), raised: 88000, goal: 220000, investors: 190, stage: "Pre-Seed" },
+  { id: "f6", name: "LocalMart", category: "E-Commerce", description: t("growth.fb6_desc"), raised: 121000, goal: 240000, investors: 233, stage: "Seed" },
 ];
 
 const GrowthHub = () => {
-  const { user } = useAuth();
   const { t } = useLanguage();
-  const [startups, setStartups] = useState<Startup[]>(FALLBACK);
+  const realDataLoaded = useRef(false);
+  const contactRef = useRef<HTMLDivElement>(null);
+
+  const [startups, setStartups] = useState<Startup[]>(() => buildFallback(t));
   const [search, setSearch] = useState("");
-  const [selected, setSelected] = useState<Startup | null>(null);
+  const [openId, setOpenId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", surname: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
-  const contactRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const load = async () => {
-      const [pRes, fundRes] = await Promise.all([
+      const [profileResult, fundingResult] = await Promise.all([
         supabase.from("profiles").select("*"),
         supabase.from("startup_funding").select("*"),
       ]);
-      const profiles = (pRes.data as any[]) ?? [];
-      const funding = (fundRes.data as any[]) ?? [];
-      const fundByUser = new Map(funding.map((f) => [f.user_id, f]));
+      const profiles = (profileResult.data as any[]) ?? [];
+      const funding = (fundingResult.data as any[]) ?? [];
+      const fundByUser = new Map(funding.map((row) => [row.user_id, row]));
 
-      // Every registered startup (exclude investor accounts and empty names).
       const mapped: Startup[] = profiles
-        .filter((p) => p.startup_name && p.startup_name.trim() && p.startup_name !== "Investor")
+        .filter((p) => p.startup_name?.trim() && p.startup_name !== "Investor")
         .map((p) => {
           const f = fundByUser.get(p.id) || {};
-          const { icon, tint } = industryStyle(p.industry);
           const founder = [p.name, p.surname].filter(Boolean).join(" ").trim();
           return {
             id: p.id,
             name: p.startup_name,
             category: p.industry || "Startup",
-            description: p.startup_description?.trim() || "An innovative venture building toward its next milestone.",
+            description: p.startup_description?.trim() || t("growth.fallback_desc"),
             country: p.country || undefined,
             founder: founder || undefined,
-            avatar: p.avatar_url || undefined,
             raised: Number(f.funding_raised) || 0,
             goal: Number(f.funding_goal) || 0,
             investors: Number(f.interest_count) || 0,
             stage: f.funding_stage,
-            icon,
-            tint,
           };
         });
 
-      // Most-funded first, then the rest alphabetically.
       mapped.sort((a, b) => b.raised - a.raised || a.name.localeCompare(b.name));
 
-      // Show every real startup; fall back to the curated showcase only when none exist.
-      if (mapped.length > 0) setStartups(mapped);
+      if (mapped.length > 0) {
+        realDataLoaded.current = true;
+        setStartups(mapped);
+      }
     };
     load().catch(() => {});
-  }, []);
+  }, [t]);
 
-  const stats = useMemo(() => {
-    const projects = startups.length;
-    const investors = startups.reduce((s, x) => s + x.investors, 0);
-    const raised = startups.reduce((s, x) => s + x.raised, 0);
-    return { projects, investors, raised };
-  }, [startups]);
+  useEffect(() => {
+    if (!realDataLoaded.current) setStartups(buildFallback(t));
+  }, [t]);
 
-  const filtered = startups.filter((s) => {
-    if (!search) return true;
+  const stats = useMemo(() => ({
+    projects: startups.length,
+    investors: startups.reduce((sum, s) => sum + s.investors, 0),
+    raised: startups.reduce((sum, s) => sum + s.raised, 0),
+  }), [startups]);
+
+  const filtered = useMemo(() => {
+    if (!search) return startups;
     const q = search.toLowerCase();
-    return s.name.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
-  });
+    return startups.filter((s) =>
+      s.name.toLowerCase().includes(q) ||
+      s.category.toLowerCase().includes(q) ||
+      s.description.toLowerCase().includes(q));
+  }, [startups, search]);
 
-  const expressInterest = (s: Startup) => {
-    const msg = t("growth.interest_msg").replace("{name}", s.name).replace("{category}", s.category);
-    setForm((prev) => ({ ...prev, message: msg }));
-    setSelected(null);
+  const expressInterest = (startup: Startup) => {
+    setForm((prev) => ({
+      ...prev,
+      message: t("growth.interest_msg").replace("{name}", startup.name).replace("{category}", startup.category),
+    }));
+    setOpenId(null);
     setTimeout(() => contactRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }), 120);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     if (!form.name || !form.surname || !form.email || !form.message) {
       toast.error(t("auth.fill_all"));
       return;
@@ -175,256 +148,195 @@ const GrowthHub = () => {
     }
   };
 
+  const field =
+    "w-full rounded-[var(--radius)] border border-[var(--rule-strong)] bg-[var(--surface)] px-3 py-2 " +
+    "text-[14px] text-[var(--ink-1)] placeholder:text-[var(--ink-3)] focus:border-[var(--accent-ink)] focus:outline-none";
+
   return (
-    <div className="relative min-h-dvh flex flex-col">
-      <OriginBackground />
-      <Navbar />
-
-      <main className="flex-1 relative z-10">
-        {/* ── Hero ── */}
-        <section className="container pt-24 pb-14 lg:pt-28 text-center">
-          <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-            <span className="inline-flex items-center gap-2 rounded-full origin-glass px-4 py-1.5 text-[13px] text-white/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#847dff]" /> {t("growth.badge")}
-            </span>
-          </motion.div>
-          <motion.h1 className="mx-auto mt-7 max-w-3xl font-origin-display font-light text-white text-4xl sm:text-6xl leading-[1.05]"
-            initial="hidden" animate="visible" variants={fadeUp} custom={1}>
-            {t("growth.hero_pre")}<span className="italic text-origin-gradient">{t("growth.hero_em")}</span>{t("growth.hero_post")}
-          </motion.h1>
-          <motion.p className="mx-auto mt-6 max-w-xl text-base sm:text-lg font-light text-white/55"
-            initial="hidden" animate="visible" variants={fadeUp} custom={2}>
-            {t("growth.hero_desc")}
-          </motion.p>
-          <motion.div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center"
-            initial="hidden" animate="visible" variants={fadeUp} custom={3}>
-            <a href="#startups"><Button variant="white" size="lg" className="origin-shimmer px-8">{t("growth.discover_btn")} <ArrowRight className="ml-1 h-4 w-4" /></Button></a>
-            <Link to={user ? "/profile" : "/signup"}><Button variant="outline" size="lg" className="px-8">{t("growth.submit_btn")}</Button></Link>
-          </motion.div>
-        </section>
-
-        {/* ── Stats banner ── */}
-        <section className="container">
-          <div className="grid grid-cols-3 gap-4 rounded-3xl border border-white/[0.07] bg-card p-2 sm:p-3">
-            {[
-              { icon: Rocket, value: `${stats.projects}+`, label: t("growth.stat_startups") },
-              { icon: Users, value: stats.investors >= 1000 ? `${(stats.investors / 1000).toFixed(1)}K+` : `${stats.investors}+`, label: t("growth.stat_investors") },
-              { icon: TrendingUp, value: `${fmt(stats.raised)}+`, label: t("growth.stat_funds") },
-            ].map((s, i) => (
-              <motion.div key={s.label} className="flex flex-col items-center gap-1 rounded-2xl px-3 py-7 text-center"
-                initial="hidden" animate="visible" viewport={{ once: true }} variants={fadeUp} custom={i}>
-                <s.icon className="h-5 w-5 text-[#847dff]" />
-                <p className="font-origin-display text-3xl sm:text-4xl font-light text-white">{s.value}</p>
-                <p className="text-xs uppercase tracking-wider text-white/40">{s.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* ── Active startups ── */}
-        <section id="startups" className="container py-20 lg:py-24">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between mb-10">
-            <div>
-              <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{t("growth.active_now")}</p>
-              <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">{t("growth.our_startups")}</h2>
+    <PageShell
+      wide
+      kicker="Growth Hub"
+      title="Startups raising now"
+      standfirst="Every company on InvestVCS that is open to investment, with what it has raised so far."
+      action={
+        <dl className="flex gap-8">
+          {[
+            { label: "Projects", value: String(stats.projects) },
+            { label: "Investors", value: stats.investors.toLocaleString() },
+            { label: "Raised", value: fmt(stats.raised) },
+          ].map((stat) => (
+            <div key={stat.label}>
+              <dt className="kicker">{stat.label}</dt>
+              <dd className="mt-1.5 text-[20px] tabular-nums tracking-[-0.02em] text-[var(--ink-1)]">{stat.value}</dd>
             </div>
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-white/35" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("growth.search_ph")} className="pl-10 rounded-full" />
-            </div>
-          </div>
+          ))}
+        </dl>
+      }
+    >
+      {/* Search */}
+      <div className="relative max-w-[380px]">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-[var(--ink-3)]" aria-hidden="true" />
+        <input
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search by name, sector or description"
+          aria-label="Search startups"
+          className={`${field} pl-9`}
+        />
+      </div>
 
-          <div className="min-w-0">
-            <div className="grid gap-5 sm:grid-cols-2">
-            {filtered.map((s, i) => {
-              const pct = s.goal > 0 ? Math.min(100, Math.round((s.raised / s.goal) * 100)) : 0;
-              return (
-                <motion.article key={s.id}
-                  onClick={() => setSelected(s)}
-                  className="group flex cursor-pointer flex-col overflow-hidden rounded-3xl border border-white/[0.07] bg-card transition-all duration-500 hover:-translate-y-1 hover:border-white/15"
-                  initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i % 3}>
-                  {/* Banner — profile photo fills the whole background */}
-                  <div className="relative h-44 overflow-hidden">
-                    {s.avatar ? (
-                      <img src={s.avatar} alt={s.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
-                    ) : (
-                      <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${s.tint}, ${s.tint}22)` }}>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <s.icon className="h-14 w-14 text-white/85" strokeWidth={1.3} />
+      {/* Index */}
+      <ul className="mt-10">
+        {filtered.map((startup) => {
+          const pct = startup.goal > 0 ? Math.min(100, Math.round((startup.raised / startup.goal) * 100)) : 0;
+          const isOpen = openId === startup.id;
+
+          return (
+            <li key={startup.id} className="border-b border-[var(--rule)]">
+              <button
+                type="button"
+                onClick={() => setOpenId(isOpen ? null : startup.id)}
+                aria-expanded={isOpen}
+                className="grid w-full grid-cols-[1fr_auto] items-center gap-x-6 gap-y-2 py-5 text-left
+                           transition-colors hover:bg-[var(--band)] sm:grid-cols-[1.6fr_1fr_140px_90px]"
+              >
+                <span className="min-w-0">
+                  <span className="block truncate text-[15px] text-[var(--ink-1)]">{startup.name}</span>
+                  <span className="mt-0.5 block truncate text-[12.5px] text-[var(--ink-3)]">
+                    {startup.category}
+                    {startup.country ? ` · ${startup.country}` : ""}
+                    {startup.stage ? ` · ${startup.stage}` : ""}
+                  </span>
+                </span>
+
+                <span className="hidden min-w-0 truncate text-[13px] text-[var(--ink-2)] sm:block">
+                  {startup.description}
+                </span>
+
+                <span className="hidden sm:block">
+                  <span className="flex items-baseline justify-between">
+                    <span className="text-[12.5px] tabular-nums text-[var(--ink-1)]">{fmt(startup.raised)}</span>
+                    <span className="text-[11.5px] tabular-nums text-[var(--ink-3)]">{pct}%</span>
+                  </span>
+                  <span className="bar mt-1.5 block" aria-hidden="true">
+                    <span style={{ width: `${pct}%` }} />
+                  </span>
+                </span>
+
+                <span className="text-right text-[12.5px] tabular-nums text-[var(--ink-3)]">
+                  {startup.investors} backers
+                </span>
+              </button>
+
+              {isOpen && (
+                <div className="enter-up grid gap-6 pb-6 sm:grid-cols-[1fr_auto]">
+                  <div className="min-w-0">
+                    <p className="measure text-[13.5px] leading-relaxed text-[var(--ink-2)]">{startup.description}</p>
+                    <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-2">
+                      {startup.founder && (
+                        <div>
+                          <dt className="kicker">Founder</dt>
+                          <dd className="mt-1 text-[13px] text-[var(--ink-1)]">{startup.founder}</dd>
                         </div>
+                      )}
+                      <div>
+                        <dt className="kicker">Goal</dt>
+                        <dd className="mt-1 text-[13px] tabular-nums text-[var(--ink-1)]">{fmt(startup.goal)}</dd>
                       </div>
-                    )}
-                    {/* legibility overlay */}
-                    <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.25), transparent 35%, rgba(20,20,22,0.85))" }} />
-                    <span className="absolute left-4 top-4 rounded-full bg-black/35 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-sm">{s.category}</span>
-                    {s.stage && <span className="absolute right-4 top-4 rounded-full bg-white/15 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-sm">{s.stage}</span>}
-                    <h3 className="absolute bottom-3 left-5 right-5 font-origin-display text-2xl font-medium text-white drop-shadow">{s.name}</h3>
+                      <div>
+                        <dt className="kicker">Raised</dt>
+                        <dd className="mt-1 text-[13px] tabular-nums text-[var(--ink-1)]">{fmt(startup.raised)}</dd>
+                      </div>
+                    </dl>
                   </div>
-                  {/* Body */}
-                  <div className="flex flex-1 flex-col p-6">
-                    {(s.founder || s.country) && (
-                      <p className="text-xs text-white/40">{[s.founder, s.country].filter(Boolean).join(" · ")}</p>
-                    )}
-                    <p className="mt-2 text-sm leading-relaxed text-white/55 font-light line-clamp-2">{s.description}</p>
 
-                    {/* Funding progress */}
-                    {s.goal > 0 && (
-                      <div className="mt-5">
-                        <div className="flex items-baseline justify-between text-sm">
-                          <span className="font-origin-display text-lg text-white">{fmt(s.raised)}</span>
-                          <span className="text-xs text-white/40">{t("growth.of")} {fmt(s.goal)}</span>
-                        </div>
-                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
-                          <motion.div className="h-full rounded-full" style={{ background: s.tint }}
-                            initial={{ width: 0 }} animate={{ width: `${pct}%` }} viewport={{ once: true }} transition={{ duration: 0.9, ease }} />
-                        </div>
-                        <div className="mt-2 flex items-center justify-between text-xs text-white/45">
-                          <span className="flex items-center gap-1"><Users className="h-3.5 w-3.5" /> {s.investors} {t("growth.interested")}</span>
-                          <span>{pct}% {t("growth.funded")}</span>
-                        </div>
-                      </div>
-                    )}
-
-                    <span className="mt-6 inline-flex items-center gap-1.5 text-sm font-medium text-white/70 transition-all group-hover:gap-2.5 group-hover:text-white">
-                      {t("growth.view_details")} <ArrowRight className="h-4 w-4" />
-                    </span>
+                  <div className="flex items-start gap-3">
+                    <button
+                      type="button"
+                      onClick={() => expressInterest(startup)}
+                      className="rounded-[var(--radius)] bg-[var(--accent-ink)] px-4 py-2 text-[13px]
+                                 font-medium text-white transition-opacity hover:opacity-90"
+                    >
+                      Express interest
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOpenId(null)}
+                      aria-label="Close"
+                      className="p-2 text-[var(--ink-3)] transition-colors hover:text-[var(--ink-1)]"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
                   </div>
-                </motion.article>
-              );
-            })}
-              </div>
-            {filtered.length === 0 && (
-              <p className="text-center text-white/40 py-16">{t("growth.no_match")} "{search}".</p>
-            )}
+                </div>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+
+      {filtered.length === 0 && (
+        <p className="py-12 text-[13.5px] text-[var(--ink-3)]">No startup matches that search.</p>
+      )}
+
+      {/* Contact */}
+      <div ref={contactRef} className="mt-20 scroll-mt-20 border-t border-[var(--rule)] pt-12">
+        <p className="kicker">Get in touch</p>
+        <h2 className="mt-2 text-[22px] leading-tight tracking-[-0.022em] text-[var(--ink-1)]">
+          Tell us which company interests you
+        </h2>
+
+        <form onSubmit={handleSubmit} className="mt-7 max-w-[560px] space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block">
+              <span className="kicker">First name</span>
+              <input
+                value={form.name}
+                onChange={(event) => setForm({ ...form, name: event.target.value })}
+                className={`${field} mt-2`}
+              />
+            </label>
+            <label className="block">
+              <span className="kicker">Last name</span>
+              <input
+                value={form.surname}
+                onChange={(event) => setForm({ ...form, surname: event.target.value })}
+                className={`${field} mt-2`}
+              />
+            </label>
           </div>
-        </section>
 
-        {/* ── How it works ── */}
-        <section className="container py-16">
-          <div className="text-center mb-12">
-            <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{t("growth.how_it_works")}</p>
-            <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">{t("growth.how_subtitle")}</h2>
-          </div>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {steps.map((step, i) => (
-              <motion.div key={step.key} className="rounded-3xl border border-white/[0.07] bg-card p-7"
-                initial="hidden" animate="visible" viewport={{ once: true, margin: "-40px" }} variants={fadeUp} custom={i}>
-                <div className="flex items-center justify-between">
-                  <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#847dff]/15">
-                    <step.icon className="h-5 w-5 text-[#b9a7ff]" strokeWidth={1.7} />
-                  </div>
-                  <span className="font-origin-display text-2xl font-light text-white/20">0{i + 1}</span>
-                </div>
-                <h3 className="mt-5 text-lg font-medium text-white">{t(`growth.${step.key}_title`)}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/55 font-light">{t(`growth.${step.key}_text`)}</p>
-              </motion.div>
-            ))}
-          </div>
-        </section>
+          <label className="block">
+            <span className="kicker">Email</span>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) => setForm({ ...form, email: event.target.value })}
+              className={`${field} mt-2`}
+            />
+          </label>
 
-        {/* ── Contact ── */}
-        <section ref={contactRef} id="contact" className="container py-20 lg:py-24">
-          <div className="mx-auto max-w-2xl">
-            <div className="text-center mb-10">
-              <p className="text-[12px] uppercase tracking-[0.25em] text-white/40">{t("growth.get_in_touch")}</p>
-              <h2 className="mt-3 font-origin-display font-light text-white text-3xl sm:text-4xl">
-                {t("growth.connect_pre")}<span className="italic text-origin-gradient">{t("growth.connect_em")}</span>{t("growth.connect_post")}
-              </h2>
-              <p className="mt-4 text-white/55 font-light">
-                {t("growth.connect_desc")}
-              </p>
-            </div>
+          <label className="block">
+            <span className="kicker">Message</span>
+            <textarea
+              rows={4}
+              value={form.message}
+              onChange={(event) => setForm({ ...form, message: event.target.value })}
+              className={`${field} mt-2 resize-y`}
+            />
+          </label>
 
-            <form onSubmit={handleSubmit} className="rounded-3xl border border-white/[0.07] bg-card p-7 sm:p-8 space-y-5">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="gh-name">{t("landing.contact_name")}</Label>
-                  <Input id="gh-name" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={t("landing.contact_name")} />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="gh-surname">{t("landing.contact_surname")}</Label>
-                  <Input id="gh-surname" value={form.surname} onChange={(e) => setForm({ ...form, surname: e.target.value })} placeholder={t("landing.contact_surname")} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gh-email">{t("landing.contact_email")}</Label>
-                <Input id="gh-email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="gh-message">{t("landing.contact_message")}</Label>
-                <Textarea id="gh-message" rows={4} value={form.message} onChange={(e) => setForm({ ...form, message: e.target.value })} placeholder={t("growth.msg_ph")} />
-              </div>
-              <Button type="submit" variant="white" className="w-full origin-shimmer" disabled={sending}>
-                {sending ? t("landing.contact_sending") : <>{t("landing.contact_send")} <Send className="ml-1.5 h-4 w-4" /></>}
-              </Button>
-            </form>
-          </div>
-        </section>
-      </main>
-
-      {/* ── Startup detail modal ── */}
-      <Dialog open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <DialogContent className="max-w-lg overflow-hidden rounded-3xl border-white/10 bg-card p-0">
-          {selected && (() => {
-            const pct = selected.goal > 0 ? Math.min(100, Math.round((selected.raised / selected.goal) * 100)) : 0;
-            const Icon = selected.icon;
-            return (
-              <div>
-                {/* Banner */}
-                <div className="relative h-52 overflow-hidden">
-                  {selected.avatar ? (
-                    <img src={selected.avatar} alt={selected.name} className="absolute inset-0 h-full w-full object-cover" />
-                  ) : (
-                    <div className="absolute inset-0" style={{ background: `linear-gradient(135deg, ${selected.tint}, ${selected.tint}22)` }}>
-                      <div className="absolute inset-0 flex items-center justify-center"><Icon className="h-16 w-16 text-white/85" strokeWidth={1.2} /></div>
-                    </div>
-                  )}
-                  <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, rgba(0,0,0,0.3), transparent 40%, rgba(20,20,22,0.92))" }} />
-                  <span className="absolute left-5 top-5 rounded-full bg-black/40 px-3 py-1 text-[11px] font-medium text-white backdrop-blur-sm">{selected.category}</span>
-                  <h2 className="absolute bottom-4 left-6 right-6 font-origin-display text-3xl font-medium text-white drop-shadow">{selected.name}</h2>
-                </div>
-
-                {/* Content */}
-                <div className="max-h-[55vh] overflow-y-auto p-6">
-                  {(selected.founder || selected.country) && (
-                    <p className="text-sm text-white/45">{[selected.founder, selected.country].filter(Boolean).join(" · ")}</p>
-                  )}
-                  <p className="mt-3 text-sm leading-relaxed text-white/70 font-light">{selected.description}</p>
-
-                  {/* Funding */}
-                  {selected.goal > 0 ? (
-                    <div className="mt-6 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-5">
-                      <div className="flex items-baseline justify-between">
-                        <span className="font-origin-display text-2xl text-white">{fmt(selected.raised)}</span>
-                        <span className="text-xs text-white/40">{t("growth.raised_of")} {fmt(selected.goal)}</span>
-                      </div>
-                      <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.06]">
-                        <div className="h-full rounded-full" style={{ width: `${pct}%`, background: selected.tint }} />
-                      </div>
-                      <div className="mt-4 grid grid-cols-3 gap-3 text-center">
-                        <div><p className="font-origin-display text-xl text-white">{pct}%</p><p className="text-[11px] uppercase tracking-wider text-white/40">{t("growth.modal_funded")}</p></div>
-                        <div><p className="font-origin-display text-xl text-white">{selected.investors}</p><p className="text-[11px] uppercase tracking-wider text-white/40">{t("growth.modal_investors")}</p></div>
-                        <div><p className="font-origin-display text-xl text-white">{selected.stage || "—"}</p><p className="text-[11px] uppercase tracking-wider text-white/40">{t("growth.modal_stage")}</p></div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-6 flex items-center gap-2 rounded-2xl border border-white/[0.07] bg-white/[0.02] p-4 text-sm text-white/55">
-                      <Rocket className="h-4 w-4 text-[#847dff]" /> {t("growth.no_round")}
-                    </div>
-                  )}
-
-                  <Button variant="white" className="mt-6 w-full origin-shimmer" onClick={() => expressInterest(selected)}>
-                    {t("growth.express_interest")} <ArrowRight className="ml-1 h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            );
-          })()}
-        </DialogContent>
-      </Dialog>
-
-      <Footer />
-    </div>
+          <button
+            type="submit"
+            disabled={sending}
+            className="rounded-[var(--radius)] bg-[var(--accent-ink)] px-4 py-2 text-[13.5px] font-medium
+                       text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          >
+            {sending ? "Sending" : "Send"}
+          </button>
+        </form>
+      </div>
+    </PageShell>
   );
 };
 

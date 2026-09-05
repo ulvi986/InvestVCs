@@ -11,7 +11,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "@/components/ui/sonner";
 import { Loader2 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import OriginBackground from "@/components/OriginBackground";
 import logoImg from "@/assets/logo.jpeg";
 
 const COUNTRIES = [
@@ -94,7 +93,6 @@ const SignUp = () => {
 
   return (
     <div className="relative flex min-h-dvh items-center justify-center px-4 py-12">
-      <OriginBackground />
       <Card className="w-full max-w-lg origin-glass">
         <CardHeader className="text-center space-y-2">
           <Link to="/" className="mx-auto flex items-center gap-2 font-display text-xl font-bold text-foreground">
@@ -161,7 +159,7 @@ const SignUp = () => {
             </div>
 
             {/* Ethical Agreement */}
-            <div className="rounded-lg border border-border bg-white/[0.03] p-4 space-y-3">
+            <div className="rounded-lg border border-border bg-[var(--band)] p-4 space-y-3">
               <h4 className="text-sm font-semibold text-foreground">{t("auth.ethical_title")}</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">{t("auth.ethical_text")}</p>
               <div className="flex items-center gap-2">

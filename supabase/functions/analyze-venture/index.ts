@@ -5,13 +5,39 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Build the Azure OpenAI (or OpenAI-compatible proxy) chat completions URL.
+// - Direct Azure:  AZURE_OPENAI_ENDPOINT = https://<resource>.openai.azure.com
+//   -> https://<resource>.openai.azure.com/openai/deployments/<deployment>/chat/completions?api-version=<version>
+// - Proxy:         AZURE_OPENAI_ENDPOINT = https://<proxy>/v1/chat/completions (used as-is)
+const buildChatUrl = (endpoint: string, deployment: string, apiVersion: string) => {
+  const base = endpoint.replace(/\/+$/, "");
+  if (base.includes("/chat/completions")) return base;
+  return `${base}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+};
+
+// Azure authenticates with the `api-key` header; OpenAI-compatible proxies use
+// `Authorization: Bearer`. If no key is set (proxy handles auth), no header is sent.
+const buildHeaders = (endpoint: string, apiKey: string) => {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (!apiKey) return headers;
+  if (endpoint.includes("openai.azure.com")) {
+    headers["api-key"] = apiKey;
+  } else {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+  }
+  return headers;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { type, data } = await req.json();
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+    const AI_ENDPOINT = Deno.env.get("AZURE_OPENAI_ENDPOINT");
+    if (!AI_ENDPOINT) throw new Error("AZURE_OPENAI_ENDPOINT is not configured");
+    const AI_DEPLOYMENT = Deno.env.get("AZURE_OPENAI_DEPLOYMENT") || "gpt-4o";
+    const AI_API_VERSION = Deno.env.get("AZURE_OPENAI_API_VERSION") || "2024-10-21";
+    const AI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY") || "";
 
     let systemPrompt = "";
     let userPrompt = "";
@@ -66,14 +92,11 @@ Be specific, reference the actual numbers, and respond in the same language the 
       });
     }
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch(buildChatUrl(AI_ENDPOINT, AI_DEPLOYMENT, AI_API_VERSION), {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: buildHeaders(AI_ENDPOINT, AI_API_KEY),
       body: JSON.stringify({
-        model: "gpt-4o",
+        model: AI_DEPLOYMENT,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
@@ -89,13 +112,13 @@ Be specific, reference the actual numbers, and respond in the same language the 
         });
       }
       if (response.status === 402 || response.status === 401) {
-        return new Response(JSON.stringify({ error: "OpenAI API key issue. Check your API key and billing." }), {
+        return new Response(JSON.stringify({ error: "AI API key issue. Check your API key and billing." }), {
           status: response.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
-      console.error("OpenAI API error:", response.status, t);
+      console.error("AI API error:", response.status, t);
       return new Response(JSON.stringify({ error: "AI analysis failed" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },

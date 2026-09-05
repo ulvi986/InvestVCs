@@ -25,3 +25,15 @@ dist-ssr
 
 # Supabase CLI local cache
 supabase/.temp
+
+# Secrets. Never commit these.
+# Order matters: the negation must come after the patterns it re-includes,
+# otherwise a later `.env*` swallows .env.example again.
+.env
+.env.*
+.env*
+!.env.example
+.vercel
+
+# TypeScript incremental build cache. Machine-local, regenerated on every build.
+*.tsbuildinfo

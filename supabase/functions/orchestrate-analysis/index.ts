@@ -1,4 +1,4 @@
-// Multi-agent investment-analysis orchestrator built with LangChain.
+// Multi-agent investment-analysis orchestrator.
 //
 // Instead of letting a single LLM answer alone, the work is split across
 // specialised agents that run in sequence and feed each other:
@@ -13,8 +13,6 @@
 // reasoning chain is transparent to the founder.
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { ChatOpenAI } from "npm:@langchain/openai@0.3.14";
-import { SystemMessage, HumanMessage } from "npm:@langchain/core@0.3.18/messages";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,28 +26,71 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+// Build the Azure OpenAI (or OpenAI-compatible proxy) chat completions URL.
+// - Direct Azure:  AZURE_OPENAI_ENDPOINT = https://<resource>.openai.azure.com
+//   -> https://<resource>.openai.azure.com/openai/deployments/<deployment>/chat/completions?api-version=<version>
+// - Proxy:         AZURE_OPENAI_ENDPOINT = https://<proxy>/v1/chat/completions (used as-is)
+const buildChatUrl = (endpoint: string, deployment: string, apiVersion: string) => {
+  const base = endpoint.replace(/\/+$/, "");
+  if (base.includes("/chat/completions")) return base;
+  return `${base}/openai/deployments/${deployment}/chat/completions?api-version=${apiVersion}`;
+};
+
+// Azure authenticates with the `api-key` header; OpenAI-compatible proxies use
+// `Authorization: Bearer`. If no key is set (proxy handles auth), no header is sent.
+const buildHeaders = (endpoint: string, apiKey: string) => {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (!apiKey) return headers;
+  if (endpoint.includes("openai.azure.com")) {
+    headers["api-key"] = apiKey;
+  } else {
+    headers["Authorization"] = `Bearer ${apiKey}`;
+  }
+  return headers;
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { data } = await req.json();
-    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
-    if (!OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is not configured");
+    const AI_ENDPOINT = Deno.env.get("AZURE_OPENAI_ENDPOINT");
+    if (!AI_ENDPOINT) throw new Error("AZURE_OPENAI_ENDPOINT is not configured");
+    const AI_DEPLOYMENT = Deno.env.get("AZURE_OPENAI_DEPLOYMENT") || "gpt-4o";
+    const AI_API_VERSION = Deno.env.get("AZURE_OPENAI_API_VERSION") || "2024-10-21";
+    const AI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY") || "";
     if (!data) return json({ error: "Missing 'data' (startup metrics)" }, 400);
 
+    const chatUrl = buildChatUrl(AI_ENDPOINT, AI_DEPLOYMENT, AI_API_VERSION);
+    const chatHeaders = buildHeaders(AI_ENDPOINT, AI_API_KEY);
     const dataStr = JSON.stringify(data, null, 2);
 
     // Slightly different temperatures per role: factual agents stay cold,
     // the analyst is allowed a little more room to synthesise.
-    const make = (temperature: number) =>
-      new ChatOpenAI({ apiKey: OPENAI_API_KEY, model: "gpt-4o", temperature });
-
     const ask = async (temperature: number, system: string, human: string): Promise<string> => {
-      const res = await make(temperature).invoke([
-        new SystemMessage(system),
-        new HumanMessage(human),
-      ]);
-      return typeof res.content === "string" ? res.content : JSON.stringify(res.content);
+      const res = await fetch(chatUrl, {
+        method: "POST",
+        headers: chatHeaders,
+        body: JSON.stringify({
+          model: AI_DEPLOYMENT,
+          temperature,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: human },
+          ],
+        }),
+      });
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("AI API error:", res.status, text);
+        throw new Error(`AI API request failed with status ${res.status}`);
+      }
+
+      const result = await res.json();
+      const content = result.choices?.[0]?.message?.content;
+      if (!content) throw new Error("Empty AI response");
+      return typeof content === "string" ? content : JSON.stringify(content);
     };
 
     // ── 1. Researcher ────────────────────────────────────────────────

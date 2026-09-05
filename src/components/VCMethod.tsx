@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Info } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { VCAnswers } from "@/context/StartupContext";
+import { computeVCBreakdown } from "@/lib/analyst/methodologies/vcMethod";
 
 interface VCMethodProps {
   answers: VCAnswers;
@@ -22,12 +23,13 @@ const VCMethod = ({ answers, onAnswersChange, onValuationChange }: VCMethodProps
 
   const update = (patch: Partial<VCAnswers>) => onAnswersChange({ ...answers, ...patch });
 
-  const netIncome = revenue * (netIncomeMargin / 100);
-  const exitValue = revenue * exitMultiple;
-  const presentValue = exitValue / Math.pow(1 + requiredIRR / 100, exitYears);
-  const postMoneyValuation = presentValue;
-  const preMoneyValuation = Math.max(0, postMoneyValuation - investmentAmount);
-  const investorOwnership = postMoneyValuation > 0 ? (investmentAmount / postMoneyValuation) * 100 : 0;
+  // Shared with the VC Method agent so both produce identical figures.
+  const {
+    exitValue,
+    postMoney: postMoneyValuation,
+    preMoney: preMoneyValuation,
+    netIncomeAtExit: netIncome,
+  } = computeVCBreakdown(answers);
 
   useEffect(() => {
     onValuationChange?.(Math.round(preMoneyValuation));

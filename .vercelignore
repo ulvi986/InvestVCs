@@ -1,0 +1,35 @@
+# Every directory pattern here is anchored with a leading slash.
+#
+# Without the anchor, ignore-file semantics match a name at ANY depth: a bare
+# `supabase` also matched `src/integrations/supabase/`, which silently dropped
+# the Supabase client from the upload and failed the build on Vercel with
+# "Could not load .../integrations/supabase/client". Anchoring keeps each rule
+# to the directory it means.
+
+# Secrets. The CLI uploads the working directory, so anything holding a
+# credential is excluded. The build reads its VITE_* values from the project's
+# Environment Variables; the 33 non-VITE keys in .env (Azure, Supabase service
+# role, Railway, GitHub) never leave this machine.
+/.env
+/.env.local
+/.env.development
+/.env.production
+
+# The analyst service is not deployed here. A run holds an SSE stream open for
+# about 380 seconds and keeps its state in process; a Vercel function is capped
+# at 300 seconds and has no sticky instance, so runs would be cut off and
+# approvals would land on the wrong worker. It is hosted separately as a
+# long-lived process (ai/Dockerfile, render.yaml).
+/ai
+
+# Database migrations and edge functions: deployed with Supabase, not Vercel.
+/supabase
+
+# Not needed to build or serve the frontend. Vercel runs the build itself, so a
+# local dist/ would only inflate the upload and risk shipping a stale bundle.
+/dist
+/docs
+/fixtures
+/.lovable
+/bun.lockb
+/bun.lock

@@ -264,15 +264,15 @@ const InvestorDashboard = () => {
                       <div>
                         <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.preseed_methods")}</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                          <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                             <p className="text-xs text-muted-foreground mb-1">{t("investor.berkus")}</p>
                             <p className="text-2xl font-bold text-primary">{numFmt(berkus)}</p>
                           </div>
-                          <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                          <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                             <p className="text-xs text-muted-foreground mb-1">{t("investor.scorecard")}</p>
                             <p className="text-2xl font-bold text-primary">{numFmt(scorecard)}</p>
                           </div>
-                          <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                          <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                             <p className="text-xs text-muted-foreground mb-1">{t("investor.risk_factor")}</p>
                             <p className="text-2xl font-bold text-primary">{numFmt(riskFactor)}</p>
                           </div>
@@ -290,13 +290,13 @@ const InvestorDashboard = () => {
                           <h4 className="text-sm font-semibold text-foreground mb-3">{t("investor.seed_methods")}</h4>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {vcVal > 0 && (
-                              <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                              <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                                 <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.vc_method")}</p>
                                 <p className="text-2xl font-bold text-primary">{numFmt(vcVal)}</p>
                               </div>
                             )}
                             {chicagoVal > 0 && (
-                              <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                              <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                                 <p className="text-xs text-muted-foreground mb-1">{t("seed_summary.chicago_method")}</p>
                                 <p className="text-2xl font-bold text-accent">{numFmt(chicagoVal)}</p>
                               </div>
@@ -319,56 +319,56 @@ const InvestorDashboard = () => {
                         </h4>
                         {latestFinancial ? (
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <TrendingUp className="h-3 w-3 text-accent" />
                                 <p className="text-xs text-muted-foreground">{t("investor.revenue")}</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.revenue?.total)}</p>
                             </div>
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <TrendingDown className="h-3 w-3 text-destructive" />
                                 <p className="text-xs text-muted-foreground">{t("investor.expenses")}</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.expenses?.total)}</p>
                             </div>
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <Wallet className="h-3 w-3 text-primary" />
                                 <p className="text-xs text-muted-foreground">{t("summary.ending_cash")}</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.cashFlow?.endingCash)}</p>
                             </div>
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <UsersIcon className="h-3 w-3 text-accent" />
                                 <p className="text-xs text-muted-foreground">{t("summary.active_users")}</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{latestFinancial.customerMetrics?.activeUsers ?? "—"}</p>
                             </div>
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <DollarSign className="h-3 w-3 text-accent" />
                                 <p className="text-xs text-muted-foreground">ARPU</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.customerMetrics?.arpu)}</p>
                             </div>
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <AlertTriangle className="h-3 w-3 text-destructive" />
                                 <p className="text-xs text-muted-foreground">{t("investor.burn_rate")}</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.cashFlow?.monthlyBurnRate)}</p>
                             </div>
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <Target className="h-3 w-3 text-primary" />
                                 <p className="text-xs text-muted-foreground">CLTV</p>
                               </div>
                               <p className="text-lg font-bold text-foreground">{numFmt(latestFinancial.customerMetrics?.cltv)}</p>
                             </div>
-                            <div className="rounded-lg border border-border p-4 bg-white/[0.03] text-center">
+                            <div className="rounded-lg border border-border p-4 bg-[var(--band)] text-center">
                               <div className="flex items-center justify-center gap-1 mb-1">
                                 <Wallet className="h-3 w-3 text-accent" />
                                 <p className="text-xs text-muted-foreground">{t("investor.runway")}</p>
@@ -401,7 +401,7 @@ const InvestorDashboard = () => {
                             <DollarSign className="h-4 w-4 text-primary" />
                             {t("funding.title")}
                           </h4>
-                          <div className="rounded-lg border border-border p-4 bg-white/[0.03] space-y-3">
+                          <div className="rounded-lg border border-border p-4 bg-[var(--band)] space-y-3">
                             <div className="flex justify-between text-sm">
                               <span className="text-muted-foreground">{t("funding.raised")}</span>
                               <span className="font-bold text-foreground">${userFunding.funding_raised.toLocaleString()} / ${userFunding.funding_goal.toLocaleString()}</span>
@@ -434,7 +434,7 @@ function ReadinessCard({ label, level, status }: { label: string; level: number;
   const pct = (level / 9) * 100;
   const color = level >= 7 ? "bg-green-500" : level >= 4 ? "bg-amber-500" : "bg-red-400";
   return (
-    <div className="rounded-lg border border-border p-4 bg-white/[0.03]">
+    <div className="rounded-lg border border-border p-4 bg-[var(--band)]">
       <p className="text-xs text-muted-foreground mb-1">{label}</p>
       <p className="text-2xl font-bold text-foreground">{level}/9</p>
       <div className="mt-2 h-2 rounded-full bg-muted overflow-hidden">

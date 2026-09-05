@@ -9,8 +9,10 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Index from "./pages/Index";
 import StartupEvaluation from "./pages/StartupEvaluation";
+import Assessment from "./pages/Assessment";
+import AssessmentResults from "./pages/AssessmentResults";
+import AnalysisReport from "./pages/AnalysisReport";
 import ProfilePage from "./pages/ProfilePage";
-import PreparationPhase from "./pages/PreparationPhase";
 import ReadinessLevel from "./pages/ReadinessLevel";
 import OverallSummary from "./pages/OverallSummary";
 import SignUp from "./pages/SignUp";
@@ -22,6 +24,8 @@ import AdminPanel from "./pages/AdminPanel";
 import InvestorDashboard from "./pages/InvestorDashboard";
 import StartupVacancies from "./pages/StartupVacancies";
 import VentureAnalysis from "./pages/VentureAnalysis";
+import Workflow from "./pages/Workflow";
+import Financials from "./pages/Financials";
 import ContactPage from "./pages/ContactPage";
 import GrowthHub from "./pages/GrowthHub";
 import Community from "./pages/Community";
@@ -74,15 +78,28 @@ const App = () => (
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/u/:id" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
+                <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
+                <Route path="/assessment/results" element={<ProtectedRoute><AssessmentResults /></ProtectedRoute>} />
                 <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
-                <Route path="/preparation" element={<ProtectedRoute><PreparationPhase /></ProtectedRoute>} />
+                <Route path="/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
+                <Route path="/preparation" element={<Navigate to="/financials" replace />} />
                 <Route path="/readiness" element={<ProtectedRoute><ReadinessLevel /></ProtectedRoute>} />
                 <Route path="/summary" element={<ProtectedRoute><OverallSummary /></ProtectedRoute>} />
+                <Route path="/reports" element={<ProtectedRoute><OverallSummary /></ProtectedRoute>} />
                 <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
                 <Route path="/investor" element={<ProtectedRoute><InvestorDashboard /></ProtectedRoute>} />
+                <Route path="/portfolio" element={<ProtectedRoute><InvestorDashboard /></ProtectedRoute>} />
                 <Route path="/vacancies" element={<ProtectedRoute><StartupVacancies /></ProtectedRoute>} />
                 <Route path="/funding-view" element={<ProtectedRoute><FundingViewPage /></ProtectedRoute>} />
                 <Route path="/venture-analysis" element={<ProtectedRoute><VentureAnalysis /></ProtectedRoute>} />
+                <Route path="/research" element={<ProtectedRoute><VentureAnalysis /></ProtectedRoute>} />
+                <Route path="/workflow" element={<ProtectedRoute><Workflow /></ProtectedRoute>} />
+                <Route path="/report" element={<ProtectedRoute><AnalysisReport /></ProtectedRoute>} />
+                <Route path="/report/:sessionId" element={<ProtectedRoute><AnalysisReport /></ProtectedRoute>} />
+                <Route path="/workspace" element={<Navigate to="/workflow" replace />} />
+                <Route path="/workflows" element={<Navigate to="/workflow" replace />} />
+                <Route path="/agents" element={<Navigate to="/workflow" replace />} />
+                <Route path="/analyst" element={<Navigate to="/workflow" replace />} />
                 <Route path="/pricing" element={<Pricing />} />
                 <Route path="/success" element={<Success />} />
                 <Route path="/cancel" element={<Cancel />} />

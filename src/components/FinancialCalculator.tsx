@@ -8,7 +8,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
-import type { FinancialSnapshot } from "@/pages/PreparationPhase";
+import type { FinancialSnapshot } from "@/lib/financialTypes";
 
 type OtherItem = { name: string; amount: string };
 
@@ -77,9 +77,9 @@ const ResultRow = ({ label, value, prefix = "$", suffix = "", bold = false, high
 );
 
 const SectionCard = ({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children: React.ReactNode }) => (
-  <div className="rounded-3xl border border-white/[0.07] bg-card p-6">
+  <div className="rounded-3xl border border-[var(--rule)] bg-card p-6">
     <div className="flex items-center gap-3 mb-5">
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#847dff]/15">
+      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[color-mix(in_srgb,var(--accent-ink)_15%,transparent)]">
         <Icon className="h-4 w-4 text-[#b9a7ff]" />
       </div>
       <h3 className="font-origin-display text-xl font-medium text-foreground">{title}</h3>
@@ -210,9 +210,9 @@ const FinancialCalculator = ({ onSave }: FinancialCalculatorProps) => {
   return (
     <div className="space-y-6">
       {/* Date Picker & Save */}
-      <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/[0.07] bg-card p-6">
+      <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-[var(--rule)] bg-card p-6">
         <div className="flex items-center gap-3 flex-1">
-          <CalendarIcon className="h-5 w-5 text-[#847dff]" />
+          <CalendarIcon className="h-5 w-5 text-[var(--accent-ink)]" />
           <div>
             <p className="text-sm font-semibold text-foreground">{t("financial.select_date")}</p>
             <p className="text-xs text-muted-foreground">{t("financial.select_date_desc")}</p>

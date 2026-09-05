@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Info } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import type { ChicagoAnswers } from "@/context/StartupContext";
+import { computeChicagoBreakdown } from "@/lib/analyst/methodologies/firstChicago";
 
 interface SeedValuationProps {
   answers: ChicagoAnswers;
@@ -22,14 +23,10 @@ const SeedValuation = ({ answers, onAnswersChange, onValuationChange }: SeedValu
 
   const update = (patch: Partial<ChicagoAnswers>) => onAnswersChange({ ...answers, ...patch });
 
-  const exitValue = revenue * exitMultiple;
-  const pvWorst = exitValue / Math.pow(1 + discountRates.worst / 100, yearsToExit);
-  const pvBase = exitValue / Math.pow(1 + discountRates.base / 100, yearsToExit);
-  const pvBest = exitValue / Math.pow(1 + discountRates.best / 100, yearsToExit);
-
-  const finalValuation = Math.round(
-    (pvWorst * probabilities.worst / 100) + (pvBase * probabilities.base / 100) + (pvBest * probabilities.best / 100)
-  );
+  // Shared with the First Chicago agent so both produce identical figures.
+  const { exitValue, presentValues, weighted } = computeChicagoBreakdown(answers);
+  const { worst: pvWorst, base: pvBase, best: pvBest } = presentValues;
+  const finalValuation = Math.round(weighted);
 
   useEffect(() => {
     onValuationChange?.(finalValuation);

@@ -7,9 +7,8 @@ import { Send } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
-import OriginBackground from "@/components/OriginBackground";
+import SiteHeader from "@/components/layout/SiteHeader";
+import SiteFooter from "@/components/layout/SiteFooter";
 
 const ContactPage = () => {
   const { t } = useLanguage();
@@ -41,12 +40,11 @@ const ContactPage = () => {
   };
 
   return (
-    <div className="relative min-h-dvh flex flex-col">
-      <OriginBackground />
-      <Navbar />
-      <main className="flex-1 relative z-10 flex items-center justify-center py-16">
+    <div className="flex min-h-dvh flex-col bg-[var(--page)]">
+      <SiteHeader />
+      <main className="flex flex-1 items-center justify-center py-20">
         <div className="w-full max-w-lg mx-auto px-4">
-          <h1 className="text-3xl sm:text-4xl font-origin-display font-light text-foreground text-center mb-2">
+          <h1 className="text-3xl sm:text-4xl text-center tracking-[-0.03em] text-[var(--ink-1)] mb-2">
             {t("landing.contact_title")}
           </h1>
           <p className="text-muted-foreground text-center mb-8">
@@ -54,7 +52,7 @@ const ContactPage = () => {
           </p>
           <form
             onSubmit={handleSubmit}
-            className="rounded-2xl border border-border/30 dark:border-white/10 bg-card/60 dark:bg-white/5 backdrop-blur-xl p-8 space-y-5 shadow-sm"
+            className="panel space-y-5 p-8"
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -81,7 +79,7 @@ const ContactPage = () => {
           </form>
         </div>
       </main>
-      <Footer />
+      <SiteFooter />
     </div>
   );
 };

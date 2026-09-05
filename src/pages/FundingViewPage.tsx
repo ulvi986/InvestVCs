@@ -232,18 +232,18 @@ const FundingViewPage = () => {
                       {icon}
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-bold text-white text-lg leading-tight truncate drop-shadow-sm">
+                      <h3 className="font-bold text-[var(--ink-1)] text-lg leading-tight truncate drop-shadow-sm">
                         {profile.startup_name}
                       </h3>
-                      <p className="text-white/80 text-sm truncate">{profile.name} {profile.surname}</p>
+                      <p className="text-[var(--ink-1)] text-sm truncate">{profile.name} {profile.surname}</p>
                       <div className="flex gap-1.5 mt-1">
                         {profile.industry && (
-                          <Badge className="bg-white/20 text-white text-[10px] font-semibold backdrop-blur-sm border-0">
+                          <Badge className="bg-[var(--band)] text-[var(--ink-1)] text-[10px] font-semibold backdrop-blur-sm border-0">
                             {profile.industry}
                           </Badge>
                         )}
                         {profile.country && (
-                          <Badge className="bg-white/20 text-white text-[10px] backdrop-blur-sm border-0">
+                          <Badge className="bg-[var(--band)] text-[var(--ink-1)] text-[10px] backdrop-blur-sm border-0">
                             {profile.country}
                           </Badge>
                         )}
