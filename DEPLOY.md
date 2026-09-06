@@ -70,8 +70,22 @@ service to `starter` costs money, so it is left as a decision rather than a
 change made in passing.
 
 Required on that host: `AZURE_AI_FOUNDRY_ENDPOINT`, `AZURE_AI_API_KEY`,
-`AZURE_AI_MODEL=gpt-5-mini`, `AZURE_OPENAI_API_VERSION=2025-11-15-preview`,
-`AI_MOCK=0`, and `CORS_ORIGINS` set to the Vercel domain.
+`AZURE_OPENAI_API_VERSION=2025-11-15-preview`, `AI_MOCK=0`, and `CORS_ORIGINS`
+set to the Vercel domain.
+
+### Which model runs
+
+On a Foundry **agent** endpoint, the agent is pinned to a model and the service
+does not send one. Whatever the agent is set to is what runs, so the model is
+changed in Foundry and no deploy or variable change is needed here. `/health`
+reports the model that actually answered, not what was configured.
+
+`AZURE_AI_MODEL` only matters on a plain Azure OpenAI resource, where the
+deployment name is how the model is chosen.
+
+This used to work the other way round, and cost two outages: the service sent
+`AZURE_AI_MODEL` and Azure rejected anything that did not equal the agent's own
+model with 400 "Model must match the agent's model".
 
 ## Order matters
 

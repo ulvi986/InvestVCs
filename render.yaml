@@ -28,8 +28,10 @@ services:
         sync: false
       - key: AZURE_AI_API_KEY
         sync: false
-      # Must equal the model the Foundry agent is pinned to, or the service
-      # replies 400 "Model must match the agent's model".
+      # Only used on a plain Azure OpenAI resource, where the deployment name
+      # chooses the model. On a Foundry agent endpoint the agent is pinned to
+      # its own model and the service does not send one, so changing the model
+      # is done in Foundry and needs no deploy here.
       - key: AZURE_AI_MODEL
         value: gpt-5-mini
       - key: AZURE_OPENAI_API_VERSION

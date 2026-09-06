@@ -12,6 +12,7 @@ without credentials and without network.
 from __future__ import annotations
 
 import importlib
+from types import SimpleNamespace
 
 import pytest
 
@@ -245,3 +246,57 @@ def test_a_plain_error_has_no_wait():
     from app.llm import AgentError
 
     assert AgentError("boom").retry_after is None
+
+
+# ── Who chooses the model ────────────────────────────────────────────────
+#
+# The Foundry endpoint addresses an agent, and the agent is pinned to a model.
+# Naming a different one is rejected outright - "Model must match the agent's
+# model" - so sending it could only agree with the agent or break the run. It
+# broke the run twice: once at setup, and again when the agent's model was
+# changed in Foundry without AZURE_AI_MODEL being changed to match.
+
+
+def test_the_agent_surface_does_not_name_a_model():
+    """Whatever the agent is pinned to is what runs. Changing it in Foundry
+    must not require a redeploy here."""
+    from app.llm import LLMClient
+
+    payload = LLMClient._responses_payload([{"role": "user", "content": "hello"}])
+    assert "model" not in payload
+
+
+def test_the_agent_surface_still_sends_what_it_must():
+    from app.llm import LLMClient
+
+    payload = LLMClient._responses_payload([{"role": "user", "content": "hello"}])
+    assert payload["input"]
+    assert payload["max_output_tokens"] > 0
+
+
+def test_a_misconfigured_model_name_cannot_break_the_agent_surface(monkeypatch):
+    """AZURE_AI_MODEL is irrelevant here, so setting it wrongly is harmless."""
+    import app.llm as llm_module
+    from app.llm import LLMClient
+
+    stand_in = SimpleNamespace(deployment="gpt-6-astra", max_output_tokens=4096)
+    monkeypatch.setattr(llm_module, "settings", stand_in)
+
+    payload = LLMClient._responses_payload([{"role": "user", "content": "hello"}])
+    assert "gpt-6-astra" not in str(payload)
+    assert "model" not in payload
+
+
+def test_the_plain_deployment_surface_still_needs_the_model(monkeypatch):
+    """On a bare Azure OpenAI resource there is no agent to ask, so the
+    deployment name is still how the model is chosen. It stays in the URL."""
+    monkeypatch.setenv("AZURE_OPENAI_ENDPOINT", "https://res.openai.azure.com")
+    monkeypatch.setenv("AZURE_OPENAI_DEPLOYMENT", "gpt-4o")
+    monkeypatch.delenv("AZURE_AI_FOUNDRY_ENDPOINT", raising=False)
+    monkeypatch.delenv("AI_PROTOCOL", raising=False)
+
+    from app.config import Settings
+
+    fresh = Settings()
+    assert fresh.protocol == "chat"
+    assert "/deployments/gpt-4o/" in fresh.chat_url

@@ -242,8 +242,18 @@ class LLMClient:
         if carried_system:
             turns.append({"role": "user", "content": "\n\n".join(carried_system)})
 
+        # No model field.
+        #
+        # This endpoint addresses a Foundry agent, and the agent is pinned to a
+        # model. Naming a different one is rejected outright - 'Model must match
+        # the agent's model' - so sending it could only ever agree with the agent
+        # or break the run, and it broke the run twice: once when the deployment
+        # was set up and again when the agent's model was changed without
+        # AZURE_AI_MODEL being changed to match.
+        #
+        # Omitting it makes the agent authoritative, which it already was. Change
+        # the model in Foundry and this service follows with no redeploy.
         return {
-            "model": settings.deployment,
             "input": turns,
             "max_output_tokens": settings.max_output_tokens,
         }
@@ -271,7 +281,15 @@ class LLMClient:
                         parts.append(text)
         return "\n".join(parts)
 
-    async def _call(self, messages: list[dict[str, str]], temperature: float) -> tuple[str, Optional[dict]]:
+    async def _call(
+        self, messages: list[dict[str, str]], temperature: float
+    ) -> tuple[str, Optional[dict], str]:
+        """Returns the content, the usage block, and the model that answered.
+
+        The model comes back from the reply rather than from configuration:
+        on an agent endpoint we no longer say which one we want, so the only
+        honest answer to 'what produced this' is whatever Azure reports.
+        """
         client = await self._http()
 
         if settings.protocol == "responses":
@@ -328,7 +346,7 @@ class LLMClient:
 
         if not content:
             raise AgentError("The model returned an empty response.", retryable=True)
-        return content, data.get("usage")
+        return content, data.get("usage"), str(data.get("model") or settings.deployment)
 
     async def run(
         self,
@@ -383,13 +401,13 @@ class LLMClient:
         last_error: Optional[AgentError] = None
         for attempt in range(1, settings.max_attempts + 1):
             try:
-                content, usage = await self._call(messages, temp)
+                content, usage, answered_by = await self._call(messages, temp)
                 try:
                     output = extract_json(content)
                 except AgentError:
                     # One repair round: cheaper and more reliable than failing
                     # the whole methodology.
-                    content, usage = await self._call(
+                    content, usage, answered_by = await self._call(
                         messages
                         + [
                             {"role": "assistant", "content": content[:4000]},
@@ -407,7 +425,7 @@ class LLMClient:
                     output=output,
                     duration_ms=int((time.perf_counter() - started) * 1000),
                     usage=usage,
-                    model=settings.deployment,
+                    model=answered_by,
                 )
             except AgentError as error:
                 last_error = error
