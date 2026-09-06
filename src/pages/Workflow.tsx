@@ -292,27 +292,24 @@ const Workflow = () => {
   }, [searchParams, setSearchParams]);
 
   /**
-   * Arriving from the interview with ?run=1 starts the analysis.
+   * Arriving from the interview.
    *
-   * The interview no longer reaches a conclusion of its own, so finishing it
-   * has to lead somewhere: the answers are already in the bundle by the time
-   * seeding completes, and this is the step that hands them to the agents.
-   *
-   * Guarded three ways, because starting a run twice costs real model time:
-   * the flag is consumed from the URL, the ref latches, and a run already in
-   * flight is never interrupted.
+   * It lands on the Company tab rather than starting the analysis. The
+   * interview is only part of what the agents can read: the pitch deck, the
+   * canvas and the financials all sharpen it, and starting the moment the
+   * last question is answered would spend several minutes of model time
+   * before the user had the chance to attach any of them.
    */
-  const autoRanRef = useRef(false);
+  const arrivedRef = useRef(false);
   useEffect(() => {
-    if (autoRanRef.current || searchParams.get("run") !== "1") return;
-    if (!seeded || isRunning || !configured) return;
+    if (arrivedRef.current || searchParams.get("run") !== "1") return;
+    if (!seeded) return;
 
-    autoRanRef.current = true;
+    arrivedRef.current = true;
+    setPanel("company");
     searchParams.delete("run");
     setSearchParams(searchParams, { replace: true });
-    runAnalysis();
-  }, [seeded, isRunning, configured, searchParams, setSearchParams, runAnalysis]);
-
+  }, [seeded, searchParams, setSearchParams]);
   const rerunMethodology = useCallback(
     (methodologyId: string) => {
       setRerunningId(methodologyId);

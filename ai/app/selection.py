@@ -15,7 +15,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Optional
 
-from . import registry
+from . import custom, registry
 from .methodologies.base import Applicability
 from .schemas import AnalysisPlan, InputBundle, PlanEntry, StartupProfile
 
@@ -28,10 +28,46 @@ class GateResult:
     verdicts: dict[str, Applicability] = field(default_factory=dict)
     candidates: list[str] = field(default_factory=list)
     excluded: list[dict[str, str]] = field(default_factory=list)
+    #: Methodologies the founder asked for by supplying their inputs, or by
+    #: adding the agent. The planner may argue with these but not drop them.
+    requested: set[str] = field(default_factory=set)
+
+
+def _answered(values) -> bool:
+    return any(value is not None for value in (values or []))
+
+
+def founder_requested(bundle: InputBundle) -> set[str]:
+    """Methodologies whose native inputs the founder actually filled in.
+
+    Filling in the VC Method's revenue and exit multiple, or the Berkus grid,
+    is a request to run that methodology. The planner sees those inputs and
+    can still judge them thin, but a methodology silently missing from the
+    report after someone entered its numbers reads as the product being
+    broken, and it is the complaint this exists to answer.
+
+    An agent the team defined is requested by definition: nobody writes an
+    agent in order for it not to run.
+    """
+    manual = bundle.manual
+    requested: set[str] = set()
+
+    if _answered(manual.berkusAnswers): requested.add("berkus")
+    if _answered(manual.scorecardAnswers) or (manual.scorecardMedian or 0) > 0: requested.add("scorecard")
+    if _answered(manual.riskAnswers): requested.add("risk_factor")
+    if manual.vcAnswers: requested.add("vc_method")
+    if manual.chicagoAnswers: requested.add("first_chicago")
+    if manual.trlAnswers or manual.crlAnswers or manual.frlAnswers: requested.add("readiness_levels")
+    if bundle.bmc: requested.add("business_model_canvas")
+    if bundle.financialSnapshot: requested.add("financial_analysis")
+
+    requested.update(custom.active().keys())
+
+    return {mid for mid in requested if registry.get(mid) is not None}
 
 
 def gate_methodologies(profile: StartupProfile, bundle: InputBundle) -> GateResult:
-    result = GateResult()
+    result = GateResult(requested=founder_requested(bundle))
 
     for spec in registry.active():
         try:
@@ -117,7 +153,11 @@ def build_plan(
             continue
 
         mandatory = enforce_mandatory and spec.id in MANDATORY_METHODOLOGY_IDS
-        if mandatory:
+        # The founder supplied this methodology's inputs, or wrote the agent.
+        # The gates still decide applicability; only the planner's preference
+        # is overridden, and its reasoning is kept below either way.
+        requested = spec.id in gate.requested
+        if mandatory or requested:
             selected = True
         elif choice is not None:
             selected = choice.get("selected") is not False
@@ -129,6 +169,14 @@ def build_plan(
             reason = (
                 "Mandatory: no investment recommendation is defensible without an explicit risk enumeration."
                 if mandatory else verdict.reason
+            )
+
+        # Say so when the planner would have skipped it, rather than presenting
+        # a result as though the analyst chose to produce it.
+        if requested and not mandatory and choice is not None and choice.get("selected") is False:
+            reason = (
+                "Run because you supplied its inputs. The planner would have skipped it: "
+                f"{reason}"
             )
 
         expected = choice.get("expectedConfidence") if choice else None

@@ -55,16 +55,16 @@ const Assessment = () => {
           That is everything worth asking about {session.startupName || "this company"}.
         </h2>
         <p className="measure mt-4 text-[15px] leading-[1.7] text-[var(--ink-2)]">
-          {progress.answered} answers. They go to the analyst agents now — the interview does not grade you
-          itself. The agents read what you said, apply the methodologies this company's stage supports,
-          argue with each other about it, and reach the conclusion.
+          {progress.answered} answers. They go to the analyst agents, not to a score sheet — the interview does
+          not grade you itself. Next you can attach the pitch deck, canvas and financials, then run the
+          analysis: the agents read all of it, argue with each other, and reach the conclusion.
         </p>
         <button
           type="button"
           onClick={() => navigate("/workflow?run=1")}
           className="mt-8 inline-flex items-center gap-2 bg-[var(--accent-ink)] px-5 py-2.5 text-[13px] font-medium text-white"
         >
-          Run the analysis
+          Add a deck and analyse
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </button>
       </section>
