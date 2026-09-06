@@ -302,30 +302,42 @@ def test_the_plain_deployment_surface_still_needs_the_model(monkeypatch):
     assert "/deployments/gpt-4o/" in fresh.chat_url
 
 
+def _health_with(monkeypatch, protocol: str) -> dict:
+    """/health as it renders under a given protocol.
+
+    The stand-in replaces the object `app.main` actually reads. Patching the
+    Settings class does not survive this file, which reloads app.config: the
+    reloaded module has a different class object, so the patch lands on a class
+    nothing is using and the assertion fails only when the suite runs in order.
+    """
+    from starlette.testclient import TestClient
+
+    import app.main as main_module
+
+    stand_in = SimpleNamespace(
+        configured=True,
+        mock=False,
+        deployment="gpt-6-astra",
+        endpoint="https://example.invalid/agents/x/endpoint/protocols/openai/responses",
+        protocol=protocol,
+    )
+    monkeypatch.setattr(main_module, "settings", stand_in)
+
+    with TestClient(main_module.app) as client:
+        return client.get("/health").json()
+
+
 def test_health_does_not_name_a_model_it_does_not_choose(monkeypatch):
     """Reporting AZURE_AI_MODEL on the agent surface would name a model with no
     bearing on what runs - which is how a stale value went unnoticed twice."""
-    from starlette.testclient import TestClient
-
-    from app.config import settings
-    from app.main import app
-
-    monkeypatch.setattr(type(settings), "protocol", property(lambda _s: "responses"))
-    with TestClient(app) as client:
-        body = client.get("/health").json()
+    body = _health_with(monkeypatch, "responses")
 
     assert body["model"] is None
     assert body["modelChosenBy"] == "the Foundry agent"
 
 
 def test_health_names_the_deployment_when_it_is_the_thing_that_chooses(monkeypatch):
-    from starlette.testclient import TestClient
+    body = _health_with(monkeypatch, "chat")
 
-    from app.config import settings
-    from app.main import app
-
-    monkeypatch.setattr(type(settings), "protocol", property(lambda _s: "chat"))
-    with TestClient(app) as client:
-        body = client.get("/health").json()
-
+    assert body["model"] == "gpt-6-astra"
     assert body["modelChosenBy"] == "AZURE_AI_MODEL"
