@@ -86,6 +86,22 @@ workflow page says the service address is not set, which is accurate.
 Supabase client from the upload; the build then failed with
 "Could not load .../integrations/supabase/client".
 
+## Browser extension -> unpacked, not a host
+
+`extension/` is a Chrome/Firefox extension that screens the company whose site
+you are on and hands it to the full analysis. It is not deployed anywhere: it
+is loaded unpacked, and it talks to the same analyst service as the web app.
+See `extension/README.md`.
+
+Two things it needs from the service, both already in place:
+
+- `POST /screen` and `GET /screen/{id}`, the cheap one-call screen and the
+  brief handover.
+- An origin exception. The extension's origin is `chrome-extension://<id>` and
+  the id is assigned at install time, so it cannot be named in `CORS_ORIGINS`;
+  `allow_origin_regex` in `ai/app/main.py` matches extension origins by
+  pattern instead. `CORS_ORIGINS` still has to name the web app's domain.
+
 ## Supabase
 
 Project `StartupEval` (`gdzzmzostnlmecbwyysy`), Postgres 17, region us-west-1.

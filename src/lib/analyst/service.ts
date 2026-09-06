@@ -389,6 +389,26 @@ export const askAboutCompany = (
 ) => postJson<AskReply>("/ask", { question, company, history });
 
 
+// ── Screened briefs ──────────────────────────────────────────────────────
+
+/** What the browser extension screened from a company's website. */
+export interface ScreenedBrief {
+  startupName: string;
+  narrative: string;
+  sourceUrl: string;
+}
+
+/**
+ * Collect a brief the extension left on the service.
+ *
+ * The page text is far too large to pass through a URL, so the extension
+ * hands over an id and the app fetches the brief behind it. Briefs expire,
+ * which is why this can legitimately 404.
+ */
+export const fetchScreenedBrief = (briefId: string) =>
+  getJson<ScreenedBrief>(`/screen/${encodeURIComponent(briefId)}`);
+
+
 // ── Workflows ────────────────────────────────────────────────────────────
 
 export interface WorkflowsResponse {

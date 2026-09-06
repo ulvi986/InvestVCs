@@ -25,7 +25,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from . import ask as ask_module, custom, registry, runs, workflow as workflow_module
+from . import (
+    ask as ask_module,
+    custom,
+    registry,
+    runs,
+    screen as screen_module,
+    workflow as workflow_module,
+)
 from .agents import COMPARE
 from .commands import compile_command
 from .config import settings
@@ -56,6 +63,9 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.origins(),
+    # The browser extension's origin is chrome-extension://<id>, and the id
+    # is assigned at install time, so it cannot be listed in advance.
+    allow_origin_regex=r"^(chrome|moz)-extension://[a-zA-Z0-9-]+$",
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -108,6 +118,14 @@ class AskRequest(BaseModel):
     company: Optional[dict[str, Any]] = None
     #: Prior turns, so a follow-up like 'why?' has something to attach to.
     history: list[dict[str, str]] = Field(default_factory=list)
+
+
+class ScreenRequest(BaseModel):
+    """A web page to screen, as the browser extension scraped it."""
+
+    url: str = ""
+    title: str = ""
+    text: str
 
 
 class ApprovalRequest(BaseModel):
@@ -269,6 +287,39 @@ async def ask(request: AskRequest) -> JSONResponse:
     return JSONResponse(
         await ask_module.answer(question, request.company, request.history)
     )
+
+
+@app.post("/screen")
+async def screen_page(request: ScreenRequest) -> JSONResponse:
+    """Screen a company from a page of its website.
+
+    One model call, seconds rather than minutes. Used by the browser
+    extension to answer whether the full analysis is worth starting.
+    """
+    if not request.text.strip():
+        return JSONResponse({"error": "No page text supplied."}, status_code=400)
+
+    if settings.mock:
+        return JSONResponse(screen_module.mock_screen(request.url, request.title, request.text))
+
+    result = await screen_module.screen(request.url, request.title, request.text)
+    status = 502 if result.get("error") and "could not be screened" in result["error"] else 200
+    if result.get("error") and status == 200:
+        status = 400
+    return JSONResponse(result, status_code=status)
+
+
+@app.get("/screen/{brief_id}")
+async def screened_brief(brief_id: str) -> JSONResponse:
+    """Collect a screened brief by id.
+
+    How the extension hands a company to the full analysis: the page text is
+    far too large for a URL, so it is left here and fetched by the web app.
+    """
+    brief = screen_module.briefs.get(brief_id)
+    if brief is None:
+        return JSONResponse({"error": "That screened page has expired."}, status_code=404)
+    return JSONResponse(brief)
 
 
 # ── Execution ────────────────────────────────────────────────────────────

@@ -66,6 +66,14 @@ ROLE_PREAMBLES: dict[str, tuple[float, str]] = {
         "asserting the claim. State the recommendation plainly, with its reasoning and its confidence. "
         "Write like an investment memo, not marketing copy.",
     ),
+    "screen": (
+        0.15,
+        "You screen a company from the text of its own website - a cheap first pass that decides whether "
+        "the full analysis is worth running. The page is marketing copy, so your value is in separating "
+        "what it evidences from what it asserts, and in noticing what it avoids saying. You never value "
+        "the company or estimate its revenue: a marketing page cannot support either, and a number with "
+        "nothing behind it is the one output this product must not produce.",
+    ),
     "ask": (
         0.2,
         "You answer an analyst's questions about one specific company that this system has analysed. "

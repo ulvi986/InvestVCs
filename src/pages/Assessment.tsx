@@ -55,15 +55,16 @@ const Assessment = () => {
           That is everything worth asking about {session.startupName || "this company"}.
         </h2>
         <p className="measure mt-4 text-[15px] leading-[1.7] text-[var(--ink-2)]">
-          {progress.answered} answers, scored across nine derived factors and put through every methodology that
-          applies at this stage. Nothing you entered was treated as a valuation input — the variables were derived.
+          {progress.answered} answers. They go to the analyst agents now — the interview does not grade you
+          itself. The agents read what you said, apply the methodologies this company's stage supports,
+          argue with each other about it, and reach the conclusion.
         </p>
         <button
           type="button"
-          onClick={() => navigate("/assessment/results")}
+          onClick={() => navigate("/workflow?run=1")}
           className="mt-8 inline-flex items-center gap-2 bg-[var(--accent-ink)] px-5 py-2.5 text-[13px] font-medium text-white"
         >
-          See the assessment
+          Run the analysis
           <ArrowRight className="h-3.5 w-3.5" aria-hidden />
         </button>
       </section>
@@ -122,10 +123,10 @@ const Assessment = () => {
 
               {answeredEnough && !finished && (
                 <Link
-                  to="/assessment/results"
+                  to="/workflow?run=1"
                   className="inline-flex items-center gap-2 text-[13px] text-[var(--accent-ink)] transition-opacity hover:opacity-70"
                 >
-                  See results so far
+                  Analyse what I have so far
                   <ArrowRight className="h-3.5 w-3.5" aria-hidden />
                 </Link>
               )}

@@ -10,7 +10,6 @@ import { ThemeProvider } from "@/context/ThemeContext";
 import Index from "./pages/Index";
 import StartupEvaluation from "./pages/StartupEvaluation";
 import Assessment from "./pages/Assessment";
-import AssessmentResults from "./pages/AssessmentResults";
 import AnalysisReport from "./pages/AnalysisReport";
 import ProfilePage from "./pages/ProfilePage";
 import ReadinessLevel from "./pages/ReadinessLevel";
@@ -75,7 +74,8 @@ const App = () => (
                 <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
                 <Route path="/u/:id" element={<ProtectedRoute><PublicProfile /></ProtectedRoute>} />
                 <Route path="/assessment" element={<ProtectedRoute><Assessment /></ProtectedRoute>} />
-                <Route path="/assessment/results" element={<ProtectedRoute><AssessmentResults /></ProtectedRoute>} />
+                {/* The interview no longer grades itself: the agents do. */}
+                <Route path="/assessment/results" element={<Navigate to="/workflow" replace />} />
                 <Route path="/evaluation" element={<ProtectedRoute><StartupEvaluation /></ProtectedRoute>} />
                 <Route path="/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
                 <Route path="/preparation" element={<Navigate to="/financials" replace />} />

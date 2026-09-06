@@ -31,7 +31,9 @@ import { buildInputBundle, emptyBundle } from "@/lib/analyst/intake";
 import { loadAssessmentSession, toAnalystInputs } from "@/lib/assessment";
 import { listSessions } from "@/lib/analyst/persistence";
 import type { CustomAgent } from "@/lib/analyst/service";
-import { AI_SERVICE_URL, fetchWorkflows, isServiceConfigured } from "@/lib/analyst/service";
+import {
+  AI_SERVICE_URL, fetchScreenedBrief, fetchWorkflows, isServiceConfigured,
+} from "@/lib/analyst/service";
 
 import AskChat from "@/components/workspace/AskChat";
 import CommandBar from "@/components/workspace/CommandBar";
@@ -246,6 +248,71 @@ const Workflow = () => {
     [bundle, mode, chosenIds, pendingWorkflow, customAgents, start, searchParams, setSearchParams],
   );
 
+  /**
+   * Arriving from the browser extension with ?brief=<id> loads what it
+   * screened.
+   *
+   * The extension has already read the company's website; this collects that
+   * text and drops it into the brief, so the agents start from the page
+   * rather than from the user retyping it. The run is not started
+   * automatically: the user should see what was picked up first.
+   */
+  const [briefError, setBriefError] = useState<string | null>(null);
+  const briefRef = useRef<string | null>(null);
+  useEffect(() => {
+    const briefId = searchParams.get("brief");
+    if (!briefId || briefId === briefRef.current) return;
+    briefRef.current = briefId;
+
+    let cancelled = false;
+    fetchScreenedBrief(briefId)
+      .then((brief) => {
+        if (cancelled) return;
+        setBundle((prev) => ({
+          ...prev,
+          startupName: brief.startupName || prev.startupName,
+          narrative: [prev.narrative, brief.narrative].filter(Boolean).join(String.fromCharCode(10, 10)),
+        }));
+        setPanel("company");
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setBriefError(
+            "That screened page has expired, so nothing was loaded. Screen the site again from the extension.",
+          );
+        }
+      })
+      .finally(() => {
+        if (cancelled) return;
+        searchParams.delete("brief");
+        setSearchParams(searchParams, { replace: true });
+      });
+
+    return () => { cancelled = true; };
+  }, [searchParams, setSearchParams]);
+
+  /**
+   * Arriving from the interview with ?run=1 starts the analysis.
+   *
+   * The interview no longer reaches a conclusion of its own, so finishing it
+   * has to lead somewhere: the answers are already in the bundle by the time
+   * seeding completes, and this is the step that hands them to the agents.
+   *
+   * Guarded three ways, because starting a run twice costs real model time:
+   * the flag is consumed from the URL, the ref latches, and a run already in
+   * flight is never interrupted.
+   */
+  const autoRanRef = useRef(false);
+  useEffect(() => {
+    if (autoRanRef.current || searchParams.get("run") !== "1") return;
+    if (!seeded || isRunning || !configured) return;
+
+    autoRanRef.current = true;
+    searchParams.delete("run");
+    setSearchParams(searchParams, { replace: true });
+    runAnalysis();
+  }, [seeded, isRunning, configured, searchParams, setSearchParams, runAnalysis]);
+
   const rerunMethodology = useCallback(
     (methodologyId: string) => {
       setRerunningId(methodologyId);
@@ -415,6 +482,12 @@ const Workflow = () => {
 
       <TabsContent value="company" className="mt-0 min-h-0 flex-1 overflow-y-auto">
         <div className="px-5 py-6">
+          {briefError && (
+            <p className="mb-5 flex items-start gap-2 text-[12.5px] leading-relaxed text-[var(--caution)]">
+              <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              <span>{briefError}</span>
+            </p>
+          )}
           <IntakePanel
             bundle={bundle}
             onBundleChange={(patch) => setBundle((prev) => ({ ...prev, ...patch }))}
