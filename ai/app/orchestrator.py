@@ -623,6 +623,31 @@ class Orchestrator:
 
             await self._retry_rate_limited(specs, profile, results, iteration)
 
+    def _restore_node(self, spec: MethodologySpec, kept: MethodologyResult) -> None:
+        """Put the node back to the result that was actually kept.
+
+        A re-run emits its node update as it happens, before the caller
+        decides whether to keep it. When the re-run is rejected - it failed,
+        or came back with nothing behind it - the node is left showing that
+        failure while the report carries the earlier, better result. The graph
+        then contradicts the page beside it, and the agent looks broken when
+        its answer is right there.
+        """
+        valuation = kept.valuation
+        headline = (
+            f"${valuation.point:,.0f}" if valuation
+            else (f"{kept.score10:.1f}/10" if kept.score10 is not None else "")
+        )
+        self._node(
+            methodology_node_id(spec.id),
+            status="completed" if kept.status == "completed" else "failed",
+            confidence=kept.confidence,
+            duration_ms=kept.durationMs,
+            headline=headline,
+            detail=kept.headline[:140],
+            error=None if kept.status == "completed" else kept.error,
+        )
+
     #: A methodology that only lost to congestion is worth one more attempt.
     #: Run one at a time: the whole reason it failed is that too many agents
     #: were asking at once.
@@ -654,13 +679,17 @@ class Orchestrator:
         )
 
         for spec in blocked:
+            previous = results.get(spec.id)
             retried = await self._run_methodology(spec, profile, results, iteration)
-            if _supersedes(results.get(spec.id), retried):
+            if _supersedes(previous, retried):
                 results[spec.id] = retried
                 self.degraded = [
                     note for note in self.degraded
                     if not note.startswith(f"{spec.name} failed:")
                 ]
+            elif previous is not None:
+                self._restore_node(spec, previous)
+
     # ── Stage 4: critique ───────────────────────────────────────────────
 
     async def _critique(
@@ -1013,8 +1042,13 @@ class Orchestrator:
                     return await self._run_methodology(spec, profile, results, iterations, instruction)
 
             for result in await asyncio.gather(*(rerun(spec, instruction) for spec, instruction in requests)):
-                if _supersedes(results.get(result.methodologyId), result):
+                previous = results.get(result.methodologyId)
+                if _supersedes(previous, result):
                     results[result.methodologyId] = result
+                elif previous is not None:
+                    kept_spec = registry.get(result.methodologyId)
+                    if kept_spec is not None:
+                        self._restore_node(kept_spec, previous)
 
             spread = analyse_valuation_spread(results)
             disagreements = detect_disagreements(results, spread)
