@@ -82,8 +82,8 @@ def digest_bundle(bundle: InputBundle) -> dict[str, Any]:
             "scorecardFactorsAnswered": answered(manual.scorecardAnswers),
             "scorecardMedianUsd": manual.scorecardMedian,
             "riskFactorsAnswered": answered(manual.riskAnswers),
-            "vcInputs": manual.vcAnswers,
-            "firstChicagoInputs": manual.chicagoAnswers,
+            "vcMethodInputs": _vc_inputs(manual.vcAnswers),
+            "firstChicagoInputs": _chicago_inputs(manual.chicagoAnswers),
             "readinessChecklistsCompleted": {
                 "trl": bool(manual.trlAnswers),
                 "crl": bool(manual.crlAnswers),
@@ -92,6 +92,94 @@ def digest_bundle(bundle: InputBundle) -> dict[str, Any]:
         },
         "userCorrections": bundle.corrections or None,
         "answersToPreviousQuestions": bundle.gapAnswers or None,
+    }
+
+
+def _number(value: Any) -> Optional[float]:
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return number if number > 0 else None
+
+
+def _vc_inputs(answers: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    """The founder's VC Method numbers, named as the agent's own schema names them.
+
+    Handing the raw calculator dict over did not work: the agent could see
+    `revenue` but had no way to know it means revenue in the EXIT year rather
+    than today's, so it declined to use it, assigned an exit-year revenue of
+    zero, and the methodology reported insufficient input on a company whose
+    founder had filled the form in. Naming the fields the way the schema names
+    them makes them adoptable instead of ambiguous.
+    """
+    if not answers:
+        return None
+
+    multiple = (
+        _number(answers.get("customMultiple")) if answers.get("isOther")
+        else _number(answers.get("exitMultiple"))
+    )
+    mapped = {
+        "exitYearRevenueUsd": _number(answers.get("revenue")),
+        "netIncomeMarginPct": _number(answers.get("netIncomeMargin")),
+        "exitMultiple": multiple,
+        "yearsToExit": _number(answers.get("exitYears")),
+        "requiredIrrPct": _number(answers.get("requiredIRR")),
+        "investmentAmountUsd": _number(answers.get("investmentAmount")),
+    }
+    supplied = {key: value for key, value in mapped.items() if value is not None}
+    if not supplied:
+        return None
+
+    return {
+        **supplied,
+        "note": (
+            "The founder entered these in the VC Method calculator, against these exact fields. "
+            "exitYearRevenueUsd is revenue in the exit year, already projected - it is not current "
+            "revenue. Adopt them unless the profile contradicts them, and say so if you depart from them."
+        ),
+    }
+
+
+def _chicago_inputs(answers: Optional[dict[str, Any]]) -> Optional[dict[str, Any]]:
+    """The founder's First Chicago numbers, likewise named for the agent."""
+    if not answers:
+        return None
+
+    multiple = (
+        _number(answers.get("customMultiple")) if answers.get("isOther")
+        else _number(answers.get("exitMultiple"))
+    )
+    rates = answers.get("discountRates") or {}
+    weights = answers.get("probabilities") or {}
+
+    supplied: dict[str, Any] = {}
+    if _number(answers.get("revenue")) is not None:
+        supplied["exitYearRevenueUsd"] = _number(answers.get("revenue"))
+    if multiple is not None:
+        supplied["exitMultiple"] = multiple
+    if _number(answers.get("yearsToExit")) is not None:
+        supplied["yearsToExit"] = _number(answers.get("yearsToExit"))
+
+    for case in ("worst", "base", "best"):
+        scenario = {}
+        if _number(rates.get(case)) is not None:
+            scenario["discountRatePct"] = _number(rates.get(case))
+        if _number(weights.get(case)) is not None:
+            scenario["probabilityPct"] = _number(weights.get(case))
+        if scenario:
+            supplied.setdefault("scenarios", {})[case] = scenario
+
+    if not supplied:
+        return None
+
+    return {
+        **supplied,
+        "note": (
+            "The founder entered these in the First Chicago calculator. exitYearRevenueUsd is revenue in "
+            "the exit year, already projected. Adopt them unless the profile contradicts them."
+        ),
     }
 
 
@@ -533,6 +621,46 @@ class Orchestrator:
             for result in await asyncio.gather(*(run_one(spec) for spec in specs)):
                 results[result.methodologyId] = result
 
+            await self._retry_rate_limited(specs, profile, results, iteration)
+
+    #: A methodology that only lost to congestion is worth one more attempt.
+    #: Run one at a time: the whole reason it failed is that too many agents
+    #: were asking at once.
+    async def _retry_rate_limited(
+        self,
+        specs: list[MethodologySpec],
+        profile: StartupProfile,
+        results: dict[str, MethodologyResult],
+        iteration: int,
+    ) -> None:
+        """Re-run methodologies that failed purely because of a rate limit.
+
+        The per-call retry inside the model client already backs off, but under
+        a deployment quota a whole wave can exhaust its attempts together and
+        the user is shown an agent that 'did not work' when nothing was wrong
+        with the analysis. Serially, after the wave, there is no contention
+        left to lose to.
+        """
+        blocked = [
+            spec for spec in specs
+            if (found := results.get(spec.id)) is not None and found.status == "failed"
+            and "rate limit" in (found.error or "").lower()
+        ]
+        if not blocked:
+            return
+
+        self._stage(
+            f"Retrying {len(blocked)} methodology result(s) that hit the model's rate limit"
+        )
+
+        for spec in blocked:
+            retried = await self._run_methodology(spec, profile, results, iteration)
+            if _supersedes(results.get(spec.id), retried):
+                results[spec.id] = retried
+                self.degraded = [
+                    note for note in self.degraded
+                    if not note.startswith(f"{spec.name} failed:")
+                ]
     # ── Stage 4: critique ───────────────────────────────────────────────
 
     async def _critique(
