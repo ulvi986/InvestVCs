@@ -26,6 +26,7 @@ from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
 from . import (
+    fetchpage,
     ask as ask_module,
     custom,
     registry,
@@ -121,11 +122,16 @@ class AskRequest(BaseModel):
 
 
 class ScreenRequest(BaseModel):
-    """A web page to screen, as the browser extension scraped it."""
+    """A company website to screen.
+
+    Either a `url` for the service to read, which is what the web app
+    sends because a browser cannot read another origin, or `text` already
+    extracted by a caller that could.
+    """
 
     url: str = ""
     title: str = ""
-    text: str
+    text: str = ""
 
 
 class ApprovalRequest(BaseModel):
@@ -291,35 +297,35 @@ async def ask(request: AskRequest) -> JSONResponse:
 
 @app.post("/screen")
 async def screen_page(request: ScreenRequest) -> JSONResponse:
-    """Screen a company from a page of its website.
+    """Screen a company from its website.
 
-    One model call, seconds rather than minutes. Used by the browser
-    extension to answer whether the full analysis is worth starting.
+    One model call, seconds rather than the twelve-agent minutes: enough to
+    answer whether the full analysis is worth starting.
+
+    Given a url, the service reads the page itself. It has to: a browser
+    cannot read a page on another origin, so the alternative would be
+    asking the user to install something, and that is the thing this
+    replaces. fetchpage refuses anything not publicly routable.
     """
-    if not request.text.strip():
-        return JSONResponse({"error": "No page text supplied."}, status_code=400)
+    url, title, text = request.url.strip(), request.title, request.text
+
+    if not text.strip():
+        if not url:
+            return JSONResponse({"error": "No address was given."}, status_code=400)
+        try:
+            url, fetched_title, text = await fetchpage.fetch(url)
+        except fetchpage.FetchError as error:
+            return JSONResponse({"error": str(error)}, status_code=400)
+        title = title or fetched_title
 
     if settings.mock:
-        return JSONResponse(screen_module.mock_screen(request.url, request.title, request.text))
+        return JSONResponse(screen_module.mock_screen(url, title, text))
 
-    result = await screen_module.screen(request.url, request.title, request.text)
+    result = await screen_module.screen(url, title, text)
     status = 502 if result.get("error") and "could not be screened" in result["error"] else 200
     if result.get("error") and status == 200:
         status = 400
     return JSONResponse(result, status_code=status)
-
-
-@app.get("/screen/{brief_id}")
-async def screened_brief(brief_id: str) -> JSONResponse:
-    """Collect a screened brief by id.
-
-    How the extension hands a company to the full analysis: the page text is
-    far too large for a URL, so it is left here and fetched by the web app.
-    """
-    brief = screen_module.briefs.get(brief_id)
-    if brief is None:
-        return JSONResponse({"error": "That screened page has expired."}, status_code=404)
-    return JSONResponse(brief)
 
 
 # ── Execution ────────────────────────────────────────────────────────────

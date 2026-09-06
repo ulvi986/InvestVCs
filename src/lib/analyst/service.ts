@@ -389,25 +389,37 @@ export const askAboutCompany = (
 ) => postJson<AskReply>("/ask", { question, company, history });
 
 
-// ── Screened briefs ──────────────────────────────────────────────────────
+// ── Reading a company's website ──────────────────────────────────────────
 
-/** What the browser extension screened from a company's website. */
-export interface ScreenedBrief {
-  startupName: string;
-  narrative: string;
-  sourceUrl: string;
+/** What the service made of a company's own website. */
+export interface ScreenResult {
+  company: string;
+  oneLiner: string;
+  stage: string;
+  stageReason: string;
+  /** Concrete things the page evidences, as opposed to asserts. */
+  signals: string[];
+  /** What the page is missing or overstates. */
+  flags: string[];
+  /** 0-1. How much of the page reads as fact rather than positioning. */
+  evidenceQuality: number;
+  worthFullAnalysis: boolean;
+  recommendation: string;
+  /** The address actually read, after redirects. */
+  url: string;
+  /** The page written up for the analyst, carrying the source text itself. */
+  brief: string;
 }
 
 /**
- * Collect a brief the extension left on the service.
+ * Read a company's website and say whether the full analysis is worth running.
  *
- * The page text is far too large to pass through a URL, so the extension
- * hands over an id and the app fetches the brief behind it. Briefs expire,
- * which is why this can legitimately 404.
+ * The service fetches the page, not the browser: a page on another origin is
+ * not readable from JavaScript. One model call, so this answers in seconds
+ * rather than the twelve-agent minutes.
  */
-export const fetchScreenedBrief = (briefId: string) =>
-  getJson<ScreenedBrief>(`/screen/${encodeURIComponent(briefId)}`);
-
+export const screenWebsite = (url: string) =>
+  postJson<ScreenResult>("/screen", { url });
 
 // ── Workflows ────────────────────────────────────────────────────────────
 

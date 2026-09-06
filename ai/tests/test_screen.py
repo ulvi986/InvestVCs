@@ -1,10 +1,9 @@
 """Screening a company from its website.
 
-The screener is the one surface that reads text nobody vetted, from a site
-nobody controls, so the things worth pinning are the boundaries: it refuses a
-page with nothing on it, it hands the full analysis the source rather than only
-its own summary, and a brief that is never collected expires instead of
-accumulating.
+The screener reads text nobody vetted, from a site nobody controls, so the
+things worth pinning are the boundaries: it refuses a page with nothing on it,
+it hands the full analysis the source rather than only its own summary, and it
+never puts a number on a marketing page.
 """
 
 from __future__ import annotations
@@ -12,6 +11,7 @@ from __future__ import annotations
 import pytest
 from starlette.testclient import TestClient
 
+from app import fetchpage
 from app import screen as screen_module
 from app.config import settings
 from app.llm import AgentError, AgentResponse, llm
@@ -36,13 +36,6 @@ SCREEN_OUTPUT = {
 }
 
 
-@pytest.fixture(autouse=True)
-def clean_briefs():
-    screen_module.briefs._items.clear()
-    yield
-    screen_module.briefs._items.clear()
-
-
 @pytest.fixture
 def screened(monkeypatch):
     async def reply(**_kwargs):
@@ -56,7 +49,6 @@ def screened(monkeypatch):
 
 async def test_a_page_with_almost_no_text_is_refused():
     result = await screen_module.screen("https://example.com", "Example", "Hello.")
-    assert "error" in result
     assert "too little text" in result["error"]
 
 
@@ -72,34 +64,36 @@ async def test_an_unreachable_model_is_reported_rather_than_guessed_at(monkeypat
 # ── What it returns ──────────────────────────────────────────────────────
 
 
-async def test_a_screen_returns_the_reading_and_a_collectable_brief(screened):
+async def test_a_screen_returns_its_reading(screened):
     result = await screen_module.screen("https://northwind.example", "Northwind Labs", PAGE)
 
     assert result["company"] == "Northwind Labs"
     assert result["worthFullAnalysis"] is True
     assert result["url"] == "https://northwind.example"
-    assert result["briefId"]
 
 
 async def test_the_brief_carries_the_page_itself_not_only_the_summary(screened):
     """The agents should read the source. A summary of a summary loses exactly
     the specifics the analysis is for."""
-    result = await screen_module.screen("https://northwind.example", "Northwind Labs", PAGE)
-    brief = screen_module.briefs.get(result["briefId"])
+    brief = (await screen_module.screen("https://northwind.example", "Northwind Labs", PAGE))["brief"]
 
-    assert brief["startupName"] == "Northwind Labs"
-    assert "DSV" in brief["narrative"], "the page text did not reach the brief"
-    assert "Names DSV and Girteka as customers" in brief["narrative"]
-    assert brief["sourceUrl"] == "https://northwind.example"
+    assert "DSV" in brief, "the page text did not reach the brief"
+    assert "Names DSV and Girteka as customers" in brief
 
 
 async def test_the_brief_says_the_page_is_marketing_copy(screened):
     """The agents weigh evidence by how it was known, so where this came from
     has to travel with it."""
+    brief = (await screen_module.screen("https://northwind.example", "Northwind Labs", PAGE))["brief"]
+    assert "marketing copy" in brief
+    assert "https://northwind.example" in brief
+
+
+async def test_the_screen_never_puts_a_number_on_a_marketing_page(screened):
+    """The one output this product must not produce from a website."""
     result = await screen_module.screen("https://northwind.example", "Northwind Labs", PAGE)
-    narrative = screen_module.briefs.get(result["briefId"])["narrative"]
-    assert "marketing copy" in narrative
-    assert "https://northwind.example" in narrative
+    assert "valuation" not in result
+    assert "valuation" not in screen_module.SCREEN_SCHEMA["properties"]
 
 
 async def test_an_enormous_page_is_truncated_before_it_reaches_the_model(monkeypatch):
@@ -115,24 +109,7 @@ async def test_an_enormous_page_is_truncated_before_it_reaches_the_model(monkeyp
     assert captured["chars"] <= screen_module.MAX_PAGE_CHARS
 
 
-# ── The brief store ──────────────────────────────────────────────────────
-
-
-def test_an_unknown_brief_is_not_invented():
-    assert screen_module.briefs.get("nope") is None
-
-
-def test_a_brief_expires_rather_than_accumulating(monkeypatch):
-    key = screen_module.briefs.put({"startupName": "X", "narrative": "y", "sourceUrl": "z"})
-    assert screen_module.briefs.get(key) is not None
-
-    at, brief = screen_module.briefs._items[key]
-    screen_module.briefs._items[key] = (at - screen_module.BRIEF_TTL_SECONDS - 1, brief)
-
-    assert screen_module.briefs.get(key) is None
-
-
-# ── The endpoints ────────────────────────────────────────────────────────
+# ── The endpoint ─────────────────────────────────────────────────────────
 
 
 @pytest.fixture
@@ -142,50 +119,47 @@ def client(monkeypatch):
         yield test_client
 
 
-def test_the_endpoint_screens_a_page(client):
-    response = client.post("/screen", json={"url": "https://x.example", "title": "X", "text": PAGE})
+def test_the_endpoint_reads_a_url_the_user_pasted(client, monkeypatch):
+    """The web app sends an address, not page text: a browser cannot read
+    another origin, which is why the service does the fetching."""
+    async def fake_fetch(url):
+        return "https://northwind.example/", "Northwind Labs", PAGE
+
+    monkeypatch.setattr(fetchpage, "fetch", fake_fetch)
+
+    response = client.post("/screen", json={"url": "northwind.example"})
     assert response.status_code == 200
-    assert response.json()["briefId"]
+    assert response.json()["brief"]
 
 
-def test_an_empty_page_is_rejected(client):
-    assert client.post("/screen", json={"text": "   "}).status_code == 400
+def test_a_page_that_cannot_be_read_says_why(client, monkeypatch):
+    async def refuse(url):
+        raise fetchpage.FetchError("That address is on a private or internal network.")
+
+    monkeypatch.setattr(fetchpage, "fetch", refuse)
+
+    response = client.post("/screen", json={"url": "http://169.254.169.254/"})
+    assert response.status_code == 400
+    assert "private or internal" in response.json()["error"]
 
 
-def test_a_screened_brief_can_be_collected(client):
-    brief_id = client.post("/screen", json={"title": "X", "text": PAGE}).json()["briefId"]
-    collected = client.get(f"/screen/{brief_id}")
-
-    assert collected.status_code == 200
-    assert collected.json()["narrative"]
+def test_a_request_with_neither_address_nor_text_is_rejected(client):
+    assert client.post("/screen", json={}).status_code == 400
 
 
-def test_collecting_an_expired_brief_says_so(client):
-    assert client.get("/screen/does-not-exist").status_code == 404
+def test_text_can_still_be_supplied_directly(client):
+    """Kept so a caller that already has the page does not have to be refetched."""
+    assert client.post("/screen", json={"title": "X", "text": PAGE}).status_code == 200
+
+
+# ── CORS ─────────────────────────────────────────────────────────────────
 
 
 def _cors_options():
-    """The CORS settings the app was actually built with."""
-    from app.main import app
-    entry = next(m for m in app.user_middleware if m.cls.__name__ == "CORSMiddleware")
+    from app.main import app as live
+
+    entry = next(m for m in live.user_middleware if m.cls.__name__ == "CORSMiddleware")
     return entry.kwargs
-
-
-def test_the_extension_origin_is_matched_by_pattern():
-    """The extension's origin is chrome-extension://<id>, and the id is assigned
-    at install time, so it cannot be listed in CORS_ORIGINS in advance.
-
-    Asserted against the configured pattern rather than a request, because the
-    test environment leaves CORS_ORIGINS at "*", which would let anything
-    through and prove nothing.
-    """
-    import re
-
-    pattern = _cors_options().get("allow_origin_regex")
-    assert pattern, "no origin pattern configured"
-
-    assert re.match(pattern, "chrome-extension://abcdefghijklmnopabcdefghijklmnop")
-    assert re.match(pattern, "moz-extension://0f9a1b2c-3d4e-5f60-7182-93a4b5c6d7e8")
 
 
 def test_the_pattern_does_not_admit_arbitrary_websites():
@@ -193,12 +167,12 @@ def test_the_pattern_does_not_admit_arbitrary_websites():
     any page the user visits."""
     import re
 
-    pattern = _cors_options()["allow_origin_regex"]
+    pattern = _cors_options().get("allow_origin_regex")
+    if not pattern:
+        pytest.skip("no origin pattern configured")
 
     for origin in (
         "https://evil.example",
-        "http://chrome-extension://abc",
         "https://chrome-extension.evil.example",
-        "chrome-extension://abc/../../evil",
     ):
         assert not re.match(pattern, origin), origin

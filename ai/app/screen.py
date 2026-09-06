@@ -10,16 +10,14 @@ would be a number with nothing behind it, and the product's whole position is
 that it does not produce those. What it returns is what the page establishes,
 what it conspicuously avoids saying, and a recommendation about the next step.
 
-The brief it extracts is kept for a short while so the web app can pick it up
-by id: that is how the extension hands a company to the full analysis without
-pushing a page of text through a URL.
+The brief it extracts comes back with the reading, so the page the user just
+screened is already in the analyst's material and they do not retype what the
+site already says.
 """
 
 from __future__ import annotations
 
 import logging
-import time
-import uuid
 from typing import Any, Optional
 
 from .jsonspec import array, boolean, enum, number, obj, string
@@ -30,9 +28,6 @@ log = logging.getLogger("investvcs.screen")
 #: A marketing site is mostly repetition. Past this the extra tokens buy
 #: nothing, and the model reads the navigation twice.
 MAX_PAGE_CHARS = 24_000
-
-#: Long enough for someone to click through to the full analysis and sign in.
-BRIEF_TTL_SECONDS = 60 * 60
 
 STAGES = ["idea", "pre_seed", "seed", "series_a", "growth", "unclear"]
 
@@ -77,36 +72,6 @@ INSTRUCTION = (
 )
 
 
-class _BriefStore:
-    """Screened briefs, held just long enough to be collected.
-
-    In process, like the run registry, and correct for the single instance this
-    deploys as. A brief that is never collected expires rather than accumulating.
-    """
-
-    def __init__(self) -> None:
-        self._items: dict[str, tuple[float, dict[str, Any]]] = {}
-
-    def _sweep(self) -> None:
-        now = time.monotonic()
-        for key in [key for key, (at, _) in self._items.items() if now - at > BRIEF_TTL_SECONDS]:
-            self._items.pop(key, None)
-
-    def put(self, brief: dict[str, Any]) -> str:
-        self._sweep()
-        key = uuid.uuid4().hex
-        self._items[key] = (time.monotonic(), brief)
-        return key
-
-    def get(self, key: str) -> Optional[dict[str, Any]]:
-        self._sweep()
-        found = self._items.get(key)
-        return found[1] if found else None
-
-
-briefs = _BriefStore()
-
-
 def _clean(text: str) -> str:
     """Collapse the whitespace a scraped page is mostly made of."""
     return " ".join((text or "").split())[:MAX_PAGE_CHARS]
@@ -143,7 +108,6 @@ def _narrative(url: str, title: str, text: str, result: dict[str, Any]) -> str:
     lines.append(_clean(text))
     return "\n".join(line for line in lines if line is not None)
 
-
 async def screen(url: str, title: str, text: str) -> dict[str, Any]:
     cleaned = _clean(text)
     if len(cleaned) < 200:
@@ -171,16 +135,12 @@ async def screen(url: str, title: str, text: str) -> dict[str, Any]:
         return {"error": "The screen returned nothing usable."}
 
     result["url"] = url
-    result["briefId"] = briefs.put({
-        "startupName": result.get("company") or title or "",
-        "narrative": _narrative(url, title, text, result),
-        "sourceUrl": url,
-    })
+    result["brief"] = _narrative(url, title, text, result)
     return result
 
 
 def mock_screen(url: str, title: str, text: str) -> dict[str, Any]:
-    """Canned screen for mock mode, so the extension works with no credentials."""
+    """Canned screen for mock mode, so the field works with no credentials."""
     name = title.split("|")[0].split("-")[0].strip() or "Mock Company"
     result = {
         "company": name,
@@ -194,9 +154,5 @@ def mock_screen(url: str, title: str, text: str) -> dict[str, Any]:
         "recommendation": "Turn off mock mode to get a real screen.",
         "url": url,
     }
-    result["briefId"] = briefs.put({
-        "startupName": name,
-        "narrative": _narrative(url, title, text, result),
-        "sourceUrl": url,
-    })
+    result["brief"] = _narrative(url, title, text, result)
     return result

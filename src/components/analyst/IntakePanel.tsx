@@ -14,6 +14,7 @@ import { Check, FileText, Loader2, Play, Upload, X } from "lucide-react";
 import type { InputBundle, SessionMode } from "@/lib/analyst/types";
 import { METHODOLOGY_META } from "@/lib/analyst/registry";
 import type { CustomAgent } from "@/lib/analyst/service";
+import WebsiteImport from "./WebsiteImport";
 import { SUPPORTED_DECK_EXTENSIONS, describeBundle, extractDeckText, hasMinimumInput } from "@/lib/analyst/intake";
 import { Empty, Eyebrow, Panel, Tag } from "./primitives";
 
@@ -179,6 +180,20 @@ export const IntakePanel = ({
           </div>
         </div>
       </Panel>
+
+      {/* Reading the company's own site is the cheapest way to fill the
+          brief, so it sits above the checklist of what is still missing. */}
+      <WebsiteImport
+        disabled={isRunning}
+        onImport={(brief) =>
+          onBundleChange({
+            startupName: bundle.startupName || brief.startupName,
+            narrative: [bundle.narrative, brief.narrative].filter(Boolean).join(
+              String.fromCharCode(10, 10),
+            ),
+          })
+        }
+      />
 
       <Panel title="What the analyst has to work with">
         <ul className="divide-y divide-white/[0.05]">

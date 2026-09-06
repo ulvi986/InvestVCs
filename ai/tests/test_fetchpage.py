@@ -1,0 +1,173 @@
+"""Reading a website the user pointed us at.
+
+Moving this from a browser extension into the site means the service now makes
+outbound requests to addresses users choose. Unguarded, that is server-side
+request forgery: the service runs inside a hosting provider's network, where a
+link-local address serves instance metadata and private ranges reach whatever
+else is deployed there.
+
+So most of this file is about what must NOT be fetched.
+"""
+
+from __future__ import annotations
+
+import pytest
+
+from app import fetchpage
+from app.fetchpage import FetchError
+
+
+def resolves_to(monkeypatch, address: str):
+    """Pin DNS so the guard can be tested without depending on real names."""
+    family = 10 if ":" in address else 2
+    monkeypatch.setattr(
+        fetchpage.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [(family, 1, 6, "", (address, 0))],
+    )
+
+
+# ── Addresses that must be refused ───────────────────────────────────────
+
+
+@pytest.mark.parametrize("address", [
+    "127.0.0.1",          # loopback
+    "::1",                # loopback, v6
+    "10.0.0.5",           # private
+    "172.16.4.9",         # private
+    "192.168.1.1",        # private
+    "169.254.169.254",    # cloud instance metadata - the classic target
+    "0.0.0.0",            # unspecified
+    "224.0.0.1",          # multicast
+    "fd00::1",            # unique local, v6
+    "fe80::1",            # link-local, v6
+])
+def test_a_non_public_address_is_refused(monkeypatch, address):
+    resolves_to(monkeypatch, address)
+    with pytest.raises(FetchError) as raised:
+        fetchpage.validate("https://internal.example")
+    assert "private or internal" in str(raised.value)
+
+
+def test_a_name_resolving_to_both_public_and_private_is_refused(monkeypatch):
+    """Returning one of each is a known way to smuggle a request inward."""
+    monkeypatch.setattr(
+        fetchpage.socket,
+        "getaddrinfo",
+        lambda *_a, **_k: [(2, 1, 6, "", ("93.184.216.34", 0)), (2, 1, 6, "", ("10.1.2.3", 0))],
+    )
+    with pytest.raises(FetchError):
+        fetchpage.validate("https://split-horizon.example")
+
+
+@pytest.mark.parametrize("url", [
+    "file:///etc/passwd",
+    "ftp://example.com/x",
+    "gopher://example.com",
+    "data:text/html,<h1>hi</h1>",
+])
+def test_only_http_and_https_are_read(monkeypatch, url):
+    resolves_to(monkeypatch, "93.184.216.34")
+    with pytest.raises(FetchError) as raised:
+        fetchpage.validate(url)
+    assert "http" in str(raised.value).lower()
+
+
+def test_a_non_standard_port_is_refused(monkeypatch):
+    """A public host on port 6379 is someone's Redis, not a marketing page."""
+    resolves_to(monkeypatch, "93.184.216.34")
+    with pytest.raises(FetchError):
+        fetchpage.validate("https://example.com:6379/")
+
+
+def test_an_unresolvable_name_says_so(monkeypatch):
+    def explode(*_a, **_k):
+        raise fetchpage.socket.gaierror("nope")
+
+    monkeypatch.setattr(fetchpage.socket, "getaddrinfo", explode)
+    with pytest.raises(FetchError) as raised:
+        fetchpage.validate("https://nothing.invalid")
+    assert "could not be resolved" in str(raised.value)
+
+
+def test_an_empty_address_is_refused():
+    with pytest.raises(FetchError):
+        fetchpage.validate("   ")
+
+
+# ── Addresses that are fine ──────────────────────────────────────────────
+
+
+def test_a_public_address_is_accepted(monkeypatch):
+    resolves_to(monkeypatch, "93.184.216.34")
+    assert fetchpage.validate("https://example.com/about") == "https://example.com/about"
+
+
+def test_a_bare_domain_is_assumed_to_be_https(monkeypatch):
+    """People paste "stripe.com", not "https://stripe.com/"."""
+    resolves_to(monkeypatch, "93.184.216.34")
+    assert fetchpage.validate("example.com").startswith("https://example.com")
+
+
+def test_credentials_are_stripped_rather_than_forwarded(monkeypatch):
+    resolves_to(monkeypatch, "93.184.216.34")
+    cleaned = fetchpage.validate("https://user:secret@example.com/x")
+    assert "secret" not in cleaned
+    assert "user" not in cleaned
+
+
+def test_the_query_string_is_kept(monkeypatch):
+    resolves_to(monkeypatch, "93.184.216.34")
+    assert fetchpage.validate("https://example.com/p?ref=1").endswith("?ref=1")
+
+
+def test_a_fragment_is_dropped(monkeypatch):
+    resolves_to(monkeypatch, "93.184.216.34")
+    assert "#" not in fetchpage.validate("https://example.com/p#pricing")
+
+
+# ── Turning a page into something readable ───────────────────────────────
+
+
+HTML = """
+<!doctype html><html><head><title>Northwind Labs — Payments</title>
+<style>.a{color:red}</style><script>var x = "not prose";</script></head>
+<body><nav>Home Pricing</nav>
+<main><h1>Cross-border payment rails</h1>
+<p>Trusted by DSV &amp; Girteka. Pricing from 490 EUR&nbsp;/month.</p></main>
+<!-- a comment --><footer>© 2026</footer></body></html>
+"""
+
+
+def test_the_title_is_pulled_out():
+    title, _ = fetchpage.extract_text(HTML)
+    assert title == "Northwind Labs — Payments"
+
+
+def test_script_and_style_contents_never_reach_the_model():
+    _, text = fetchpage.extract_text(HTML)
+    assert "not prose" not in text
+    assert "color:red" not in text
+
+
+def test_comments_are_dropped():
+    _, text = fetchpage.extract_text(HTML)
+    assert "a comment" not in text
+
+
+def test_the_prose_survives_with_entities_decoded():
+    _, text = fetchpage.extract_text(HTML)
+    assert "Cross-border payment rails" in text
+    assert "DSV & Girteka" in text
+    assert "490 EUR /month" in text or "490 EUR/month" in text
+
+
+def test_text_is_capped():
+    _, text = fetchpage.extract_text("<html><body>" + ("word " * 200_000) + "</body></html>")
+    assert len(text) <= fetchpage.MAX_TEXT_CHARS
+
+
+def test_a_page_with_no_title_still_yields_text():
+    title, text = fetchpage.extract_text("<html><body><p>Just prose here.</p></body></html>")
+    assert title == ""
+    assert "Just prose here." in text
