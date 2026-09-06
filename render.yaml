@@ -23,19 +23,31 @@ services:
     numInstances: 1
 
     envVars:
-      # Azure AI Foundry agent endpoint, ending in /responses.
+      # Two surfaces are supported and the endpoint decides which:
+      #
+      #   AZURE_OPENAI_ENDPOINT      https://<resource> - the deployment
+      #                              surface. AZURE_AI_MODEL names the
+      #                              deployment, so the model is chosen here.
+      #   AZURE_AI_FOUNDRY_ENDPOINT  a Foundry agent URL ending in /responses.
+      #                              The agent is pinned to its own model and
+      #                              the service sends none.
+      #
+      # AZURE_OPENAI_ENDPOINT wins when both are set. gpt-6-astra is only
+      # servable on the deployment surface: through an agent it returns 500.
+      - key: AZURE_OPENAI_ENDPOINT
+        sync: false
       - key: AZURE_AI_FOUNDRY_ENDPOINT
         sync: false
       - key: AZURE_AI_API_KEY
         sync: false
-      # Only used on a plain Azure OpenAI resource, where the deployment name
-      # chooses the model. On a Foundry agent endpoint the agent is pinned to
-      # its own model and the service does not send one, so changing the model
-      # is done in Foundry and needs no deploy here.
+      # The deployment to call, on the deployment surface. Ignored on a
+      # Foundry agent endpoint, where the agent's own model is what runs.
       - key: AZURE_AI_MODEL
-        value: gpt-5-mini
+        value: gpt-6-astra
+      # The deployment surface does not serve 2025-11-15-preview: it 404s.
+      # That version is for the Foundry agent endpoint.
       - key: AZURE_OPENAI_API_VERSION
-        value: 2025-11-15-preview
+        value: 2024-10-21
 
       # The browser calls this service directly, so the Vercel domain has to be
       # allowed. Set it once the frontend has a URL; "*" only while testing.

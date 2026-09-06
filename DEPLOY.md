@@ -75,20 +75,36 @@ set to the Vercel domain.
 
 ### Which model runs
 
-On a Foundry **agent** endpoint, the agent is pinned to a model and the service
-does not send one. Whatever the agent is set to is what runs, so the model is
-changed in Foundry and no deploy or variable change is needed here.
+Two surfaces, and the endpoint decides which one is in use.
 
-`/health` says `modelChosenBy: the Foundry agent` and leaves `model` null on
-this surface, rather than naming a configured value that has no bearing on what
-runs. Each agent result carries the model that actually answered it.
+| Variable | Surface | Who picks the model |
+| --- | --- | --- |
+| `AZURE_OPENAI_ENDPOINT` | `https://<resource>` | `AZURE_AI_MODEL` names the deployment |
+| `AZURE_AI_FOUNDRY_ENDPOINT` | an agent URL ending `/responses` | the agent, which is pinned to one |
 
-`AZURE_AI_MODEL` only matters on a plain Azure OpenAI resource, where the
-deployment name is how the model is chosen.
+`AZURE_OPENAI_ENDPOINT` wins when both are set.
 
-This used to work the other way round, and cost two outages: the service sent
-`AZURE_AI_MODEL` and Azure rejected anything that did not equal the agent's own
-model with 400 "Model must match the agent's model".
+**gpt-6-astra only works on the deployment surface.** Through a Foundry agent
+it returns 500, with a deployment in place and a freshly created tool-free
+agent. Verified both ways.
+
+The api-versions are not interchangeable either: the deployment surface serves
+`2024-10-21` and 404s `2025-11-15-preview`; the agent endpoint is the other way
+round.
+
+`ai/scripts/check_azure.py` prints the deployments, the agents, their models
+and which agents can actually serve a request. Three outages here looked
+identical from outside - "the model does not work" - and were an unmatched
+model name, an unsupported tool, and a model with no deployment behind it.
+
+### Chat parameters are learned, not assumed
+
+Models disagree about two of them and say so only by rejecting the request:
+gpt-5-mini and gpt-6-astra require `max_completion_tokens` and reject
+`max_tokens`; gpt-6-astra accepts only the default temperature, while the roles
+here run cold on purpose. The client sends the current spelling, reads the
+rejection, adjusts and retries once. Switching model does not need a code
+change.
 
 ## Order matters
 

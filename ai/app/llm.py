@@ -141,6 +141,64 @@ class AgentError(RuntimeError):
         self.retry_after = retry_after
 
 
+class _ChatDialect:
+    """Which spelling of the chat request a deployment accepts.
+
+    Azure models disagree about two parameters and say so only by
+    rejecting the request:
+
+      * gpt-5-mini and gpt-6-astra require `max_completion_tokens` and
+        reject `max_tokens`; older deployments are the other way round.
+      * gpt-6-astra accepts only the default temperature, while the roles
+        in this service deliberately run cold.
+
+    Hard-coding either one strands the service on whichever model it was
+    written against - which is how switching model broke it three times.
+    So the first rejection teaches it, and the retry is invisible.
+    """
+
+    __slots__ = ("token_field", "send_temperature")
+
+    def __init__(self) -> None:
+        # The newer spelling first: it is what current models want, and the
+        # older ones name the alternative in their error.
+        self.token_field = "max_completion_tokens"
+        self.send_temperature = True
+
+    def learn_from(self, message: str) -> bool:
+        """Adjust from a rejection. True when something changed."""
+        lowered = (message or "").lower()
+
+        if "max_completion_tokens" in lowered and "max_tokens" in lowered:
+            # One of them is unsupported and the other is named as the fix.
+            wanted = "max_completion_tokens" if "use 'max_completion_tokens'" in lowered else "max_tokens"
+            if wanted != self.token_field:
+                self.token_field = wanted
+                return True
+        elif "max_completion_tokens" in lowered:
+            if self.token_field != "max_tokens":
+                self.token_field = "max_tokens"
+                return True
+        elif "max_tokens" in lowered:
+            if self.token_field != "max_completion_tokens":
+                self.token_field = "max_completion_tokens"
+                return True
+
+        if "temperature" in lowered and self.send_temperature:
+            self.send_temperature = False
+            return True
+
+        return False
+
+
+#: One per deployment, for the life of the process.
+_DIALECTS: dict[str, _ChatDialect] = {}
+
+
+def _dialect() -> _ChatDialect:
+    return _DIALECTS.setdefault(settings.deployment, _ChatDialect())
+
+
 @dataclass
 class AgentResponse:
     output: dict[str, Any]
@@ -292,18 +350,34 @@ class LLMClient:
         """
         client = await self._http()
 
-        if settings.protocol == "responses":
-            payload: dict[str, Any] = self._responses_payload(messages)
-        else:
-            payload = {
+        def build() -> dict[str, Any]:
+            if settings.protocol == "responses":
+                return self._responses_payload(messages)
+
+            dialect = _dialect()
+            built: dict[str, Any] = {
                 "model": settings.deployment,
-                "temperature": temperature,
-                "max_tokens": settings.max_output_tokens,
+                dialect.token_field: settings.max_output_tokens,
                 "response_format": {"type": "json_object"},
                 "messages": messages,
             }
+            if dialect.send_temperature:
+                built["temperature"] = temperature
+            return built
 
+        payload = build()
         response = await client.post(settings.chat_url, headers=settings.auth_headers, json=payload)
+
+        # A 400 naming a parameter is the model telling us its dialect. Learn
+        # it and send again; the caller never sees this round trip.
+        if response.status_code == 400 and settings.protocol != "responses":
+            if _dialect().learn_from(response.text):
+                log.info(
+                    "adjusted chat parameters for %s and retried", settings.deployment,
+                )
+                response = await client.post(
+                    settings.chat_url, headers=settings.auth_headers, json=build()
+                )
 
         if response.status_code >= 400:
             body = response.text[:400]

@@ -341,3 +341,72 @@ def test_health_names_the_deployment_when_it_is_the_thing_that_chooses(monkeypat
 
     assert body["model"] == "gpt-6-astra"
     assert body["modelChosenBy"] == "AZURE_AI_MODEL"
+
+
+# ── Learning what a deployment accepts ───────────────────────────────────
+#
+# Azure models disagree about two chat parameters and say so only by rejecting
+# the request: gpt-5-mini and gpt-6-astra require max_completion_tokens, older
+# deployments require max_tokens, and gpt-6-astra accepts only the default
+# temperature while every role in this service runs cold. Hard-coding either
+# strands the service on whichever model it was written against.
+
+
+def _fresh_dialect():
+    from app.llm import _ChatDialect
+
+    return _ChatDialect()
+
+
+def test_it_starts_on_the_spelling_current_models_want():
+    dialect = _fresh_dialect()
+    assert dialect.token_field == "max_completion_tokens"
+    assert dialect.send_temperature is True
+
+
+def test_it_learns_that_a_model_wants_the_older_spelling():
+    dialect = _fresh_dialect()
+    changed = dialect.learn_from(
+        "Unsupported parameter: 'max_completion_tokens' is not supported with this model."
+    )
+    assert changed is True
+    assert dialect.token_field == "max_tokens"
+
+
+def test_it_learns_that_a_model_wants_the_newer_spelling():
+    """The live message names both, and the fix. Astra and gpt-5-mini send it."""
+    dialect = _fresh_dialect()
+    dialect.token_field = "max_tokens"
+    changed = dialect.learn_from(
+        "Unsupported parameter: 'max_tokens' is not supported with this model. "
+        "Use 'max_completion_tokens' instead."
+    )
+    assert changed is True
+    assert dialect.token_field == "max_completion_tokens"
+
+
+def test_it_stops_sending_a_temperature_a_model_refuses():
+    """Verified live: gpt-6-astra rejects 0.2 and accepts only the default."""
+    dialect = _fresh_dialect()
+    changed = dialect.learn_from(
+        "Unsupported value: 'temperature' does not support 0.2 with this model. "
+        "Only the default (1) value is supported."
+    )
+    assert changed is True
+    assert dialect.send_temperature is False
+
+
+def test_an_unrelated_rejection_teaches_it_nothing():
+    """Otherwise a content or auth failure would silently degrade the request."""
+    dialect = _fresh_dialect()
+    assert dialect.learn_from("The API deployment for this resource does not exist.") is False
+    assert dialect.token_field == "max_completion_tokens"
+    assert dialect.send_temperature is True
+
+
+def test_it_does_not_flap_when_told_the_same_thing_twice():
+    """The retry is once. A dialect that kept changing would loop."""
+    dialect = _fresh_dialect()
+    message = "Unsupported parameter: 'max_completion_tokens' is not supported with this model."
+    assert dialect.learn_from(message) is True
+    assert dialect.learn_from(message) is False
