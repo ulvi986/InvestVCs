@@ -203,7 +203,18 @@ async def health() -> dict:
         "status": "ok",
         "configured": settings.configured,
         "mock": settings.mock,
-        "model": settings.deployment if settings.endpoint else None,
+        # On an agent endpoint the agent is pinned to a model and this service
+        # does not send one, so reporting the configured value here would name a
+        # model that has no bearing on what runs. Only the deployment surface
+        # actually chooses.
+        "model": (
+            settings.deployment
+            if settings.endpoint and settings.protocol != "responses"
+            else None
+        ),
+        "modelChosenBy": (
+            "the Foundry agent" if settings.protocol == "responses" else "AZURE_AI_MODEL"
+        ),
         "methodologies": len(registry.REGISTRY),
         "customAgentFamilies": custom.FAMILIES,
         "activeRuns": len(runs.active()),

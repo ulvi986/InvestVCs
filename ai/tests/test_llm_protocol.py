@@ -300,3 +300,32 @@ def test_the_plain_deployment_surface_still_needs_the_model(monkeypatch):
     fresh = Settings()
     assert fresh.protocol == "chat"
     assert "/deployments/gpt-4o/" in fresh.chat_url
+
+
+def test_health_does_not_name_a_model_it_does_not_choose(monkeypatch):
+    """Reporting AZURE_AI_MODEL on the agent surface would name a model with no
+    bearing on what runs - which is how a stale value went unnoticed twice."""
+    from starlette.testclient import TestClient
+
+    from app.config import settings
+    from app.main import app
+
+    monkeypatch.setattr(type(settings), "protocol", property(lambda _s: "responses"))
+    with TestClient(app) as client:
+        body = client.get("/health").json()
+
+    assert body["model"] is None
+    assert body["modelChosenBy"] == "the Foundry agent"
+
+
+def test_health_names_the_deployment_when_it_is_the_thing_that_chooses(monkeypatch):
+    from starlette.testclient import TestClient
+
+    from app.config import settings
+    from app.main import app
+
+    monkeypatch.setattr(type(settings), "protocol", property(lambda _s: "chat"))
+    with TestClient(app) as client:
+        body = client.get("/health").json()
+
+    assert body["modelChosenBy"] == "AZURE_AI_MODEL"

@@ -77,8 +77,11 @@ set to the Vercel domain.
 
 On a Foundry **agent** endpoint, the agent is pinned to a model and the service
 does not send one. Whatever the agent is set to is what runs, so the model is
-changed in Foundry and no deploy or variable change is needed here. `/health`
-reports the model that actually answered, not what was configured.
+changed in Foundry and no deploy or variable change is needed here.
+
+`/health` says `modelChosenBy: the Foundry agent` and leaves `model` null on
+this surface, rather than naming a configured value that has no bearing on what
+runs. Each agent result carries the model that actually answered it.
 
 `AZURE_AI_MODEL` only matters on a plain Azure OpenAI resource, where the
 deployment name is how the model is chosen.
