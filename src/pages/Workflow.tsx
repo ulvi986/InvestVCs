@@ -33,6 +33,7 @@ import { listSessions } from "@/lib/analyst/persistence";
 import type { CustomAgent } from "@/lib/analyst/service";
 import { AI_SERVICE_URL, fetchWorkflows, isServiceConfigured } from "@/lib/analyst/service";
 
+import AskChat from "@/components/workspace/AskChat";
 import CommandBar from "@/components/workspace/CommandBar";
 import AgentGraph from "@/components/analyst/AgentGraph";
 import AgentRail from "@/components/analyst/AgentRail";
@@ -300,6 +301,30 @@ const Workflow = () => {
   }, [state.status, state.thesis]);
 
   const startupName = state.startupName || bundle.startupName;
+
+  /**
+   * What the Ask tab may answer from.
+   *
+   * Rebuilt as the run streams, so a question asked mid-analysis sees the
+   * results that exist at that moment rather than waiting for the thesis.
+   * The brief is included because asking before any run is a normal case.
+   */
+  const askContext = useMemo(
+    () => ({
+      startupName,
+      narrative: bundle.narrative,
+      profile: state.profile,
+      results: state.results,
+      reconciled: state.reconciled,
+      thesis: state.thesis,
+      critique: state.critique,
+      disagreements: state.disagreements,
+    }),
+    [
+      startupName, bundle.narrative, state.profile, state.results,
+      state.reconciled, state.thesis, state.critique, state.disagreements,
+    ],
+  );
   const hasOutput = Boolean(state.thesis) || Object.keys(state.results).length > 0;
 
   /* ── The graph column ─────────────────────────────────────────────── */
@@ -379,35 +404,61 @@ const Workflow = () => {
         ))}
       </TabsList>
 
-      {/* Ask */}
-      <TabsContent value="ask" className="mt-0 min-h-0 flex-1 overflow-y-auto">
-        {/* Almost every instruction needs a company, so it is asked for here
-            rather than sending the user to another tab to find out. Always
-            shown: hiding it once a name is typed would take the description
-            field away mid-sentence. The fields write to the same bundle the
-            Company tab edits. */}
-        <Block title="Which company">
-          <input
-            value={bundle.startupName}
-            onChange={(event) => setBundle((prev) => ({ ...prev, startupName: event.target.value }))}
-            placeholder="Company name"
-            aria-label="Company name"
-            className={askField}
-            />
-          <textarea
-            rows={3}
-            value={bundle.narrative}
-            onChange={(event) => setBundle((prev) => ({ ...prev, narrative: event.target.value }))}
-            placeholder="What does it do? Stage, customers, revenue, what you are raising."
-            aria-label="What the company does"
-            className={`${askField} mt-3 resize-y`}
-            />
-          <p className="mt-2.5 text-[12px] leading-relaxed text-[var(--ink-3)]">
-            A description is enough to start. The deck, canvas and financials live in the Company tab and make it
-            sharper.
+      {/* Ask - a conversation about the company. */}
+      <TabsContent value="ask" className="mt-0 min-h-0 flex-1 overflow-hidden">
+        <AskChat
+          context={askContext}
+          startupName={startupName}
+          hasAnalysis={Object.keys(state.results).length > 0}
+        />
+      </TabsContent>
+
+      <TabsContent value="company" className="mt-0 min-h-0 flex-1 overflow-y-auto">
+        <div className="px-5 py-6">
+          <IntakePanel
+            bundle={bundle}
+            onBundleChange={(patch) => setBundle((prev) => ({ ...prev, ...patch }))}
+            mode={mode}
+            onModeChange={setMode}
+            chosenIds={chosenIds}
+            onChosenIdsChange={setChosenIds}
+            customAgents={customAgents}
+            onStart={() => runAnalysis()}
+            onCancel={cancel}
+            isRunning={isRunning}
+          />
+        </div>
+
+        <Block
+          title="Financial management"
+          action={
+            <span className="text-[12px] text-[var(--ink-3)]">
+              {snapshots.length ? `${snapshots.length} on file` : "None yet"}
+            </span>
+          }
+        >
+          <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
+            Revenue, burn and runway have their own section. The Financial agent reads the latest snapshot from there.
           </p>
+          <Link
+            to="/financials"
+            className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-[var(--accent-ink)]
+                       underline-offset-4 transition-colors hover:underline"
+          >
+            Open financial management
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </Link>
         </Block>
 
+        <Block title="Overall summary">
+          <StartupSummaryPanel />
+        </Block>
+      </TabsContent>
+
+      {/* Agents: the live roster once there is a run, your own agents before. */}
+      {/* Agents. Also holds the run controls that used to sit under Ask,
+          now that Ask is a conversation rather than a launcher. */}
+      <TabsContent value="agents" className="mt-0 min-h-0 flex-1 overflow-y-auto">
         <Block title="Tell it what to do">
           <CommandBar
             startupName={startupName}
@@ -476,53 +527,7 @@ const Workflow = () => {
             </ul>
           </Block>
         )}
-      </TabsContent>
 
-      {/* Company */}
-      <TabsContent value="company" className="mt-0 min-h-0 flex-1 overflow-y-auto">
-        <div className="px-5 py-6">
-          <IntakePanel
-            bundle={bundle}
-            onBundleChange={(patch) => setBundle((prev) => ({ ...prev, ...patch }))}
-            mode={mode}
-            onModeChange={setMode}
-            chosenIds={chosenIds}
-            onChosenIdsChange={setChosenIds}
-            customAgents={customAgents}
-            onStart={() => runAnalysis()}
-            onCancel={cancel}
-            isRunning={isRunning}
-          />
-        </div>
-
-        <Block
-          title="Financial management"
-          action={
-            <span className="text-[12px] text-[var(--ink-3)]">
-              {snapshots.length ? `${snapshots.length} on file` : "None yet"}
-            </span>
-          }
-        >
-          <p className="text-[13px] leading-relaxed text-[var(--ink-2)]">
-            Revenue, burn and runway have their own section. The Financial agent reads the latest snapshot from there.
-          </p>
-          <Link
-            to="/financials"
-            className="mt-3 inline-flex items-center gap-1.5 text-[13px] text-[var(--accent-ink)]
-                       underline-offset-4 transition-colors hover:underline"
-          >
-            Open financial management
-            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </Link>
-        </Block>
-
-        <Block title="Overall summary">
-          <StartupSummaryPanel />
-        </Block>
-      </TabsContent>
-
-      {/* Agents: the live roster once there is a run, your own agents before. */}
-      <TabsContent value="agents" className="mt-0 min-h-0 flex-1 overflow-hidden">
         {graph.nodes.length > 0 || state.log.length > 0 ? (
           <AgentRail
             graph={graph}

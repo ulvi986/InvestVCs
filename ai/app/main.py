@@ -25,7 +25,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field
 
-from . import custom, registry, runs, workflow as workflow_module
+from . import ask as ask_module, custom, registry, runs, workflow as workflow_module
 from .agents import COMPARE
 from .commands import compile_command
 from .config import settings
@@ -96,6 +96,18 @@ class CommandRequest(BaseModel):
     #: The team's own agents. The compiler has to see them, or an instruction
     #: naming one compiles to a workflow that quietly leaves it out.
     customAgents: list[CustomAgentPayload] = Field(default_factory=list)
+
+
+class AskRequest(BaseModel):
+    """A question about the company, with the analysis it should be answered from."""
+
+    question: str
+    #: Whatever the client currently holds: the brief, the profile, the
+    #: methodology results, the thesis. Absent before a run, which is a
+    #: supported case rather than an error.
+    company: Optional[dict[str, Any]] = None
+    #: Prior turns, so a follow-up like 'why?' has something to attach to.
+    history: list[dict[str, str]] = Field(default_factory=list)
 
 
 class ApprovalRequest(BaseModel):
@@ -237,6 +249,26 @@ async def command(request: CommandRequest) -> JSONResponse:
         payload = plan.to_dict()
 
     return JSONResponse(payload)
+
+
+@app.post("/ask")
+async def ask(request: AskRequest) -> JSONResponse:
+    """Answer a question about the company under analysis.
+
+    Read-only by construction: it cannot start a run, change a result or
+    write to a session. That is what makes it safe to let it answer freely
+    while the pipeline itself stays strictly structured.
+    """
+    question = request.question.strip()
+    if not question:
+        return JSONResponse({"error": "Empty question."}, status_code=400)
+
+    if settings.mock:
+        return JSONResponse(ask_module.mock_answer(question, request.company))
+
+    return JSONResponse(
+        await ask_module.answer(question, request.company, request.history)
+    )
 
 
 # ── Execution ────────────────────────────────────────────────────────────

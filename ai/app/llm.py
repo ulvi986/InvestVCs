@@ -66,6 +66,15 @@ ROLE_PREAMBLES: dict[str, tuple[float, str]] = {
         "asserting the claim. State the recommendation plainly, with its reasoning and its confidence. "
         "Write like an investment memo, not marketing copy.",
     ),
+    "ask": (
+        0.2,
+        "You answer an analyst's questions about one specific company that this system has analysed. "
+        "You are not running a methodology and you cannot change a result: you read the analysis that "
+        "exists and explain it. Answer from the supplied material, quote its figures rather than "
+        "approximating them, and when the material does not settle the question say so and say what "
+        "would. A confident answer built on what similar companies usually look like is the one failure "
+        "mode that matters here.",
+    ),
     "compare": (
         0.2,
         "You are the Comparative Analysis agent of an institutional investment-analysis system. You compare two "

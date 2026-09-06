@@ -339,6 +339,56 @@ export const compileCommand = (
   customAgents: CustomAgent[] = [],
 ) => postJson<CommandPlan>("/command", { command, startup: startup ?? null, customAgents });
 
+// ── Ask ──────────────────────────────────────────────────────────────────
+
+/** One turn of the conversation, as the service expects it. */
+export interface AskTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+/**
+ * What an answer may be grounded in.
+ *
+ * Assembled by the page from the live run, so a question asked while the
+ * analysis is still going sees the results that exist so far. Every field is
+ * optional: asking before anything has run is a supported case, and the
+ * service says so in its answer rather than failing.
+ */
+export interface AskContext {
+  startupName?: string;
+  narrative?: string;
+  profile?: StartupProfile | null;
+  results?: Record<string, MethodologyResult>;
+  reconciled?: ReconciledValuation | null;
+  thesis?: InvestmentThesis | null;
+  critique?: Critique | null;
+  disagreements?: Disagreement[];
+}
+
+export interface AskReply {
+  answer: string;
+  /** What the answer rested on, shown beneath it so a claim can be checked. */
+  basis: string[];
+  /** False when the answer is not drawn from this company's material. */
+  grounded: boolean;
+  /** True when the model could not be reached, so this is not an answer. */
+  degraded: boolean;
+}
+
+/**
+ * Ask a question about the company under analysis.
+ *
+ * Read-only: it cannot start a run or change a result, so it is safe to call
+ * at any point, including while an analysis is streaming.
+ */
+export const askAboutCompany = (
+  question: string,
+  company: AskContext,
+  history: AskTurn[] = [],
+) => postJson<AskReply>("/ask", { question, company, history });
+
+
 // ── Workflows ────────────────────────────────────────────────────────────
 
 export interface WorkflowsResponse {
