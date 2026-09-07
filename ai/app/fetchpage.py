@@ -144,6 +144,27 @@ def validate(url: str) -> str:
     return urlunparse((parsed.scheme, netloc, parsed.path or "/", "", parsed.query, ""))
 
 
+#: Mount points a client-rendered app leaves in its HTML shell. The page is
+#: one empty element plus a script bundle, so the server sends no prose at
+#: all - a different problem from a thin page, needing a different thing
+#: said about it.
+SPA_MARKERS = (
+    'id="root"',
+    "id='root'",
+    'id="app"',
+    'id="__next"',
+    'id="__nuxt"',
+    "data-reactroot",
+    "ng-version",
+)
+
+
+def looks_client_rendered(html: str) -> bool:
+    """Whether the emptiness is because the page builds itself in the browser."""
+    lowered = (html or "").lower()
+    return any(marker.lower() in lowered for marker in SPA_MARKERS)
+
+
 def extract_text(html: str) -> tuple[str, str]:
     """Title and readable text from a page.
 
@@ -270,11 +291,19 @@ async def fetch(url: str) -> tuple[str, str, str]:
         if len(payload) > MAX_BYTES:
             raise FetchError("That page is too large to read.")
 
-        title, text = extract_text(_decode(payload, content_type))
+        body = _decode(payload, content_type)
+        title, text = extract_text(body)
         if len(text) < 200:
+            if looks_client_rendered(body):
+                raise FetchError(
+                    "That page builds itself in the browser, so the server returned an "
+                    "empty shell with no text to read. That is normal for a single-page "
+                    "app. Use a page rendered on the server - a marketing or docs page "
+                    "usually is - or describe the company in the brief instead."
+                )
             raise FetchError(
-                "There was almost no readable text on that page. Some sites render "
-                "entirely in the browser; try the company's home or product page."
+                "There was almost no readable text on that page. Try the company's "
+                "home or product page, wherever it describes itself."
             )
 
         return final_url, title, text

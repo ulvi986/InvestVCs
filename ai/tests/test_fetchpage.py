@@ -171,3 +171,45 @@ def test_a_page_with_no_title_still_yields_text():
     title, text = fetchpage.extract_text("<html><body><p>Just prose here.</p></body></html>")
     assert title == ""
     assert "Just prose here." in text
+
+
+# ── Saying why a page had nothing to read ────────────────────────────────
+#
+# Reported as "it returns 400". It does, correctly: the address was the user's
+# own site, a React app whose server response is a 2KB shell with zero prose.
+# The old message told them to try the home page, which is where they already
+# were, so the reason stayed hidden.
+
+
+SPA_SHELL = (
+    '<!doctype html><html lang="en"><head><title>InvestVCs</title></head>'
+    '<body><div id="root"></div><script src="/assets/index.js"></script></body></html>'
+)
+
+
+def test_a_client_rendered_shell_is_recognised():
+    assert fetchpage.looks_client_rendered(SPA_SHELL) is True
+
+
+def test_other_mount_points_are_recognised_too():
+    for shell in (
+        "<div id='root'></div>",
+        '<div id="app"></div>',
+        '<div id="__next"></div>',
+        '<div id="__nuxt"></div>',
+        '<div data-reactroot></div>',
+        '<app-root ng-version="17.0"></app-root>',
+    ):
+        assert fetchpage.looks_client_rendered(shell) is True, shell
+
+
+def test_a_server_rendered_page_is_not_mistaken_for_one():
+    """Otherwise a genuinely thin page would be blamed on rendering."""
+    assert fetchpage.looks_client_rendered(
+        "<html><body><h1>Acme</h1><p>We sell things.</p></body></html>"
+    ) is False
+
+
+def test_the_shell_yields_no_text_at_all():
+    _, text = fetchpage.extract_text(SPA_SHELL)
+    assert len(text) < 200
