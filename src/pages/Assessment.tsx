@@ -19,7 +19,7 @@ import { MINIMUM_COVERAGE } from "@/lib/assessment";
 const Assessment = () => {
   const navigate = useNavigate();
   const {
-    session, current, progress, blocking, result, finished,
+    session, saved, current, progress, blocking, result, finished,
     answer, back, canGoBack, resolve, reviseAnswer, reset,
   } = useAssessment();
 
@@ -94,6 +94,17 @@ const Assessment = () => {
             <span className="analyst-bar mt-2.5 block">
               <span style={{ width: `${progress.ratio * 100}%` }} />
             </span>
+            {/* Answers are written to this browser first and the account
+                second, so the two are briefly out of step after every
+                answer. Only a write that did not land is worth saying,
+                and it is worth saying plainly: the interview is long
+                enough that finding out later would be too late. */}
+            {progress.answered > 0 && !saved && (
+              <p className="mt-2 text-[11.5px] leading-relaxed text-[var(--ink-3)]">
+                Saved in this browser. Not yet copied to your account — if you clear this
+                browser now, these answers go with it.
+              </p>
+            )}
           </div>
 
           {body}

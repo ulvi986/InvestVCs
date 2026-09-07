@@ -1,12 +1,18 @@
 // Assessment session state.
 //
-// The interview is long enough that losing it to a refresh would be a real
-// failure, so the session is written to local storage on every answer and
-// rehydrated on mount. The derived result is recomputed from the answers
-// rather than stored — there is one source of truth, and it is what the
-// founder said.
+// The interview is long enough that losing it would be a real failure, so
+// it is written twice: to local storage on every answer, which is instant
+// and works offline, and to the account, which is what survives a cleared
+// cache or a second machine. Local storage alone was not enough - it
+// presented a founder who had answered nothing while the analysis went on
+// quoting the answers they had given.
+//
+// The derived result is recomputed from the answers rather than stored —
+// there is one source of truth, and it is what the founder said.
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+
+import { useAuth } from "@/context/AuthContext";
 
 import {
   blockingContradiction,
@@ -24,6 +30,9 @@ import {
   type Question,
   type Resolution,
 } from "@/lib/assessment";
+import {
+  deleteInterview, loadInterview, preferred, saveInterview,
+} from "@/lib/assessment/persistence";
 
 const STORAGE_KEY = "investvcs.assessment.v1";
 
@@ -62,6 +71,8 @@ function save(session: AssessmentSession): void {
 
 export interface UseAssessment {
   session: AssessmentSession;
+  /** False while the account copy is behind what is on screen. */
+  saved: boolean;
   /** The question to put next, or null when the interview is exhausted. */
   current: Question | null;
   progress: Progress;
@@ -82,13 +93,55 @@ export interface UseAssessment {
 }
 
 export function useAssessment(): UseAssessment {
+  const { user } = useAuth();
   const [session, setSession] = useState<AssessmentSession>(load);
   /** Set when the founder steps back to revisit a specific question. */
   const [revisiting, setRevisiting] = useState<string | null>(null);
+  const [saved, setSaved] = useState(true);
+  /** Whether the account copy has been read, so the first write does not
+   *  overwrite it with the local one before it has been seen. */
+  const mergedRef = useRef(false);
 
+  // Local storage first: it is synchronous, so answering a question never
+  // waits on the network and never depends on it.
   useEffect(() => {
     save(session);
   }, [session]);
+
+  // Then the account. Signing in brings the stored interview forward; the
+  // one with more answers wins, because answers are only ever added and a
+  // fresh empty session must never overwrite a completed one.
+  useEffect(() => {
+    if (!user) {
+      mergedRef.current = false;
+      return;
+    }
+
+    let cancelled = false;
+    void (async () => {
+      const remote = await loadInterview(user.id);
+      if (cancelled) return;
+      setSession((local) => preferred(local, remote) ?? local);
+      mergedRef.current = true;
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  // Writes are debounced: a founder answering quickly should produce one
+  // round trip, not one per keystroke-fast click.
+  useEffect(() => {
+    if (!user || !mergedRef.current) return;
+
+    setSaved(false);
+    const timer = setTimeout(() => {
+      void saveInterview(user.id, session).then((ok) => setSaved(ok));
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [user, session]);
 
   const signals = useMemo(() => collectSignals(session.answers), [session.answers]);
   const contradictions = useMemo(() => detectContradictions(session.answers), [session.answers]);
@@ -176,10 +229,14 @@ export function useAssessment(): UseAssessment {
     setRevisiting(null);
     setSession(fresh);
     save(fresh);
-  }, []);
+    // Starting over has to reach the account too, or the next load would
+    // bring the old interview back as the copy with more answers.
+    if (user) void deleteInterview(user.id);
+  }, [user]);
 
   return {
     session,
+    saved,
     current,
     progress: progress(session.answers, signals),
     contradictions,
