@@ -277,10 +277,41 @@ export interface MethodologyMeta {
   priority: number;
 }
 
+/**
+ * The reason a request failed, in the words the service used.
+ *
+ * These endpoints refuse for reasons the user can act on - a site that
+ * blocks readers, an address behind a sign-in wall, a question with no
+ * company to answer it about - and they say so in the body. Reporting only
+ * the status code threw that away and left "returned 400", which reads as a
+ * fault in the product rather than something to try differently.
+ */
+async function failureDetail(response: Response): Promise<string> {
+  const body = await response.text().catch(() => "");
+  if (!body) return "";
+  try {
+    const parsed = JSON.parse(body) as { error?: unknown; detail?: unknown };
+    for (const field of [parsed.error, parsed.detail]) {
+      if (typeof field === "string" && field.trim()) return field.trim();
+    }
+    // It parsed but explains nothing. Showing the raw JSON would be worse
+    // than the status line, so let the caller fall back to that.
+    return "";
+  } catch {
+    // Not JSON - a proxy or gateway error page. Its text is still better
+    // than nothing, but only the first line of it is worth showing.
+    return body.split("\n")[0].slice(0, 300).trim();
+  }
+}
+
 async function getJson<T>(path: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${requireBase()}${path}`, init);
   if (!response.ok) {
-    throw new ServiceError(`The analyst service returned ${response.status} for ${path}.`, response.status);
+    const detail = await failureDetail(response);
+    throw new ServiceError(
+      detail || `The analyst service returned ${response.status} for ${path}.`,
+      response.status,
+    );
   }
   return (await response.json()) as T;
 }
