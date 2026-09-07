@@ -159,6 +159,76 @@ SPA_MARKERS = (
 )
 
 
+#: Metadata worth reading when the body is empty, in the order a reader
+#: would want it. A single-page app sends none of its content but usually
+#: sends these, because link previews depend on them.
+META_FIELDS = (
+    ("og:site_name", "Site name"),
+    ("og:title", "Title"),
+    ("twitter:title", "Title"),
+    ("description", "Description"),
+    ("og:description", "Description"),
+    ("twitter:description", "Description"),
+    ("keywords", "Keywords"),
+)
+
+
+def extract_metadata(html: str) -> dict[str, str]:
+    """Title and meta tags, deduplicated by what they say.
+
+    Both `name=` and `property=` spellings are read: og: tags use property,
+    description and keywords use name, and plenty of sites mix them.
+    """
+    found: dict[str, str] = {}
+
+    title_match = re.search(r"<title[^>]*>(.*?)</title>", html, re.S | re.I)
+    if title_match:
+        cleaned = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", "", title_match.group(1))).strip()
+        if cleaned:
+            found["Title"] = cleaned[:300]
+
+    for key, label in META_FIELDS:
+        pattern = (
+            r"<meta[^>]+(?:name|property)=[\"\']"
+            + re.escape(key)
+            + r"[\"\'][^>]*?content=[\"\']([^\"\']*)[\"\']"
+        )
+        match = re.search(pattern, html, re.I)
+        if not match:
+            continue
+        value = re.sub(r"\s+", " ", match.group(1)).strip()
+        if not value:
+            continue
+        # Keep the first value for a label; og:title and twitter:title
+        # normally repeat each other and repeating them adds nothing.
+        if label in found and found[label].lower() == value.lower():
+            continue
+        found.setdefault(label, value[:600])
+
+    return found
+
+
+def metadata_block(meta: dict[str, str]) -> str:
+    """The metadata written out for the screener, labelled as what it is.
+
+    The provenance line is not padding: the screener has to know it is
+    judging a link preview rather than a page, or it would read the absence
+    of customers, pricing and team as facts about the company instead of an
+    artefact of how the site is built.
+    """
+    if not meta:
+        return ""
+
+    lines = [
+        "NOTE ON SOURCE: this site renders its content in the browser, so the server "
+        "returned an empty page. Only the metadata below could be read - roughly what a "
+        "link preview would show. Treat it as the site's own summary of itself, and treat "
+        "everything it does not cover as unknown rather than absent.",
+        "",
+    ]
+    lines += [f"{label}: {value}" for label, value in meta.items()]
+    return chr(10).join(lines)
+
 def looks_client_rendered(html: str) -> bool:
     """Whether the emptiness is because the page builds itself in the browser."""
     lowered = (html or "").lower()
@@ -293,7 +363,18 @@ async def fetch(url: str) -> tuple[str, str, str]:
 
         body = _decode(payload, content_type)
         title, text = extract_text(body)
+
         if len(text) < 200:
+            # The page sent no prose. It usually still sent the metadata that
+            # link previews are built from, and that is the site describing
+            # itself - thin, but real, and better than refusing outright.
+            meta = extract_metadata(body)
+            described = any(
+                label in meta for label in ("Description", "Keywords", "Site name")
+            )
+            if meta.get("Title") and described:
+                return final_url, meta.get("Title", title), metadata_block(meta)
+
             if looks_client_rendered(body):
                 raise FetchError(
                     "That page builds itself in the browser, so the server returned an "

@@ -213,3 +213,55 @@ def test_a_server_rendered_page_is_not_mistaken_for_one():
 def test_the_shell_yields_no_text_at_all():
     _, text = fetchpage.extract_text(SPA_SHELL)
     assert len(text) < 200
+
+
+# ── Reading a single-page app's metadata ─────────────────────────────────
+#
+# Refusing outright was correct but useless: the user's own site is a React
+# app, and "your page has no text" is not something they can act on. The shell
+# does carry the metadata link previews are built from, and that is the site
+# describing itself - thin, but real.
+
+SHELL_WITH_META = (
+    '<!doctype html><html><head>'
+    '<title>InvestVCs - Startup Evaluation Platform</title>'
+    '<meta name="description" content="Evaluate your startup with Berkus, Scorecard, '
+    'and Risk Factor methods. Track financials and readiness levels.">'
+    '<meta property="og:title" content="InvestVCs - Startup Evaluation Platform">'
+    '<meta property="og:description" content="Evaluate your startup with Berkus, Scorecard, '
+    'and Risk Factor methods. Track financials and readiness levels.">'
+    '</head><body><div id="root"></div></body></html>'
+)
+
+
+def test_the_title_and_description_are_read_from_the_shell():
+    meta = fetchpage.extract_metadata(SHELL_WITH_META)
+    assert meta["Title"] == "InvestVCs - Startup Evaluation Platform"
+    assert "Berkus" in meta["Description"]
+
+
+def test_a_repeated_value_is_not_listed_twice():
+    """og:title and twitter:title normally say the same thing."""
+    meta = fetchpage.extract_metadata(SHELL_WITH_META)
+    assert list(meta.values()).count(meta["Title"]) == 1
+
+
+def test_the_block_says_where_it_came_from():
+    """Without this the screener would read the absence of customers, pricing
+    and team as facts about the company rather than as how the site is built."""
+    block = fetchpage.metadata_block(fetchpage.extract_metadata(SHELL_WITH_META))
+    assert "renders its content in the browser" in block
+    assert "unknown rather than absent" in block
+    assert "Berkus" in block
+
+
+def test_a_shell_with_no_metadata_yields_nothing_to_screen():
+    meta = fetchpage.extract_metadata('<html><head></head><body><div id="root"></div></body></html>')
+    assert fetchpage.metadata_block(meta) == ""
+
+
+def test_a_title_alone_is_not_enough_to_screen_a_company():
+    """A bare title is a brand name, not a description of a business."""
+    meta = fetchpage.extract_metadata("<html><head><title>Acme</title></head><body></body></html>")
+    assert meta == {"Title": "Acme"}
+    assert "Description" not in meta
