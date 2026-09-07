@@ -549,10 +549,9 @@ export function useInvestmentAnalyst() {
         return;
       }
 
-      const resolved = strandedRun(
-        session.status,
-        session.status === "running" ? recallLiveRun(session.id) : null,
-      );
+      // strandedRun owns the question of which states are mid-flight; asking
+      // it only about one of them is how a queued row lost its live run.
+      const resolved = strandedRun(session.status, recallLiveRun(session.id));
 
       setState({
         ...initialState,
