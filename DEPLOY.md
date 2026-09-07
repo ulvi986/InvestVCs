@@ -97,6 +97,27 @@ and which agents can actually serve a request. Three outages here looked
 identical from outside - "the model does not work" - and were an unmatched
 model name, an unsupported tool, and a model with no deployment behind it.
 
+### What each model costs you
+
+Measured on the same company, same request, against the live service.
+
+| | gpt-5-mini | gpt-6-astra | claude-fable-5 |
+| --- | --- | --- | --- |
+| Per agent call | ~30-40s | 165-190s | 70-105s |
+| Deployment capacity | 50 | 5000 | 1000 |
+| Rate-limit failures | frequent | none | none |
+| Valuations produced | yes | mostly `insufficient_input` | yes |
+| Full run | ~10 min | did not finish | ~15-20 min |
+
+gpt-6-astra runs, but on this pipeline it returns `insufficient_input` for
+most valuation methods and near-zero confidence throughout, so it is not what
+ships. claude-fable-5 is the current configuration: slower per call than
+gpt-5-mini but with twenty times the quota, so nothing is lost to rate limits.
+
+A full run is long enough that the browser will sometimes lose the stream.
+That is survivable by design - the run belongs to the service, not the
+connection, and the client reattaches at `/runs/{id}/stream?from=N`.
+
 ### Chat parameters are learned, not assumed
 
 Models disagree about two of them and say so only by rejecting the request:

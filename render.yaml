@@ -41,13 +41,15 @@ services:
       - key: AZURE_AI_API_KEY
         sync: false
       # The deployment to call, on the deployment surface. Ignored on a
-      # Foundry agent endpoint, where the agent's own model is what runs.
+      # Foundry agent endpoint, where the agent's own model is what runs -
+      # which is how this deploys today.
       - key: AZURE_AI_MODEL
-        value: gpt-6-astra
-      # The deployment surface does not serve 2025-11-15-preview: it 404s.
-      # That version is for the Foundry agent endpoint.
+        sync: false
+      # Version per surface, and they are not interchangeable: the agent
+      # endpoint takes 2025-11-15-preview and the deployment surface 404s it;
+      # the deployment surface takes 2024-10-21 and the agent endpoint 404s it.
       - key: AZURE_OPENAI_API_VERSION
-        value: 2024-10-21
+        value: 2025-11-15-preview
 
       # The browser calls this service directly, so the Vercel domain has to be
       # allowed. Set it once the frontend has a URL; "*" only while testing.
@@ -60,5 +62,12 @@ services:
         value: "0"
 
       # The deployment's rate limit, not the orchestrator, caps throughput.
+      # claude-fable-5 has capacity 1000 against gpt-5-mini's 50, so this can
+      # be generous; on a small deployment drop it to 2.
       - key: AGENT_CONCURRENCY
-        value: "3"
+        value: "6"
+
+      # A single agent call takes 70-105s on claude-fable-5 and up to 190s on
+      # gpt-6-astra. The default 120 cut runs off mid-call.
+      - key: LLM_TIMEOUT_SECONDS
+        value: "300"
