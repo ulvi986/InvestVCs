@@ -69,6 +69,64 @@ export const supersedes = (
   return true;
 };
 
+/**
+ * Where the id of a run in flight is kept.
+ *
+ * The analysis itself is in Supabase; this is not. A run id addresses a
+ * live stream on one service instance, which is browser-and-moment scoped
+ * in a way a session row is not, and the service forgets it within hours.
+ * Keeping it here lets a reload rejoin the run it was already watching
+ * without inviting another device to try.
+ *
+ * Without it, reloading mid-run loaded the session row, read its
+ * 'running' status and rendered a Stop button over an empty canvas - a
+ * page that said an analysis was in progress while showing none of it.
+ */
+const liveRunKey = (sessionId: string) => `investvcs.liveRun.${sessionId}`;
+
+export function rememberLiveRun(sessionId: string | null, runId: string | null) {
+  if (!sessionId) return;
+  try {
+    if (runId) localStorage.setItem(liveRunKey(sessionId), runId);
+    else localStorage.removeItem(liveRunKey(sessionId));
+  } catch {
+    // Blocked storage. Losing this costs a reattach, not the analysis.
+  }
+}
+
+export function recallLiveRun(sessionId: string): string | null {
+  try {
+    return localStorage.getItem(liveRunKey(sessionId));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What to show for a session whose stored status is still `running`.
+ *
+ * Three cases, and only the first is ordinary: the run finished normally
+ * and the row says so. A row that still says running was interrupted - the
+ * page was closed or reloaded while the service carried on. That is
+ * recoverable when this browser remembers which run it was, and is not when
+ * it does not, and the difference has to reach the screen: presenting an
+ * unrecoverable one as live gave a Stop button over an empty canvas.
+ */
+export function strandedRun(
+  status: SessionStatus,
+  rememberedRunId: string | null,
+): { status: SessionStatus; rejoin: string | null; error: string | null } {
+  if (status !== "running") return { status, rejoin: null, error: null };
+  if (rememberedRunId) return { status: "running", rejoin: rememberedRunId, error: null };
+  return {
+    status: "failed",
+    rejoin: null,
+    error:
+      "This analysis was still running when the page was closed, and this browser can no "
+      + "longer follow it. Anything it finished is below; run it again for the rest.",
+  };
+}
+
 const initialState: AnalystState = {
   sessionId: null,
   runId: null,
@@ -140,34 +198,32 @@ export function useInvestmentAnalyst() {
     [],
   );
 
-  const start = useCallback(
-    async ({ bundle, mode, chosenMethodologyIds, maxIterations, workflow, templateId, customAgents }: StartOptions) => {
-      if (!isServiceConfigured()) {
-        update({
-          status: "failed",
-          error: "The AI analyst service is not configured. Set VITE_AI_SERVICE_URL to the deployed Python service.",
-        });
-        return;
-      }
-
-      abortRef.current?.abort();
-      const controller = new AbortController();
-      abortRef.current = controller;
-
-      const sessionId = user
-        ? await createSession({ userId: user.id, startupName: bundle.startupName, mode, bundle })
-        : null;
-
-      setState({
-        ...initialState,
-        sessionId,
-        persisted: Boolean(sessionId),
-        mode,
-        workflow: workflow ?? null,
-        startupName: bundle.startupName,
-        status: "running",
-        statusMessage: "Starting analysis",
-      });
+  /**
+   * Drive the state machine from a stream of run events.
+   *
+   * Shared by starting a run and rejoining one, because after the first
+   * event the two are the same thing: the service replays a reattached run
+   * from the beginning, so every branch below has to be reached either
+   * way. Two copies of this would drift, and the copy nobody looks at
+   * would be the reattach.
+   */
+  const consume = useCallback(
+    async (options: {
+      controller: AbortController;
+      sessionId: string | null;
+      resumeRunId?: string;
+      bundle?: InputBundle;
+      mode?: SessionMode;
+      chosenMethodologyIds?: string[];
+      maxIterations?: number;
+      workflow?: WorkflowSpec;
+      templateId?: string;
+      customAgents?: CustomAgent[];
+    }) => {
+      const {
+        controller, sessionId, resumeRunId, bundle, mode, chosenMethodologyIds,
+        maxIterations, workflow, templateId, customAgents,
+      } = options;
 
       // Collected locally so the final write has everything, even if a
       // mid-flight patch failed.
@@ -180,7 +236,7 @@ export function useInvestmentAnalyst() {
       let thesis: InvestmentThesis | null = null;
 
       seenRef.current = 0;
-      runIdRef.current = null;
+      runIdRef.current = resumeRunId ?? null;
       abandonedRef.current = false;
 
       // The service keeps a run alive when its reader goes away, so a dropped
@@ -194,7 +250,9 @@ export function useInvestmentAnalyst() {
           try {
             const stream = first
               ? analyze({
-                  bundle, mode, chosenMethodologyIds, maxIterations, workflow, templateId,
+                  bundle: bundle as InputBundle,
+                  mode: mode as SessionMode,
+                  chosenMethodologyIds, maxIterations, workflow, templateId,
                   customAgents,
                   sessionId: sessionId ?? undefined,
                   signal: controller.signal,
@@ -227,6 +285,7 @@ export function useInvestmentAnalyst() {
           switch (event.type) {
             case "run":
               runIdRef.current = event.payload.runId;
+              rememberLiveRun(sessionId, event.payload.runId);
               update({ runId: event.payload.runId, workflow: event.payload.workflow });
               break;
 
@@ -295,6 +354,7 @@ export function useInvestmentAnalyst() {
               break;
 
             case "done":
+              rememberLiveRun(sessionId, null);
               update({
                 status: "completed",
                 statusMessage: "Analysis complete",
@@ -328,6 +388,7 @@ export function useInvestmentAnalyst() {
           }
         }
       } catch (error) {
+        rememberLiveRun(sessionId, null);
         if (!mountedRef.current) return;
         const cancelled = controller.signal.aborted;
         const message = error instanceof Error ? error.message : "Analysis failed.";
@@ -347,6 +408,68 @@ export function useInvestmentAnalyst() {
     [user, update],
   );
 
+  const start = useCallback(
+    async ({ bundle, mode, chosenMethodologyIds, maxIterations, workflow, templateId, customAgents }: StartOptions) => {
+      if (!isServiceConfigured()) {
+        update({
+          status: "failed",
+          error: "The AI analyst service is not configured. Set VITE_AI_SERVICE_URL to the deployed Python service.",
+        });
+        return;
+      }
+
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      const sessionId = user
+        ? await createSession({ userId: user.id, startupName: bundle.startupName, mode, bundle })
+        : null;
+
+      setState({
+        ...initialState,
+        sessionId,
+        persisted: Boolean(sessionId),
+        mode,
+        workflow: workflow ?? null,
+        startupName: bundle.startupName,
+        status: "running",
+        statusMessage: "Starting analysis",
+      });
+
+      await consume({
+        controller, sessionId, bundle, mode, chosenMethodologyIds, maxIterations,
+        workflow, templateId, customAgents,
+      });
+    },
+    [user, update, consume],
+  );
+
+  /**
+   * Rejoin a run that is still going.
+   *
+   * The service holds a finished run for half an hour and an abandoned one
+   * for two, and replays it from the first event, so what comes back is
+   * the whole analysis rather than the tail of it.
+   */
+  const resume = useCallback(
+    async (sessionId: string, runId: string) => {
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+
+      update({
+        status: "running",
+        statusMessage: "Rejoining the run in progress",
+        runId,
+        error: null,
+      });
+
+      await consume({ controller, sessionId, resumeRunId: runId });
+    },
+    [update, consume],
+  );
+
   /**
    * Stop the analysis.
    *
@@ -359,6 +482,7 @@ export function useInvestmentAnalyst() {
     const runId = runIdRef.current;
     abortRef.current?.abort();
     if (runId) void cancelRun(runId);
+    rememberLiveRun(stateRef.current.sessionId, null);
     update({ status: "draft", statusMessage: "Cancelled", approval: null });
   }, [update]);
 
@@ -403,10 +527,16 @@ export function useInvestmentAnalyst() {
         update({ error: "That analysis session could not be loaded.", statusMessage: "" });
         return;
       }
+
+      const resolved = strandedRun(
+        session.status,
+        session.status === "running" ? recallLiveRun(session.id) : null,
+      );
+
       setState({
         ...initialState,
         sessionId: session.id,
-        status: session.status,
+        status: resolved.status,
         mode: session.mode,
         startupName: session.startupName,
         // A stored session has no live graph; the results below carry it.
@@ -419,11 +549,13 @@ export function useInvestmentAnalyst() {
         critique: session.critique,
         thesis: session.thesis,
         iterations: session.iteration ?? 0,
-        error: session.error,
+        error: resolved.error ?? session.error,
         persisted: true,
       });
+
+      if (resolved.rejoin) void resume(session.id, resolved.rejoin);
     },
-    [update],
+    [update, resume],
   );
 
   return {
@@ -432,6 +564,7 @@ export function useInvestmentAnalyst() {
     cancel,
     reset,
     open,
+    resume,
     respondToApproval,
     isRunning: state.status === "running",
     /** The run is open but the orchestrator is blocked on a person. */
