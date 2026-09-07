@@ -229,6 +229,66 @@ def metadata_block(meta: dict[str, str]) -> str:
     lines += [f"{label}: {value}" for label, value in meta.items()]
     return chr(10).join(lines)
 
+#: Hosts that exist only to authenticate. Landing on one means a redirect
+#: took us away from whatever was asked for.
+AUTH_HOSTS = (
+    "accounts.google.com",
+    "login.microsoftonline.com",
+    "login.live.com",
+    "appleid.apple.com",
+    "auth0.com",
+    "okta.com",
+    "signin.aws.amazon.com",
+)
+
+#: Path fragments that mark an authentication endpoint rather than a page
+#: about a company.
+AUTH_PATHS = (
+    "/signin", "/sign-in", "/sign_in",
+    "/login", "/log-in", "/log_in",
+    "/auth/", "/oauth", "/sso", "/session/new", "/session/create",
+)
+
+#: Wording a sign-in form uses. Counted, never matched singly: almost every
+#: SaaS marketing page has "Log in" in its navigation, and rejecting those
+#: would reject exactly the companies this is for.
+SIGN_IN_PHRASES = (
+    "sign in", "signin", "log in", "login",
+    "email or phone", "forgot email", "forgot password", "forgot your password",
+    "create account", "keep me signed in", "stay signed in",
+    "enter your password", "remember me", "two-factor",
+)
+
+#: A real marketing page says far more than a sign-in form does, so length is
+#: what separates "a page with a login link" from "a login page".
+SIGN_IN_MAX_CHARS = 1500
+
+
+def looks_like_sign_in(final_url: str, text: str) -> bool:
+    """Whether what came back is an authentication page rather than a company.
+
+    Two independent signals, because either alone is wrong. A URL under
+    /login is one whatever it says; and a page that is nothing but a form is
+    one whatever its address, which covers a redirect that keeps the original
+    path.
+    """
+    lowered_url = (final_url or "").lower()
+    host = urlparse(lowered_url).hostname or ""
+    path = urlparse(lowered_url).path or ""
+
+    if any(host == auth or host.endswith("." + auth) for auth in AUTH_HOSTS):
+        return True
+    if any(fragment in path for fragment in AUTH_PATHS):
+        return True
+
+    body = (text or "").lower()
+    if len(body) <= SIGN_IN_MAX_CHARS:
+        hits = sum(1 for phrase in SIGN_IN_PHRASES if phrase in body)
+        return hits >= 3
+
+    return False
+
+
 def looks_client_rendered(html: str) -> bool:
     """Whether the emptiness is because the page builds itself in the browser."""
     lowered = (html or "").lower()
@@ -385,6 +445,14 @@ async def fetch(url: str) -> tuple[str, str, str]:
             raise FetchError(
                 "There was almost no readable text on that page. Try the company's "
                 "home or product page, wherever it describes itself."
+            )
+
+        if looks_like_sign_in(final_url, text):
+            raise FetchError(
+                "That address leads to a sign-in page, not a page about the company. "
+                "Screening it would describe a login form. Use the public marketing "
+                "site instead - usually the same domain without the app or account "
+                "subdomain."
             )
 
         return final_url, title, text

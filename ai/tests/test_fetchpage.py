@@ -265,3 +265,58 @@ def test_a_title_alone_is_not_enough_to_screen_a_company():
     meta = fetchpage.extract_metadata("<html><head><title>Acme</title></head><body></body></html>")
     assert meta == {"Title": "Acme"}
     assert "Description" not in meta
+
+
+# ── Sign-in walls ────────────────────────────────────────────────────────
+#
+# "What about https://mail.google.com/?" It redirects to a Google sign-in
+# form, which extracted cleanly as a thousand characters of "Email or phone /
+# Forgot email / Create account" - and the model was then asked to screen a
+# company from a login form. GitHub's login page it handled well; Gmail's it
+# returned an empty response for, which reached the user as an opaque failure.
+#
+# The risk in fixing this is the opposite error: nearly every SaaS marketing
+# page has "Log in" in its navigation, and rejecting those would reject
+# exactly the companies this feature exists for.
+
+
+def test_an_authentication_host_is_recognised():
+    assert fetchpage.looks_like_sign_in("https://accounts.google.com/v3/signin/identifier", "") is True
+    assert fetchpage.looks_like_sign_in("https://login.microsoftonline.com/x", "") is True
+
+
+def test_a_subdomain_of_an_authentication_host_is_recognised():
+    assert fetchpage.looks_like_sign_in("https://eu.okta.com/login", "") is True
+
+
+def test_an_authentication_path_is_recognised():
+    for url in (
+        "https://github.com/login",
+        "https://example.com/sign-in",
+        "https://example.com/auth/callback",
+        "https://example.com/session/new",
+    ):
+        assert fetchpage.looks_like_sign_in(url, "") is True, url
+
+
+def test_a_bare_form_is_recognised_wherever_it_lives():
+    """A redirect can keep the original path, so the wording has to count too."""
+    form = "Sign in to continue. Email or phone. Forgot email? Create account."
+    assert fetchpage.looks_like_sign_in("https://mail.example.com/", form) is True
+
+
+def test_a_marketing_page_with_a_login_link_is_not_a_login_page():
+    """The failure that would matter: this is the shape of every SaaS home page."""
+    marketing = (
+        "Log in Sign up Product Pricing Customers. The system for product development. "
+        "Purpose-built for planning and building products. " * 40
+    )
+    assert len(marketing) > fetchpage.SIGN_IN_MAX_CHARS
+    assert fetchpage.looks_like_sign_in("https://linear.app/", marketing) is False
+
+
+def test_a_short_page_mentioning_login_once_is_not_a_login_page():
+    """One mention is a navigation link, not a form."""
+    assert fetchpage.looks_like_sign_in(
+        "https://example.com/", "Acme sells payment rails to logistics operators. Log in"
+    ) is False
