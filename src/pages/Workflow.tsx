@@ -214,13 +214,68 @@ const Workflow = () => {
     return () => { cancelled = true; };
   }, [configured]);
 
+  /**
+   * The analysis you were last looking at.
+   *
+   * A finished run is already in Supabase, but the page only restored one
+   * when the URL named it - and starting a run stripped that parameter. So
+   * stepping over to the Assessment tab and back came home to a blank
+   * workspace with the work sitting in Earlier runs, which reads as having
+   * lost it.
+   *
+   * Kept per user: a shared browser must not open someone else's analysis.
+   */
+  const lastSessionKey = user ? `investvcs.lastSession.${user.id}` : null;
+
+  const rememberSession = useCallback(
+    (sessionId: string | null) => {
+      if (!lastSessionKey) return;
+      try {
+        if (sessionId) localStorage.setItem(lastSessionKey, sessionId);
+        else localStorage.removeItem(lastSessionKey);
+      } catch {
+        // Private mode or blocked storage: the URL still carries the session.
+      }
+    },
+    [lastSessionKey],
+  );
+
+  // Once the service has created the session, make it the one that comes back.
+  useEffect(() => {
+    if (!state.sessionId) return;
+    openedRef.current = state.sessionId;
+    rememberSession(state.sessionId);
+  }, [state.sessionId, rememberSession]);
+
   const openedRef = useRef<string | null>(null);
   useEffect(() => {
-    const sessionId = searchParams.get("session");
-    if (!sessionId || sessionId === openedRef.current) return;
-    openedRef.current = sessionId;
-    void open(sessionId);
-  }, [searchParams, open]);
+    const named = searchParams.get("session");
+
+    // An address naming a session always wins: it is either a deep link or
+    // the row someone just clicked in Earlier runs.
+    if (named) {
+      if (named === openedRef.current) return;
+      openedRef.current = named;
+      rememberSession(named);
+      void open(named);
+      return;
+    }
+
+    // Otherwise pick up where they left off, but never over the top of a
+    // run in flight or an analysis already on screen.
+    if (openedRef.current || isRunning || state.sessionId || !lastSessionKey) return;
+
+    let remembered: string | null = null;
+    try {
+      remembered = localStorage.getItem(lastSessionKey);
+    } catch {
+      remembered = null;
+    }
+    if (!remembered) return;
+
+    openedRef.current = remembered;
+    void open(remembered);
+  }, [searchParams, open, rememberSession, isRunning, state.sessionId, lastSessionKey]);
 
   /* ── Running ──────────────────────────────────────────────────────── */
 
@@ -232,6 +287,10 @@ const Workflow = () => {
       setRerunningId(null);
       searchParams.delete("session");
       setSearchParams(searchParams, { replace: true });
+      // The old one is no longer what is on screen; the new id is written
+      // below, once the service has created it.
+      openedRef.current = null;
+      rememberSession(null);
       void start({
         bundle: next,
         mode,
@@ -243,7 +302,10 @@ const Workflow = () => {
       // The roster is where a run is watched, so go there when one starts.
       setPanel("agents");
     },
-    [bundle, mode, chosenIds, pendingWorkflow, customAgents, start, searchParams, setSearchParams],
+    [
+      bundle, mode, chosenIds, pendingWorkflow, customAgents, start,
+      searchParams, setSearchParams, rememberSession,
+    ],
   );
 
   /**
