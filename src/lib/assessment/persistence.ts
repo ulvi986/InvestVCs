@@ -7,6 +7,7 @@
 // two disagree about which is newer.
 
 import { supabase } from "@/integrations/supabase/client";
+import type { Json } from "@/integrations/supabase/types";
 import type { AssessmentSession } from "./types";
 
 const TABLE = "assessment_interviews";
@@ -70,12 +71,12 @@ export async function saveInterview(userId: string, session: AssessmentSession):
       user_id: userId,
       session_id: session.id,
       startup_name: session.startupName ?? "",
-      answers: session.answers as never,
-      resolutions: session.resolutions as never,
-      history: session.history as never,
+      answers: session.answers as unknown as Json,
+      resolutions: session.resolutions as unknown as Json,
+      history: session.history as unknown as Json,
       started_at: session.startedAt,
       updated_at: new Date().toISOString(),
-    } as never,
+    },
     { onConflict: "user_id" },
   );
 

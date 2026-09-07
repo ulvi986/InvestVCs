@@ -10,10 +10,150 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
+  }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      analysis_agent_runs: {
+        Row: {
+          agent: string
+          confidence: number | null
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          finished_at: string | null
+          id: string
+          input: Json | null
+          iteration: number
+          label: string
+          methodology_id: string | null
+          output: Json | null
+          session_id: string
+          started_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          agent: string
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json | null
+          iteration?: number
+          label?: string
+          methodology_id?: string | null
+          output?: Json | null
+          session_id: string
+          started_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          agent?: string
+          confidence?: number | null
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          input?: Json | null
+          iteration?: number
+          label?: string
+          methodology_id?: string | null
+          output?: Json | null
+          session_id?: string
+          started_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_agent_runs_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      analysis_evidence: {
+        Row: {
+          claim: string
+          confidence: number
+          created_at: string
+          evidence: string
+          id: string
+          methodology: string
+          reasoning: string
+          session_id: string
+          source: string
+          source_type: string
+          user_id: string
+        }
+        Insert: {
+          claim: string
+          confidence?: number
+          created_at?: string
+          evidence?: string
+          id?: string
+          methodology?: string
+          reasoning?: string
+          session_id: string
+          source?: string
+          source_type?: string
+          user_id: string
+        }
+        Update: {
+          claim?: string
+          confidence?: number
+          created_at?: string
+          evidence?: string
+          id?: string
+          methodology?: string
+          reasoning?: string
+          session_id?: string
+          source?: string
+          source_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_evidence_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analysis_sessions: {
         Row: {
           analysis_plan: Json | null
@@ -80,101 +220,35 @@ export type Database = {
         }
         Relationships: []
       }
-      analysis_agent_runs: {
+      assessment_interviews: {
         Row: {
-          agent: string
-          confidence: number | null
-          created_at: string
-          duration_ms: number | null
-          error: string | null
-          finished_at: string | null
-          id: string
-          input: Json | null
-          iteration: number
-          label: string
-          methodology_id: string | null
-          output: Json | null
+          answers: Json
+          history: Json
+          resolutions: Json
           session_id: string
-          started_at: string | null
-          status: string
+          started_at: string
+          startup_name: string
+          updated_at: string
           user_id: string
         }
         Insert: {
-          agent: string
-          confidence?: number | null
-          created_at?: string
-          duration_ms?: number | null
-          error?: string | null
-          finished_at?: string | null
-          id?: string
-          input?: Json | null
-          iteration?: number
-          label?: string
-          methodology_id?: string | null
-          output?: Json | null
+          answers?: Json
+          history?: Json
+          resolutions?: Json
           session_id: string
-          started_at?: string | null
-          status?: string
+          started_at?: string
+          startup_name?: string
+          updated_at?: string
           user_id: string
         }
         Update: {
-          agent?: string
-          confidence?: number | null
-          created_at?: string
-          duration_ms?: number | null
-          error?: string | null
-          finished_at?: string | null
-          id?: string
-          input?: Json | null
-          iteration?: number
-          label?: string
-          methodology_id?: string | null
-          output?: Json | null
+          answers?: Json
+          history?: Json
+          resolutions?: Json
           session_id?: string
-          started_at?: string | null
-          status?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      analysis_evidence: {
-        Row: {
-          claim: string
-          confidence: number
-          created_at: string
-          evidence: string
-          id: string
-          methodology: string
-          reasoning: string
-          session_id: string
-          source: string
-          source_type: string
-          user_id: string
-        }
-        Insert: {
-          claim: string
-          confidence?: number
-          created_at?: string
-          evidence?: string
-          id?: string
-          methodology?: string
-          reasoning?: string
-          session_id: string
-          source?: string
-          source_type?: string
-          user_id: string
-        }
-        Update: {
-          claim?: string
-          confidence?: number
-          created_at?: string
-          evidence?: string
-          id?: string
-          methodology?: string
-          reasoning?: string
-          session_id?: string
-          source?: string
-          source_type?: string
+          started_at?: string
+          startup_name?: string
+          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -205,6 +279,120 @@ export type Database = {
           created_at?: string
           id?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      community_post_likes: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post_replies: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_replies_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_post_saves: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "community_post_saves_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      community_posts: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          image_url: string | null
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
           user_id?: string
         }
         Relationships: []
@@ -373,27 +561,6 @@ export type Database = {
           file_url?: string
           id?: string
           slide_count?: number | null
-          user_id?: string
-        }
-        Relationships: []
-      }
-      community_posts: {
-        Row: {
-          content: string
-          created_at: string
-          id: string
-          user_id: string
-        }
-        Insert: {
-          content: string
-          created_at?: string
-          id?: string
-          user_id: string
-        }
-        Update: {
-          content?: string
-          created_at?: string
-          id?: string
           user_id?: string
         }
         Relationships: []
@@ -575,6 +742,33 @@ export type Database = {
         }
         Relationships: []
       }
+      user_cvs: {
+        Row: {
+          extracted_text: string | null
+          file_name: string
+          file_path: string
+          skills: string[]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          extracted_text?: string | null
+          file_name: string
+          file_path: string
+          skills?: string[]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          extracted_text?: string | null
+          file_name?: string
+          file_path?: string
+          skills?: string[]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           approved: boolean
@@ -666,12 +860,35 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_trending_topics: {
+        Args: { _days?: number; _limit?: number }
+        Returns: {
+          last_used: string
+          mentions: number
+          posts: number
+          topic: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      list_investors: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          country: string
+          current_company: string
+          email: string
+          id: string
+          industry: string
+          linkedin_url: string
+          name: string
+          surname: string
+        }[]
       }
       redeem_voucher: {
         Args: {
@@ -688,29 +905,6 @@ export type Database = {
           _voucher_code: string
         }
         Returns: Json
-      }
-      list_investors: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          id: string
-          name: string | null
-          surname: string | null
-          avatar_url: string | null
-          linkedin_url: string | null
-          current_company: string | null
-          industry: string | null
-          country: string | null
-          email: string | null
-        }[]
-      }
-      get_trending_topics: {
-        Args: { _days?: number; _limit?: number }
-        Returns: {
-          topic: string
-          mentions: number
-          posts: number
-          last_used: string
-        }[]
       }
     }
     Enums: {
@@ -730,12 +924,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -759,11 +953,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -784,11 +978,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -809,11 +1003,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -826,11 +1020,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -840,9 +1034,12 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
-      app_role: ["admin", "investor", "startup"],
+      app_role: ["admin", "investor", "startup", "user"],
     },
   },
 } as const
