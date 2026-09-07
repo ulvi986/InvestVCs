@@ -407,6 +407,8 @@ const Workflow = () => {
     ],
   );
   const hasOutput = Boolean(state.thesis) || Object.keys(state.results).length > 0;
+  /** A run that ended without being watched, rather than one never started. */
+  const interrupted = state.status === "failed" && Boolean(state.error) && !hasOutput;
 
   /* ── The graph column ─────────────────────────────────────────────── */
 
@@ -421,11 +423,25 @@ const Workflow = () => {
   ) : (
     <div className="graph-surface flex h-full items-center justify-center px-8">
       <div className="measure text-center">
-        <p className="kicker">No workflow yet</p>
-        <p className="mt-4 text-[14px] leading-relaxed text-[var(--ink-2)]">
-          Say what you want done in the panel on the right, or describe the company and run the analysis. The
-          orchestrator picks the agents, decides what can run in parallel, and executes the workflow here.
-        </p>
+        {/* An interrupted run leaves a named workspace with nothing in it,
+            which is indistinguishable from a new one unless it says so. The
+            reason lives on state.error, but the Results tab is the wrong
+            place for it: there are no results to open that tab for. */}
+        {interrupted ? (
+          <>
+            <p className="kicker">Run interrupted</p>
+            <p className="mt-4 text-[14px] leading-relaxed text-[var(--ink-2)]">{state.error}</p>
+          </>
+        ) : (
+          <>
+            <p className="kicker">No workflow yet</p>
+            <p className="mt-4 text-[14px] leading-relaxed text-[var(--ink-2)]">
+              Say what you want done in the panel on the right, or describe the company and run the
+              analysis. The orchestrator picks the agents, decides what can run in parallel, and executes
+              the workflow here.
+            </p>
+          </>
+        )}
         {service.problem ? (
           <span className="mt-6 inline-flex flex-col items-center gap-2 text-[12.5px] leading-relaxed">
             <span className="inline-flex items-start gap-2 text-left text-[var(--caution)]">
