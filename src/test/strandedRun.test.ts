@@ -30,6 +30,23 @@ describe("a session that was left running", () => {
     expect(resolved.error).toBeNull();
   });
 
+  it("is rejoined while still queued, before the first stage reports", () => {
+    // A row is created queued and becomes running only once the service
+    // accepts the run. Reloading in the seconds between the two used to
+    // read an ordinary unstarted session and abandon a live run.
+    expect(strandedRun("queued", RUN).rejoin).toBe(RUN);
+  });
+
+  it("is rejoined while the run is waiting on a person", () => {
+    expect(strandedRun("waiting_for_input", RUN).rejoin).toBe(RUN);
+  });
+
+  it("admits a queued row it cannot rejoin rather than offering a fresh start", () => {
+    const resolved = strandedRun("queued", null);
+    expect(resolved.status).toBe("failed");
+    expect(resolved.error).toContain("run it again");
+  });
+
   it("is not presented as live when there is nothing to rejoin", () => {
     // The failure this exists to prevent: a Stop button over an empty canvas.
     const resolved = strandedRun("running", null);

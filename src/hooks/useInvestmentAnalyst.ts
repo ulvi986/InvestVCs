@@ -106,17 +106,26 @@ export function recallLiveRun(sessionId: string): string | null {
  * What to show for a session whose stored status is still `running`.
  *
  * Three cases, and only the first is ordinary: the run finished normally
- * and the row says so. A row that still says running was interrupted - the
- * page was closed or reloaded while the service carried on. That is
- * recoverable when this browser remembers which run it was, and is not when
- * it does not, and the difference has to reach the screen: presenting an
- * unrecoverable one as live gave a Stop button over an empty canvas.
+ * and the row says so. A row left mid-flight was interrupted - the page was
+ * closed or reloaded while the service carried on. That is recoverable when
+ * this browser remembers which run it was, and is not when it does not, and
+ * the difference has to reach the screen: presenting an unrecoverable one as
+ * live gave a Stop button over an empty canvas.
+ *
+ * Mid-flight means queued as well as running. A row is created queued and
+ * only becomes running once the service has accepted the run, so a reload in
+ * the seconds between the two found a queued row, treated it as an ordinary
+ * unstarted session, and abandoned a run it could have rejoined.
  */
+const MID_FLIGHT: SessionStatus[] = [
+  "queued", "running", "waiting_for_input",
+];
+
 export function strandedRun(
   status: SessionStatus,
   rememberedRunId: string | null,
 ): { status: SessionStatus; rejoin: string | null; error: string | null } {
-  if (status !== "running") return { status, rejoin: null, error: null };
+  if (!MID_FLIGHT.includes(status)) return { status, rejoin: null, error: null };
   if (rememberedRunId) return { status: "running", rejoin: rememberedRunId, error: null };
   return {
     status: "failed",
@@ -291,6 +300,10 @@ export function useInvestmentAnalyst() {
             case "run":
               runIdRef.current = event.payload.runId;
               rememberLiveRun(sessionId, event.payload.runId);
+              // The row is running from here, not from the profile stage:
+              // this is the moment the service took the run, and a reload
+              // before the profile arrives has to find it that way.
+              if (sessionId) void patchSession(sessionId, { status: "running" });
               update({ runId: event.payload.runId, workflow: event.payload.workflow });
               break;
 
