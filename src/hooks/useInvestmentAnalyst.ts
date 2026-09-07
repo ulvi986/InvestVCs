@@ -267,7 +267,12 @@ export function useInvestmentAnalyst() {
             return;
           } catch (error) {
             const deliberate = controller.signal.aborted || abandonedRef.current;
-            const resumable = !deliberate && runIdRef.current !== null && attempt < 4;
+            // A 404 is the service saying it no longer holds this run - it
+            // finished and aged out, or the instance restarted. Retrying that
+            // four times over eight seconds only delays the explanation.
+            const gone = error instanceof ServiceError && error.status === 404;
+            const resumable =
+              !deliberate && !gone && runIdRef.current !== null && attempt < 4;
             if (!resumable) throw error;
 
             attempt += 1;
@@ -391,7 +396,10 @@ export function useInvestmentAnalyst() {
         rememberLiveRun(sessionId, null);
         if (!mountedRef.current) return;
         const cancelled = controller.signal.aborted;
-        const message = error instanceof Error ? error.message : "Analysis failed.";
+        const gone = error instanceof ServiceError && error.status === 404;
+        const message = gone
+          ? "The run this page was following has already finished on the service and is no longer available to rejoin. Run the analysis again."
+          : error instanceof Error ? error.message : "Analysis failed.";
         update({
           status: cancelled ? "draft" : "failed",
           statusMessage: cancelled ? "Cancelled" : "Analysis failed",
