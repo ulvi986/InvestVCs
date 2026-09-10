@@ -2,6 +2,16 @@
 
 Reads the same AZURE_OPENAI_* variables the existing Supabase edge functions
 use, so a deployment that already works keeps working with no new secrets.
+
+Three surfaces are supported, and the endpoint decides which:
+
+  Azure deployment   https://<resource>.services.ai.azure.com  - chat
+                     completions under /openai/deployments/<name>. The
+                     deployment name chooses the model.
+  Azure AI Foundry   an agent URL ending in /responses. The agent is
+                     pinned to its own model and we send none.
+  OpenAI             https://api.openai.com/v1 - chat completions at
+                     the root, a bearer token, and no api-version.
 """
 
 from __future__ import annotations
@@ -77,10 +87,31 @@ def _float_env(name: str, default: float) -> float:
 
 @dataclass(frozen=True)
 class Settings:
-    endpoint: str = field(default_factory=lambda: _env("AZURE_OPENAI_ENDPOINT", "AZURE_AI_FOUNDRY_ENDPOINT"))
-    deployment: str = field(default_factory=lambda: _env("AZURE_OPENAI_DEPLOYMENT", "AZURE_AI_MODEL", default="gpt-4o"))
+    #: Azure spellings come first because that is what the existing
+    #: deployments set; OPENAI_BASE_URL is what an OpenAI-only deployment
+    #: would naturally use, and defaults to OpenAI's own host once a key is
+    #: present, so pointing at OpenAI takes one variable rather than two.
+    endpoint: str = field(
+        default_factory=lambda: _env(
+            "AZURE_OPENAI_ENDPOINT", "AZURE_AI_FOUNDRY_ENDPOINT", "OPENAI_BASE_URL",
+            default=("https://api.openai.com/v1" if os.getenv("OPENAI_API_KEY") else ""),
+        )
+    )
+    #: The default has to be valid on both surfaces, because it is what
+    #: applies when nobody named a model. gpt-5-mini is a real OpenAI model
+    #: id and also a deployment in the Azure resource, so neither surface
+    #: 400s on it. Deployments name gpt-5-mini-2 explicitly - the same model
+    #: on a hundred times the quota - so this default is a floor, not the
+    #: intended configuration.
+    deployment: str = field(
+        default_factory=lambda: _env(
+            "AZURE_OPENAI_DEPLOYMENT", "AZURE_AI_MODEL", "OPENAI_MODEL", default="gpt-5-mini",
+        )
+    )
     api_version: str = field(default_factory=lambda: _env("AZURE_OPENAI_API_VERSION", default="2024-10-21"))
-    api_key: str = field(default_factory=lambda: _env("AZURE_OPENAI_API_KEY", "AZURE_AI_API_KEY"))
+    api_key: str = field(
+        default_factory=lambda: _env("AZURE_OPENAI_API_KEY", "AZURE_AI_API_KEY", "OPENAI_API_KEY")
+    )
 
     request_timeout: float = field(default_factory=lambda: _float_env("LLM_TIMEOUT_SECONDS", 120.0))
     #: On the Responses surface a reasoning model spends part of this budget
@@ -140,6 +171,18 @@ class Settings:
         return "chat"
 
     @property
+    def is_azure(self) -> bool:
+        """Whether the endpoint is an Azure surface.
+
+        Two things hang off this and they must not disagree: how the URL is
+        built and how the request is authenticated. Azure wants an api-key
+        header and its deployment path; OpenAI wants a bearer token and
+        /chat/completions at the root. Mixing them gives a 401 or a 404 with
+        nothing in the message pointing at the cause.
+        """
+        return ".azure.com" in self.endpoint
+
+    @property
     def chat_url(self) -> str:
         """The URL to POST a completion to, for whichever protocol applies."""
         base = self.endpoint.rstrip("/")
@@ -154,6 +197,13 @@ class Settings:
 
         if "/chat/completions" in base:
             return base
+
+        # OpenAI's own API: the path is fixed, the model travels in the body,
+        # and there is no api-version - sending one is simply ignored, but
+        # the deployment path it belongs to would 404.
+        if not self.is_azure:
+            return f"{base}/chat/completions"
+
         return f"{base}/openai/deployments/{self.deployment}/chat/completions?api-version={self.api_version}"
 
     @property
@@ -162,9 +212,10 @@ class Settings:
         if not self.api_key:
             return headers
         # Every Azure surface authenticates with `api-key`, including AI
-        # Foundry on services.ai.azure.com. Non-Azure proxies use a bearer
-        # token. Getting this wrong is a 403, not a helpful error.
-        if ".azure.com" in self.endpoint:
+        # Foundry on services.ai.azure.com. OpenAI and OpenAI-compatible
+        # proxies use a bearer token. Getting this wrong is a 401, not a
+        # helpful error.
+        if self.is_azure:
             headers["api-key"] = self.api_key
         else:
             headers["Authorization"] = f"Bearer {self.api_key}"

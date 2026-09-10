@@ -101,18 +101,23 @@ model name, an unsupported tool, and a model with no deployment behind it.
 
 Measured on the same company, same request, against the live service.
 
-| | gpt-5-mini | gpt-6-astra | claude-fable-5 |
-| --- | --- | --- | --- |
-| Per agent call | ~30-40s | 165-190s | 70-105s |
-| Deployment capacity | 50 | 5000 | 1000 |
-| Rate-limit failures | frequent | none | none |
-| Valuations produced | yes | mostly `insufficient_input` | yes |
-| Full run | ~10 min | did not finish | ~15-20 min |
+| | gpt-5-mini-2 | gpt-6-astra |
+| --- | --- | --- |
+| Per agent call | ~30-40s | 165-190s |
+| Deployment capacity | 4975 | 5000 |
+| Rate-limit failures | none | none |
+| Valuations produced | yes | mostly `insufficient_input` |
+| Full run | ~10 min | did not finish |
 
-gpt-6-astra runs, but on this pipeline it returns `insufficient_input` for
-most valuation methods and near-zero confidence throughout, so it is not what
-ships. claude-fable-5 is the current configuration: slower per call than
-gpt-5-mini but with twenty times the quota, so nothing is lost to rate limits.
+`gpt-5-mini-2` is what ships. The original `gpt-5-mini` deployment had a
+capacity of 50, which is what made rate limits the binding constraint and
+sent us looking at other models; `gpt-5-mini-2` is the same model with a
+hundred times the quota, so that reason is gone.
+
+gpt-6-astra runs and has the quota, but on this pipeline it returns
+`insufficient_input` for most valuation methods and near-zero confidence
+throughout - a report that concludes nothing. It is one variable away
+(`AZURE_AI_MODEL=gpt-6-astra`) if you want to measure it again.
 
 A full run is long enough that the browser will sometimes lose the stream.
 That is survivable by design - the run belongs to the service, not the

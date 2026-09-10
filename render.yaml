@@ -23,33 +23,42 @@ services:
     numInstances: 1
 
     envVars:
-      # Two surfaces are supported and the endpoint decides which:
+      # Three surfaces are supported and the endpoint decides which:
       #
-      #   AZURE_OPENAI_ENDPOINT      https://<resource> - the deployment
-      #                              surface. AZURE_AI_MODEL names the
-      #                              deployment, so the model is chosen here.
+      #   AZURE_OPENAI_ENDPOINT      https://<resource>.services.ai.azure.com -
+      #                              the deployment surface. AZURE_AI_MODEL
+      #                              names the deployment, so the model is
+      #                              chosen here. This is what ships.
       #   AZURE_AI_FOUNDRY_ENDPOINT  a Foundry agent URL ending in /responses.
       #                              The agent is pinned to its own model and
       #                              the service sends none.
+      #   OPENAI_BASE_URL            https://api.openai.com/v1 with
+      #                              OPENAI_API_KEY and OPENAI_MODEL, for
+      #                              OpenAI's own API rather than Azure's.
       #
-      # AZURE_OPENAI_ENDPOINT wins when both are set. gpt-6-astra is only
-      # servable on the deployment surface: through an agent it returns 500.
+      # AZURE_OPENAI_ENDPOINT wins when more than one is set.
+      #
+      # The deployment surface is used rather than an agent because an agent
+      # carries its own tool list, and a tool the model does not support fails
+      # the whole request: the project's agent has web_search attached, which
+      # gpt-6-astra rejects with a 400. On the deployment surface there are no
+      # tools to disagree about.
       - key: AZURE_OPENAI_ENDPOINT
-        sync: false
-      - key: AZURE_AI_FOUNDRY_ENDPOINT
         sync: false
       - key: AZURE_AI_API_KEY
         sync: false
-      # The deployment to call, on the deployment surface. Ignored on a
-      # Foundry agent endpoint, where the agent's own model is what runs -
-      # which is how this deploys today.
+
+      # The deployment to call. gpt-5-mini-2 is the same model as the original
+      # gpt-5-mini deployment with a hundred times the quota, which is what
+      # makes it usable here: rate limits, not the model, were the problem.
       - key: AZURE_AI_MODEL
-        sync: false
-      # Version per surface, and they are not interchangeable: the agent
-      # endpoint takes 2025-11-15-preview and the deployment surface 404s it;
-      # the deployment surface takes 2024-10-21 and the agent endpoint 404s it.
+        value: gpt-5-mini-2
+
+      # Version per surface, and they are not interchangeable: the deployment
+      # surface takes 2024-10-21 and the agent endpoint 404s it; the agent
+      # endpoint takes 2025-11-15-preview and the deployment surface 404s that.
       - key: AZURE_OPENAI_API_VERSION
-        value: 2025-11-15-preview
+        value: 2024-10-21
 
       # The browser calls this service directly, so the Vercel domain has to be
       # allowed. Set it once the frontend has a URL; "*" only while testing.
@@ -62,12 +71,12 @@ services:
         value: "0"
 
       # The deployment's rate limit, not the orchestrator, caps throughput.
-      # claude-fable-5 has capacity 1000 against gpt-5-mini's 50, so this can
-      # be generous; on a small deployment drop it to 2.
+      # gpt-5-mini-2 has capacity 4975, so this can be generous; on a small
+      # deployment drop it to 2.
       - key: AGENT_CONCURRENCY
         value: "6"
 
-      # A single agent call takes 70-105s on claude-fable-5 and up to 190s on
+      # A single agent call takes 30-40s on gpt-5-mini-2 and up to 190s on
       # gpt-6-astra. The default 120 cut runs off mid-call.
       - key: LLM_TIMEOUT_SECONDS
         value: "300"

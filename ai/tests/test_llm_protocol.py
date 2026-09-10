@@ -21,23 +21,33 @@ FOUNDRY = (
     "/agents/myagent/endpoint/protocols/openai/responses"
 )
 AZURE_OPENAI = "https://example-resource.openai.azure.com"
+OPENAI = "https://api.openai.com/v1"
 
 
 def _settings(monkeypatch, **env):
-    """Rebuild Settings from a clean environment."""
+    """Rebuild Settings from a clean environment.
+
+    The reload comes first and the deletions after it, which looks backwards
+    and is not: importing app.config reads the repo's .env into os.environ,
+    so clearing before the reload leaves the file's values in place and the
+    test measures the developer's machine instead of its own inputs. Doing it
+    in this order the file is loaded, then overwritten, then read.
+    """
+    from app import config as config_module
+
+    importlib.reload(config_module)
+
     for key in [
         "AZURE_OPENAI_ENDPOINT", "AZURE_AI_FOUNDRY_ENDPOINT",
         "AZURE_OPENAI_API_KEY", "AZURE_AI_API_KEY",
         "AZURE_OPENAI_DEPLOYMENT", "AZURE_AI_MODEL",
         "AZURE_OPENAI_API_VERSION", "AI_PROTOCOL", "AI_MOCK", "MOCK",
+        "OPENAI_API_KEY", "OPENAI_BASE_URL", "OPENAI_MODEL",
     ]:
         monkeypatch.delenv(key, raising=False)
     for key, value in env.items():
         monkeypatch.setenv(key, value)
 
-    from app import config as config_module
-
-    importlib.reload(config_module)
     return config_module.Settings()
 
 
@@ -410,3 +420,90 @@ def test_it_does_not_flap_when_told_the_same_thing_twice():
     message = "Unsupported parameter: 'max_completion_tokens' is not supported with this model."
     assert dialect.learn_from(message) is True
     assert dialect.learn_from(message) is False
+
+# ── OpenAI's own API ─────────────────────────────────────────────────────
+#
+# Azure and OpenAI serve the same models over deliberately different
+# shapes: Azure puts the model in the path and authenticates with an
+# api-key header, OpenAI puts the model in the body and takes a bearer
+# token. Building one and sending the other is a 401 or a 404 whose message
+# says nothing about the cause, so both halves are pinned here.
+
+
+def test_openai_posts_to_chat_completions_at_the_root(monkeypatch):
+    settings = _settings(monkeypatch, OPENAI_BASE_URL=OPENAI, OPENAI_API_KEY="sk-test")
+    assert settings.chat_url == "https://api.openai.com/v1/chat/completions"
+
+
+def test_openai_is_not_given_a_deployment_path(monkeypatch):
+    """The deployment path is an Azure idea; on OpenAI it is a 404."""
+    settings = _settings(
+        monkeypatch, OPENAI_BASE_URL=OPENAI, OPENAI_API_KEY="sk-test", OPENAI_MODEL="gpt-5-mini",
+    )
+    assert "/deployments/" not in settings.chat_url
+
+
+def test_openai_is_not_given_an_api_version(monkeypatch):
+    """OpenAI has no api-version; the one Azure needs would be noise."""
+    settings = _settings(monkeypatch, OPENAI_BASE_URL=OPENAI, OPENAI_API_KEY="sk-test")
+    assert "api-version" not in settings.chat_url
+
+
+def test_openai_authenticates_with_a_bearer_token(monkeypatch):
+    settings = _settings(monkeypatch, OPENAI_BASE_URL=OPENAI, OPENAI_API_KEY="sk-test")
+    assert settings.auth_headers["Authorization"] == "Bearer sk-test"
+    assert "api-key" not in settings.auth_headers
+
+
+def test_a_key_alone_is_enough_to_reach_openai(monkeypatch):
+    """Nobody should have to name OpenAI's own URL, or model, to use OpenAI.
+
+    The default model has to be one OpenAI will accept. An Azure deployment
+    name here - gpt-5-mini-2, say - is a 400 from OpenAI and would make this
+    convenience a trap.
+    """
+    settings = _settings(monkeypatch, OPENAI_API_KEY="sk-test")
+    assert settings.chat_url == "https://api.openai.com/v1/chat/completions"
+    assert settings.deployment == "gpt-5-mini"
+    assert settings.configured
+
+
+def test_openai_speaks_chat_not_responses(monkeypatch):
+    settings = _settings(monkeypatch, OPENAI_BASE_URL=OPENAI, OPENAI_API_KEY="sk-test")
+    assert settings.protocol == "chat"
+
+
+def test_the_model_comes_from_openai_model(monkeypatch):
+    settings = _settings(
+        monkeypatch, OPENAI_API_KEY="sk-test", OPENAI_MODEL="gpt-5-mini",
+    )
+    assert settings.deployment == "gpt-5-mini"
+
+
+def test_azure_still_wins_when_both_are_configured(monkeypatch):
+    """A working Azure deployment must not be hijacked by a stray key."""
+    settings = _settings(
+        monkeypatch,
+        AZURE_OPENAI_ENDPOINT=AZURE_OPENAI,
+        AZURE_AI_MODEL="gpt-5-mini-2",
+        OPENAI_API_KEY="sk-test",
+    )
+    assert settings.is_azure
+    assert "/openai/deployments/gpt-5-mini-2/" in settings.chat_url
+
+
+def test_the_shipped_deployment_surface_is_addressed_correctly(monkeypatch):
+    """What production actually sets, end to end."""
+    settings = _settings(
+        monkeypatch,
+        AZURE_OPENAI_ENDPOINT="https://res.services.ai.azure.com",
+        AZURE_AI_API_KEY="secret",
+        AZURE_AI_MODEL="gpt-5-mini-2",
+        AZURE_OPENAI_API_VERSION="2024-10-21",
+    )
+    assert settings.protocol == "chat"
+    assert settings.chat_url == (
+        "https://res.services.ai.azure.com/openai/deployments/gpt-5-mini-2"
+        "/chat/completions?api-version=2024-10-21"
+    )
+    assert settings.auth_headers["api-key"] == "secret"

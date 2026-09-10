@@ -56,7 +56,10 @@ serve(async (req) => {
     const { data } = await req.json();
     const AI_ENDPOINT = Deno.env.get("AZURE_OPENAI_ENDPOINT");
     if (!AI_ENDPOINT) throw new Error("AZURE_OPENAI_ENDPOINT is not configured");
-    const AI_DEPLOYMENT = Deno.env.get("AZURE_OPENAI_DEPLOYMENT") || "gpt-4o";
+    // Falls back to the deployment the analyst service uses. gpt-4o was the
+    // old default and is not deployed in this resource, so an unset secret
+    // produced a 404 from Azure rather than a working default.
+    const AI_DEPLOYMENT = Deno.env.get("AZURE_OPENAI_DEPLOYMENT") || "gpt-5-mini-2";
     const AI_API_VERSION = Deno.env.get("AZURE_OPENAI_API_VERSION") || "2024-10-21";
     const AI_API_KEY = Deno.env.get("AZURE_OPENAI_API_KEY") || "";
     if (!data) return json({ error: "Missing 'data' (startup metrics)" }, 400);

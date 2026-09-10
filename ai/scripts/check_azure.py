@@ -29,9 +29,9 @@ import httpx  # noqa: E402
 from app.config import settings  # noqa: E402
 
 #: Tool/model pairs Azure is known to reject, keyed by model prefix. Kept
-#: narrow on purpose: claude-fable-5 agents carrying web_search were verified
-#: working through this same surface, so a blanket rule about the tool would be
-#: wrong and would report a dozen healthy agents as broken.
+#: narrow on purpose: other models carrying web_search were verified working
+#: through this same surface, so a blanket rule about the tool would be wrong
+#: and would report healthy agents as broken.
 UNSUPPORTED_TOOLS = {
     "gpt-6-astra": {"web_search": "gpt-6-astra rejects web_search (400)"},
 }
