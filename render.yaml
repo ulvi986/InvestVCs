@@ -76,7 +76,9 @@ services:
       - key: AGENT_CONCURRENCY
         value: "6"
 
-      # A single agent call takes 30-40s on gpt-5-mini-2 and up to 190s on
-      # gpt-6-astra. The default 120 cut runs off mid-call.
+      # A single agent call takes 24-54s on gpt-5-mini-2. The default 120 cut
+      # runs off mid-call. gpt-6-astra needs 900 instead: it takes minutes per
+      # call on real material, and a call thrown away at the timeout is
+      # retried from scratch, so too small a value costs more than it saves.
       - key: LLM_TIMEOUT_SECONDS
         value: "300"

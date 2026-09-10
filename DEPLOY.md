@@ -103,21 +103,41 @@ Measured on the same company, same request, against the live service.
 
 | | gpt-5-mini-2 | gpt-6-astra |
 | --- | --- | --- |
-| Per agent call | ~30-40s | 165-190s |
+| Per agent call | 24-54s | 1-10 min |
+| First stage (understand) | ~35s | ~10 min |
 | Deployment capacity | 4975 | 5000 |
 | Rate-limit failures | none | none |
-| Valuations produced | yes | mostly `insufficient_input` |
-| Full run | ~10 min | did not finish |
+| Full run | ~13 min, 14/15 stages, a WATCH with a valuation band | not reached: the instance slept first |
 
 `gpt-5-mini-2` is what ships. The original `gpt-5-mini` deployment had a
 capacity of 50, which is what made rate limits the binding constraint and
 sent us looking at other models; `gpt-5-mini-2` is the same model with a
 hundred times the quota, so that reason is gone.
 
-gpt-6-astra runs and has the quota, but on this pipeline it returns
-`insufficient_input` for most valuation methods and near-zero confidence
-throughout - a report that concludes nothing. It is one variable away
-(`AZURE_AI_MODEL=gpt-6-astra`) if you want to measure it again.
+#### Why gpt-6-astra is not the default
+
+It works. Every agent role answers on it, the dialect adjustment below
+handles its refusal of `temperature` automatically, and it reached the
+synthesis stage on a real company. The problem is how long it takes.
+
+Asked in isolation it looks fast: a 118,000-character prompt comes back in
+26 seconds. That measurement is misleading, because the filler used to
+reach that size repeats itself. On genuinely varied material of the same
+length - a real website screen plus the founder interview - the same call
+takes ten minutes, because it is a reasoning model and novel input is what
+it spends its thinking on. Anyone re-testing this should use real content,
+not padding, or they will conclude it is fast and be wrong.
+
+Ten-minute calls have two consequences. Calls exceed `LLM_TIMEOUT_SECONDS`
+and get thrown away and retried, tripling the work for nothing - raise the
+timeout to 900 before measuring anything. And a full run then outlives the
+instance: on Render's free plan the service sleeps mid-run and takes the
+run with it, which is what happened here, at the synthesis stage, after
+twenty-four minutes.
+
+So gpt-6-astra is viable only on a paid instance. It is one variable away
+(`AZURE_AI_MODEL=gpt-6-astra`, and raise `LLM_TIMEOUT_SECONDS` to 900) once
+the service no longer sleeps.
 
 A full run is long enough that the browser will sometimes lose the stream.
 That is survivable by design - the run belongs to the service, not the
